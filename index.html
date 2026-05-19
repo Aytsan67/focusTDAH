@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Tache ⚡</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --card: #1a1a22;
+    --border: #2a2a38;
+    --text: #f0eff8;
+    --muted: #7a7890;
+    --accent: #7c5cfc;
+    --accent2: #fc5c7d;
+    --green: #5cfca0;
+    --yellow: #fcd45c;
+    --orange: #fc8c5c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding: 24px 20px 40px; max-width: 440px; margin: 0 auto; }
+  .screen { display: none; animation: fadeIn 0.3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .big-label { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2; margin-bottom: 20px; }
+  .big-label span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  textarea { width: 100%; background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; padding: 18px; resize: none; min-height: 110px; outline: none; transition: border-color 0.2s; }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+  .feeling-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin: 28px 0 14px; font-weight: 500; }
+  .feelings { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .feel-btn { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px 12px; cursor: pointer; text-align: left; transition: all 0.18s; position: relative; overflow: hidden; }
+  .feel-btn .emoji { font-size: 22px; display: block; margin-bottom: 6px; }
+  .feel-btn .feel-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--text); display: block; }
+  .feel-btn .feel-sub { font-size: 11px; color: var(--muted); display: block; margin-top: 2px; }
+  .feel-btn.selected { border-color: var(--accent); background: rgba(124,92,252,0.12); }
+  .feel-btn.selected::after { content: '✓'; position: absolute; top: 8px; right: 10px; font-size: 13px; color: var(--accent); font-weight: 700; }
+  .btn-primary { width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 14px; color: white; font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; padding: 18px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+  .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-secondary { width: 100%; background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; padding: 14px; cursor: pointer; margin-top: 10px; }
+  .methods { display: flex; flex-direction: column; gap: 10px; margin: 20px 0 24px; }
+  .method-btn { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 16px; cursor: pointer; text-align: left; transition: all 0.18s; display: flex; align-items: center; gap: 14px; width: 100%; }
+  .method-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .method-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
+  .method-desc { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+  .response-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 18px; padding: 22px; margin: 20px 0; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+  .timer-wrap { background: var(--card); border: 1.5px solid var(--border); border-radius: 18px; padding: 24px; margin: 16px 0; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .timer-display { font-family: 'Syne', sans-serif; font-size: 52px; font-weight: 800; color: var(--text); letter-spacing: 2px; }
+  .timer-row { display: flex; gap: 10px; }
+  .timer-btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 12px; color: white; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; padding: 12px 28px; cursor: pointer; }
+  .timer-reset { background: var(--card); border: 1.5px solid var(--border); border-radius: 12px; color: var(--muted); font-size: 15px; padding: 12px 18px; cursor: pointer; }
+  svg.ring { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 5; }
+  .ring-fill { fill: none; stroke: url(#grad); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  .loading { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 15px; padding: 20px 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: bounce 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; background: var(--accent2); }
+  .dot:nth-child(3) { animation-delay: 0.4s; background: var(--yellow); }
+  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+  .task-recap { background: rgba(124,92,252,0.08); border: 1px solid rgba(124,92,252,0.2); border-radius: 12px; padding: 14px 16px; font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+  .task-recap strong { color: var(--text); font-size: 15px; display: block; margin-bottom: 4px; }
+  .done-msg { text-align: center; padding: 16px 0; font-size: 28px; }
+  .back-link { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 14px; cursor: pointer; margin-bottom: 24px; background: none; border: none; }
+  .api-note { background: rgba(252,92,125,0.08); border: 1px solid rgba(252,92,125,0.2); border-radius: 12px; padding: 14px 16px; font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .api-note a { color: var(--accent2); text-decoration: none; }
+  .api-setup { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+  .api-setup label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
+  .api-setup input { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 12px 14px; outline: none; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-setup">
+  <div class="header"><span>⚡</span><span class="logo">Tache</span></div>
+  <div class="big-label">Bienvenue !<br><span>Une seule fois</span> à configurer.</div>
+  <div class="api-note">
+    Pour fonctionner, l'app a besoin de ta clé API Anthropic. Elle reste uniquement sur ton téléphone.<br><br>
+    👉 Récupère-la sur <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
+  </div>
+  <div class="api-setup">
+    <label>Ta clé API Anthropic</label>
+    <input type="password" id="api-key-input" placeholder="sk-ant-..." />
+  </div>
+  <button class="btn-primary" onclick="saveKey()">Enregistrer et commencer →</button>
+</div>
+
+<div class="screen" id="screen-task">
+  <div class="header"><span>⚡</span><span class="logo">Tache</span></div>
+  <div class="big-label">C'est quoi ta <span>tâche</span> ?</div>
+  <textarea id="task-input" placeholder="Ex : envoyer un email, ranger ma chambre, réviser..." rows="4"></textarea>
+  <div class="feeling-label">Comment tu te sens là ?</div>
+  <div class="feelings">
+    <button class="feel-btn" data-feel="rapide" onclick="toggleFeel(this)">
+      <span class="emoji">⚡</span>
+      <span class="feel-name">Démarrer vite</span>
+      <span class="feel-sub">Règle 2 min · Timer-course</span>
+    </button>
+    <button class="feel-btn" data-feel="bloquee" onclick="toggleFeel(this)">
+      <span class="emoji">🧱</span>
+      <span class="feel-name">Je suis bloquée</span>
+      <span class="feel-sub">Reverse Pomodoro · Micro-étape</span>
+    </button>
+    <button class="feel-btn" data-feel="motivation" onclick="toggleFeel(this)">
+      <span class="emoji">🎮</span>
+      <span class="feel-name">Besoin motivation</span>
+      <span class="feel-sub">Mini-quête · Task racing</span>
+    </button>
+    <button class="feel-btn" data-feel="submergee" onclick="toggleFeel(this)">
+      <span class="emoji">😰</span>
+      <span class="feel-name">Je suis submergée</span>
+      <span class="feel-sub">1 seule chose · Brain dump</span>
+    </button>
+    <button class="feel-btn" data-feel="temps" onclick="toggleFeel(this)" style="grid-column: span 2;">
+      <span class="emoji">⏱️</span>
+      <span class="feel-name">Combien de temps ?</span>
+      <span class="feel-sub">Estimation x1.5 · Découpage visible</span>
+    </button>
+  </div>
+  <button class="btn-primary" id="btn-next" onclick="goToMethods()" disabled>Voir mes options →</button>
+</div>
+
+<div class="screen" id="screen-methods">
+  <button class="back-link" onclick="showScreen('screen-task')">← Retour</button>
+  <div class="task-recap">
+    <strong id="recap-task"></strong>
+    <span id="recap-feels"></span>
+  </div>
+  <div class="big-label">Quelle <span>méthode</span> ?</div>
+  <div class="methods" id="methods-list"></div>
+</div>
+
+<div class="screen" id="screen-response">
+  <button class="back-link" onclick="showScreen('screen-task')">← Nouvelle tâche</button>
+  <div class="task-recap"><strong id="resp-task"></strong></div>
+  <div id="loading-wrap" class="loading">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <span>Claude prépare ton plan...</span>
+  </div>
+  <div id="response-content" style="display:none">
+    <div class="response-card" id="response-text"></div>
+    <div id="timer-section" style="display:none">
+      <div class="timer-wrap">
+        <svg width="100" height="100" viewBox="0 0 100 100" class="ring">
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#7c5cfc"/>
+              <stop offset="100%" style="stop-color:#fc5c7d"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="50" cy="50" r="44"/>
+          <circle class="ring-fill" id="ring" cx="50" cy="50" r="44" stroke-dasharray="276.46" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-display" id="timer-display">5:00</div>
+        <div class="timer-row">
+          <button class="timer-btn" id="timer-btn" onclick="toggleTimer()">▶ Start</button>
+          <button class="timer-reset" onclick="resetTimer()">↺</button>
+        </div>
+        <div id="timer-done" style="display:none" class="done-msg">🎉 +1 point !</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="showScreen('screen-task')">Nouvelle tâche ⚡</button>
+    <button class="btn-secondary" onclick="resetAll()">Tout recommencer</button>
+  </div>
+</div>
+
+<script>
+const TOTAL=300,CIRCUM=276.46;
+let timerRemaining=TOTAL,timerRunning=false,timerInterval=null;
+let selectedFeels=[],currentTask='',selectedMethod='';
+
+function saveKey(){
+  const k=document.getElementById('api-key-input').value.trim();
+  if(!k.startsWith('sk-ant-')){alert('Clé invalide — elle doit commencer par sk-ant-');return;}
+  localStorage.setItem('claude_key',k);
+  showScreen('screen-task');
+}
+function getKey(){return localStorage.getItem('claude_key');}
+
+window.onload=()=>{
+  if(getKey())showScreen('screen-task');
+  else showScreen('screen-setup');
+  const p=new URLSearchParams(window.location.search);
+  const t=p.get('task');
+  if(t){document.getElementById('task-input').value=decodeURIComponent(t);updateNextBtn();}
+  document.getElementById('task-input').addEventListener('input',updateNextBtn);
+};
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function toggleFeel(btn){
+  btn.classList.toggle('selected');
+  selectedFeels=[...document.querySelectorAll('.feel-btn.selected')].map(b=>b.dataset.feel);
+  updateNextBtn();
+}
+
+function updateNextBtn(){
+  const ok=document.getElementById('task-input').value.trim().length>2&&selectedFeels.length>0;
+  document.getElementById('btn-next').disabled=!ok;
+}
+
+const MD={
+  rapide:[
+    {id:'regle2',icon:'🎯',color:'#5cfca0',title:'Règle des 2 min',desc:'Une action si petite que c\'est impossible de refuser'},
+    {id:'timer_course',icon:'🏁',color:'#fcd45c',title:'Timer-course',desc:'Combien tu peux faire en 5 min chrono ?'}
+  ],
+  bloquee:[
+    {id:'reverse_pomodoro',icon:'🍅',color:'#fc8c5c',title:'Reverse Pomodoro',desc:'Juste 5 min. Pas besoin de finir.'},
+    {id:'micro_etape',icon:'🐜',color:'#7c5cfc',title:'Micro-étape ridicule',desc:'Action si minuscule que c\'est absurde de ne pas la faire'}
+  ],
+  motivation:[
+    {id:'mini_quete',icon:'⚔️',color:'#fc5c7d',title:'Mini-quête RPG',desc:'Points, niveau, récompense — ton cerveau adore ça'},
+    {id:'task_racing',icon:'🏎️',color:'#fcd45c',title:'Task Racing',desc:'Timer compétitif contre toi-même'}
+  ],
+  submergee:[
+    {id:'une_chose',icon:'🎯',color:'#5cfca0',title:'1 seule chose',desc:'Tout le reste à la poubelle. Maintenant.'},
+    {id:'brain_dump',icon:'🧠',color:'#7c5cfc',title:'Brain Dump Express',desc:'Vide ta tête en 60 secondes puis on trie'}
+  ],
+  temps:[
+    {id:'estimation',icon:'⏱️',color:'#fc8c5c',title:'Estimation x1.5',desc:'Le temps réel avec les sous-tâches cachées'},
+    {id:'decoupage',icon:'📊',color:'#5cfca0',title:'Découpage visible',desc:'Progression numérotée : 1/7, 2/7...'}
+  ]
+};
+
+const needsTimer=['timer_course','mini_quete','task_racing','reverse_pomodoro'];
+
+function goToMethods(){
+  currentTask=document.getElementById('task-input').value.trim();
+  const fl={rapide:'⚡ Démarrer vite',bloquee:'🧱 Bloquée',motivation:'🎮 Motivation',submergee:'😰 Submergée',temps:'⏱️ Temps'};
+  document.getElementById('recap-task').textContent=currentTask;
+  document.getElementById('recap-feels').textContent=selectedFeels.map(f=>fl[f]).join(' · ');
+  const list=document.getElementById('methods-list');
+  list.innerHTML='';
+  selectedFeels.forEach(feel=>{
+    (MD[feel]||[]).forEach(m=>{
+      const btn=document.createElement('button');
+      btn.className='method-btn';
+      btn.innerHTML=`<div class="method-icon" style="background:${m.color}22">${m.icon}</div><div><div class="method-title">${m.title}</div><div class="method-desc">${m.desc}</div></div>`;
+      btn.onclick=()=>chooseMethod(m.id);
+      list.appendChild(btn);
+    });
+  });
+  showScreen('screen-methods');
+}
+
+const PROMPTS={
+  regle2:`Tâche : "{task}". Applique la règle des 2 minutes : donne UNE seule action physique de moins de 2 minutes à faire MAINTENANT. Ultra concrète. Max 4 lignes. Commence directement par l'action.`,
+  timer_course:`Tâche : "{task}". Lance un timer-course : dis exactement ce à accomplir dans les 5 prochaines minutes. Ton de défi amical. Max 4 lignes.`,
+  reverse_pomodoro:`Tâche : "{task}". Reverse Pomodoro : rassure que 5 minutes suffisent pour commencer. Dis quoi faire pendant ces 5 min. Max 4 lignes.`,
+  micro_etape:`Tâche : "{task}". Donne la micro-étape la plus ridiculement petite possible. Une seule action absurdement simple. Max 3 lignes.`,
+  mini_quete:`Tâche : "{task}". Transforme en mini-quête RPG fun : nom de quête épique, 3 niveaux courts, 1 récompense à choisir. Style jeu vidéo, max 6 lignes.`,
+  task_racing:`Tâche : "{task}". Task racing : défie de voir combien avancer en 5 min. Ton enthousiaste. Max 4 lignes.`,
+  une_chose:`Tâche : "{task}". LA seule chose qui compte maintenant. Ignore tout le reste. Max 3 lignes.`,
+  brain_dump:`Tâche : "{task}". Guide un brain dump express : noter tout ce qui tourne en tête en 60 secondes, puis classer en Maintenant / Plus tard / Poubelle. Max 5 lignes.`,
+  estimation:`Tâche : "{task}". Estimation honnête : 2-3 sous-tâches cachées qu'on oublie toujours, puis multiplier par 1.5. Max 5 lignes.`,
+  decoupage:`Tâche : "{task}". Découpe en 5 à 7 micro-étapes numérotées (1/6, 2/6...). Chaque étape en une ligne courte.`
+};
+
+async function chooseMethod(methodId){
+  selectedMethod=methodId;
+  document.getElementById('resp-task').textContent=currentTask;
+  document.getElementById('loading-wrap').style.display='flex';
+  document.getElementById('response-content').style.display='none';
+  showScreen('screen-response');
+  resetTimer();
+
+  const prompt=(PROMPTS[methodId]||PROMPTS.regle2).replace('{task}',currentTask);
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const text=data.content?.[0]?.text||'Erreur. Vérifie ta clé API.';
+    document.getElementById('response-text').textContent=text;
+    document.getElementById('loading-wrap').style.display='none';
+    document.getElementById('response-content').style.display='block';
+    document.getElementById('timer-section').style.display=needsTimer.includes(methodId)?'block':'none';
+  }catch(e){
+    document.getElementById('response-text').textContent='Erreur de connexion. Vérifie ta clé API et ta connexion.';
+    document.getElementById('loading-wrap').style.display='none';
+    document.getElementById('response-content').style.display='block';
+  }
+}
+
+function toggleTimer(){
+  if(timerRemaining===0)return;
+  timerRunning=!timerRunning;
+  const btn=document.getElementById('timer-btn');
+  if(timerRunning){btn.textContent='⏸ Pause';timerInterval=setInterval(tickTimer,1000);}
+  else{btn.textContent='▶ Continuer';clearInterval(timerInterval);}
+}
+
+function tickTimer(){
+  timerRemaining--;
+  const m=Math.floor(timerRemaining/60),s=timerRemaining%60;
+  document.getElementById('timer-display').textContent=m+':'+String(s).padStart(2,'0');
+  document.getElementById('ring').style.strokeDashoffset=CIRCUM*(1-timerRemaining/TOTAL);
+  if(timerRemaining<=0){
+    clearInterval(timerInterval);timerRunning=false;
+    document.getElementById('timer-btn').style.display='none';
+    document.getElementById('timer-done').style.display='block';
+  }
+}
+
+function resetTimer(){
+  clearInterval(timerInterval);timerRunning=false;timerRemaining=TOTAL;
+  document.getElementById('timer-display').textContent='5:00';
+  document.getElementById('ring').style.strokeDashoffset=0;
+  document.getElementById('timer-btn').textContent='▶ Start';
+  document.getElementById('timer-btn').style.display='inline-block';
+  document.getElementById('timer-done').style.display='none';
+}
+
+function resetAll(){
+  selectedFeels=[];
+  document.querySelectorAll('.feel-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('task-input').value='';
+  updateNextBtn();
+  showScreen('screen-task');
+}
+</script>
+</body>
+</html>
