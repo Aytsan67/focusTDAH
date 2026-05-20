@@ -2838,14 +2838,14 @@ function promptAddCategory(proj) {
 const SEANCE_MICRO_OPTIONS = [
   { emoji: '📖', label: 'Lire le cours' },
   { emoji: '🗂', label: 'Commencer à ficher' },
+  { emoji: '✅', label: 'Finir de ficher' },
   { emoji: '📹', label: 'Regarder la vidéo / cours' },
   { emoji: '✏️', label: 'Faire les exercices' },
-  { emoji: '📝', label: 'Rédiger un résumé' },
-  { emoji: '🧪', label: 'Tester ses connaissances' },
-  { emoji: '🖊', label: 'Annoter le cours' },
+  { emoji: '❓', label: 'Faire des quizzs' },
+  { emoji: '🖍', label: 'Surligner les fiches' },
   { emoji: '🧠', label: 'Faire une carte mentale' },
   { emoji: '🔁', label: 'Réviser les fiches' },
-  { emoji: '💬', label: 'Expliquer à voix haute' }
+  { emoji: '📄', label: 'Page vierge' }
 ];
 function promptSeanceMicros(onConfirm) {
   const selected = new Set();
