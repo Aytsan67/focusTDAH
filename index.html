@@ -298,6 +298,11 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .end-opt:active { border-color: var(--accent); }
 .end-opt.opt-main { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #fff; }
 .end-opt.opt-green { border-color: rgba(92,252,160,.3); color: var(--green); }
+
+.fo-step-ind { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 18px; }
+.fo-back-step { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; padding: 0; margin-bottom: 16px; display: block; }
+.fo-back-step:hover { color: var(--text); }
+.fo-cats { display: grid; gap: 10px; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -375,6 +380,44 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <input id="files-input" type="file" multiple style="display:none">
     <div id="files-chips" class="file-chips"></div>
     <button class="btn" id="btn-build-plan" style="display:none">Créer le plan →</button>
+  </div>
+</section>
+
+<!-- FILE OPTIONS -->
+<section class="screen" id="file-options">
+  <button class="back" id="fo-back">← Retour</button>
+  <div id="fo-s1">
+    <div class="fo-step-ind">Étape 1 / 2</div>
+    <h1>Comment <em>analyser</em><br>tes fichiers ?</h1>
+    <p class="sub">Choisis comment le contenu doit être découpé en étapes de travail.</p>
+    <button class="block-btn block-main" id="fo-par-fichier">
+      <span class="b-title">📄 Par fichier</span>
+      <span class="b-sub">Chaque fichier devient une étape dans le plan</span>
+    </button>
+    <button class="block-btn block-secondary" id="fo-par-slide">
+      <span class="b-title">📑 Par section / page</span>
+      <span class="b-sub">Le contenu de chaque fichier est découpé automatiquement en sections</span>
+    </button>
+  </div>
+  <div id="fo-s2" style="display:none">
+    <button class="fo-back-step" id="fo-back-s2">← Retour</button>
+    <div class="fo-step-ind">Étape 2 / 2</div>
+    <h1>Appliquer <em>où</em> ?</h1>
+    <p class="sub">Remplace tout le plan, ou enrichis une seule étape existante.</p>
+    <button class="block-btn block-main" id="fo-global">
+      <span class="b-title">🗂 Plan global</span>
+      <span class="b-sub">Génère ou met à jour l'ensemble des étapes du projet</span>
+    </button>
+    <button class="block-btn block-secondary" id="fo-categorie">
+      <span class="b-title">📌 Une étape précise</span>
+      <span class="b-sub">Ajoute des micro-tâches dans une étape existante (Commencer, Avancer…)</span>
+    </button>
+  </div>
+  <div id="fo-s3" style="display:none">
+    <button class="fo-back-step" id="fo-back-s3">← Retour</button>
+    <h1>Quelle <em>étape</em> ?</h1>
+    <p class="sub">Les fichiers seront convertis en micro-tâches dans cette étape.</p>
+    <div class="fo-cats" id="fo-cats"></div>
   </div>
 </section>
 
@@ -571,6 +614,10 @@ let currentProject = null;
 let currentMode = '2min';
 let pendingProject = null;
 
+// ─── FILE OPTIONS STATE ───
+let foMode = null, foScope = null, foApplyCategory = null;
+let foPendingFiles = [], foPendingFileObjects = [], foCalledFrom = 'create';
+
 // ─── HOME ───
 function renderHome() {
   const projects = getProjects();
@@ -710,6 +757,30 @@ function generateSteps(name, goal, fileHints) {
   ];
 }
 
+// ─── FILE ANALYSIS ───
+function readFileContent(file) {
+  return new Promise(function(resolve) {
+    var textExt = /\.(txt|md|csv|js|ts|html|css|json|xml|py|java|c|cpp|h|php|rb|rs|go|swift|kt|sql|sh|bat|yml|yaml|ini|log)$/i;
+    if (file.type.startsWith('text/') || textExt.test(file.name)) {
+      var reader = new FileReader();
+      reader.onload = function(e) { resolve(e.target.result); };
+      reader.onerror = function() { resolve(null); };
+      reader.readAsText(file);
+    } else { resolve(null); }
+  });
+}
+function detectSections(content, fileName) {
+  var headings = content.match(/^#{1,3}\s+(.+)$/gm);
+  if (headings && headings.length >= 2) return headings.map(function(h) { return h.replace(/^#+\s+/, '').trim().substring(0, 50); });
+  var numbered = content.match(/^\d+[.)]\s+.{3,}/gm);
+  if (numbered && numbered.length >= 2) return numbered.map(function(n) { return n.replace(/^\d+[.)]\s+/, '').trim().substring(0, 50); });
+  var slides = content.match(/^(slide|page|diapo)\s*\d+[:\s-]*.*/gim);
+  if (slides && slides.length >= 2) return slides.map(function(sl) { return sl.trim().substring(0, 50); });
+  var paras = content.split(/\n{2,}/).filter(function(p) { return p.trim().length > 15; }).map(function(p) { return p.trim().split('\n')[0].substring(0, 50); }).slice(0, 8);
+  if (paras.length >= 2) return paras;
+  return [fileName.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')];
+}
+
 // ─── PROJECT UTILS ───
 function getCurrentStep(p) {
   return p.steps.find(st => (st.done || 0) < st.micros.length) || null;
@@ -746,20 +817,122 @@ document.getElementById('btn-no-files').onclick = () => {
   show('plan-preview');
 };
 document.getElementById('files-input').onchange = function() {
-  const names = [...this.files].map(f => f.name);
-  pendingProject.files = names;
-  document.getElementById('files-chips').innerHTML = names.map(n => '<span class="file-chip">📎 ' + n + '</span>').join('');
-  const lbl = document.getElementById('files-label');
-  lbl.classList.toggle('has-files', names.length > 0);
-  lbl.querySelector('span').textContent = names.length > 0
-    ? names.length + ' fichier' + (names.length > 1 ? 's' : '') + ' ajouté' + (names.length > 1 ? 's' : '')
-    : '📂 Choisir des fichiers';
-  document.getElementById('btn-build-plan').style.display = names.length > 0 ? 'block' : 'none';
+  if (!this.files.length) return;
+  const fileList = this.files;
+  this.value = '';
+  showFileOptions(fileList, 'create');
 };
 document.getElementById('btn-build-plan').onclick = () => {
   renderPlanPreview(pendingProject);
   show('plan-preview');
 };
+
+// ─── FILE OPTIONS SCREEN ───
+function showFileOptions(fileList, calledFrom) {
+  foPendingFileObjects = [...fileList];
+  foPendingFiles = foPendingFileObjects.map(function(f) { return f.name; });
+  foCalledFrom = calledFrom;
+  foMode = null; foScope = null; foApplyCategory = null;
+  document.getElementById('fo-s1').style.display = '';
+  document.getElementById('fo-s2').style.display = 'none';
+  document.getElementById('fo-s3').style.display = 'none';
+  show('file-options');
+}
+document.getElementById('fo-back').onclick = function() {
+  if (foCalledFrom === 'create') {
+    document.getElementById('files-chips').innerHTML = '';
+    document.getElementById('btn-build-plan').style.display = 'none';
+    show('create-files');
+  } else { show('plan-preview'); }
+};
+document.getElementById('fo-back-s2').onclick = function() {
+  document.getElementById('fo-s1').style.display = '';
+  document.getElementById('fo-s2').style.display = 'none';
+};
+document.getElementById('fo-back-s3').onclick = function() {
+  document.getElementById('fo-s2').style.display = '';
+  document.getElementById('fo-s3').style.display = 'none';
+};
+document.getElementById('fo-par-fichier').onclick = function() {
+  foMode = 'fichier';
+  document.getElementById('fo-s1').style.display = 'none';
+  document.getElementById('fo-s2').style.display = '';
+};
+document.getElementById('fo-par-slide').onclick = function() {
+  foMode = 'slide';
+  document.getElementById('fo-s1').style.display = 'none';
+  document.getElementById('fo-s2').style.display = '';
+};
+document.getElementById('fo-global').onclick = function() {
+  foScope = 'global';
+  applyFileOptions();
+};
+document.getElementById('fo-categorie').onclick = function() {
+  foScope = 'categorie';
+  var proj = pendingProject || currentProject;
+  var cats = document.getElementById('fo-cats');
+  cats.innerHTML = '';
+  (proj ? proj.steps : []).forEach(function(st) {
+    var btn = document.createElement('button');
+    btn.className = 'block-btn block-secondary';
+    btn.innerHTML = '<span class="b-title">' + st.name + '</span><span class="b-sub">Ajouter des micro-tâches à cette étape</span>';
+    (function(name) { btn.onclick = function() { foApplyCategory = name; applyFileOptions(); }; })(st.name);
+    cats.appendChild(btn);
+  });
+  document.getElementById('fo-s2').style.display = 'none';
+  document.getElementById('fo-s3').style.display = '';
+};
+async function applyFileOptions() {
+  var proj = pendingProject || currentProject;
+  if (!proj) return;
+  var newSteps = [], newMicros = [];
+  if (foMode === 'fichier') {
+    foPendingFiles.forEach(function(name) {
+      var clean = name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+      if (foScope === 'global') {
+        newSteps.push(s(clean, ['Ouvrir ' + clean, 'Parcourir rapidement', 'Identifier les éléments clés', 'Finaliser le travail lié'], 'moyenne', 20));
+      } else { newMicros.push('Traiter : ' + clean); }
+    });
+  } else {
+    for (var i = 0; i < foPendingFileObjects.length; i++) {
+      var file = foPendingFileObjects[i];
+      var content = await readFileContent(file);
+      var sections = content ? detectSections(content, file.name) : [file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')];
+      sections.forEach(function(sec) {
+        if (foScope === 'global') {
+          newSteps.push(s(sec, ['Ouvrir cette section', 'Lire et comprendre', 'Prendre des notes', 'Résumer en une phrase'], 'moyenne', 15));
+        } else { newMicros.push(sec); }
+      });
+    }
+  }
+  var existing = proj.files || [];
+  proj.files = existing.concat(foPendingFiles.filter(function(n) { return !existing.includes(n); }));
+  if (foScope === 'global') {
+    var stepsToApply = newSteps.length ? newSteps : generateSteps(proj.name, proj.goal, proj.files.map(function(f) { return f.toLowerCase().replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '); }).join(' '));
+    proj.steps = mergeProgress(proj.steps, stepsToApply);
+  } else {
+    var target = proj.steps.find(function(st) { return st.name === foApplyCategory; });
+    if (target && newMicros.length) {
+      target.micros = target.micros.concat(newMicros);
+      target.done = Math.min(target.done || 0, target.micros.length);
+    }
+  }
+  if (!pendingProject && currentProject) {
+    var list = getProjects();
+    var idx = list.findIndex(function(p) { return p.id === proj.id; });
+    if (idx !== -1) { list[idx] = proj; saveProjects(list); currentProject = proj; }
+  }
+  if (foCalledFrom === 'create') {
+    renderPlanPreview(pendingProject);
+    show('plan-preview');
+  } else {
+    renderPlanPreview(proj);
+    var msg = document.getElementById('pp-update-msg');
+    msg.style.display = 'block'; msg.style.opacity = '1';
+    setTimeout(function() { msg.style.opacity = '0'; setTimeout(function() { msg.style.display = 'none'; }, 300); }, 2000);
+    show('plan-preview');
+  }
+}
 
 // ─── PLAN PREVIEW ───
 document.getElementById('back-plan-preview').onclick = () => {
@@ -800,33 +973,10 @@ document.getElementById('pp-edit-name').onclick = function() {
 };
 
 document.getElementById('pp-files-input').onchange = function() {
-  const newNames = [...this.files].map(f => f.name);
-  if (!newNames.length) return;
-  const proj = pendingProject || currentProject;
-  if (!proj) return;
-
-  const existing = proj.files || [];
-  proj.files = [...existing, ...newNames.filter(n => !existing.includes(n))];
-
-  const hints = proj.files.map(f => f.toLowerCase().replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')).join(' ');
-  const newSteps = generateSteps(proj.name, proj.goal, hints);
-  proj.steps = mergeProgress(proj.steps, newSteps);
-
-  if (!pendingProject && currentProject) {
-    const list = getProjects();
-    const idx = list.findIndex(p => p.id === proj.id);
-    if (idx !== -1) { list[idx] = proj; saveProjects(list); currentProject = proj; }
-  }
-
-  const msg = document.getElementById('pp-update-msg');
-  msg.style.display = 'block'; msg.style.opacity = '1';
-  setTimeout(function() {
-    msg.style.opacity = '0';
-    setTimeout(function() { msg.style.display = 'none'; }, 300);
-  }, 2000);
-
-  renderPlanPreview(proj);
+  if (!this.files.length) return;
+  const fileList = this.files;
   this.value = '';
+  showFileOptions(fileList, 'pp');
 };
 document.getElementById('btn-delete-project').onclick = () => {
   if (!currentProject) return;
