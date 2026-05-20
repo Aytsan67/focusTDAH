@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>focusTDAH</title>
 <!-- PWA iPhone -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -355,21 +355,26 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .file-chip-del:hover { opacity: 1; color: #fc5c7d; }
 
 .cat-card { border: 1.5px solid var(--border); border-radius: 20px; background: var(--card); margin-bottom: 14px; overflow: hidden; }
-.cat-header { display: flex; align-items: center; gap: 12px; padding: 16px 16px 10px; }
-.cat-mini-circle { width: 46px; height: 46px; min-width: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px var(--soft); }
+.cat-header { display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 10px; }
+.cat-header-top { display: flex; align-items: center; gap: 10px; }
+.cat-header-actions { display: flex; align-items: center; gap: 8px; padding-left: 56px; }
+.cat-mini-circle { width: 46px; height: 46px; min-width: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px var(--soft); flex-shrink: 0; }
 .cat-mini-pct { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .cat-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
-.cat-del { background: none; border: none; color: var(--muted); font-size: 15px; cursor: pointer; padding: 4px 6px; border-radius: 8px; opacity: .5; transition: opacity .15s, color .15s; }
+.cat-del { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 7px; border-radius: 8px; opacity: .5; transition: opacity .15s, color .15s; flex-shrink: 0; }
 .cat-del:hover { opacity: 1; color: #fc5c7d; }
-.cat-start-btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 12px; color: #fff; font: 700 13px 'Syne', sans-serif; padding: 8px 14px; cursor: pointer; transition: transform .12s; }
+.cat-collapse-top { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; padding: 4px 7px; border-radius: 8px; flex-shrink: 0; transition: color .15s; }
+.cat-collapse-top:hover { color: var(--text); }
+.cat-start-btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 10px; color: #fff; font: 700 12px 'Syne', sans-serif; padding: 6px 12px; cursor: pointer; transition: transform .12s; white-space: nowrap; }
 .cat-start-btn:active { transform: scale(.95); }
+/* Step delete button */
+.step-del-btn { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 5px; flex-shrink: 0; opacity: .35; transition: opacity .15s, color .15s; line-height: 1; }
+.step-del-btn:hover { opacity: 1; color: #fc5c7d; }
 .cat-steps { padding: 0 12px 14px; }
 .cat-add-btn { width: 100%; border: 1.5px dashed var(--border); border-radius: 16px; background: none; color: var(--muted); font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; padding: 14px; cursor: pointer; margin-bottom: 16px; transition: border-color .2s, color .2s; }
 .cat-add-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── COLLAPSE + MODE CHIP ── */
-.cat-collapse-btn { background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 7px;border-radius:7px;transition:color .15s;flex-shrink:0;line-height:1;transform-origin:center; }
-.cat-collapse-btn:hover { color:var(--text); }
+/* ── MODE CHIP ── */
 .cat-body { overflow:hidden;max-height:2000px;transition:max-height .3s cubic-bezier(.22,1,.36,1); }
 .cat-body.collapsed { max-height:0; }
 .cat-mode-chip { display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,252,.12);border:1px solid rgba(124,92,252,.25);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer;transition:background .15s,border-color .15s;font-family:inherit;flex-shrink:0;white-space:nowrap; }
@@ -2235,6 +2240,10 @@ function renderStepsList(steps, container, saveFn, seanceMode) {
   container.innerHTML = '';
 
   function renderStep(step, idx, wrapEl) {
+    // Ensure every step has at least default micros
+    if (!step.micros || !step.micros.length) {
+      step.micros = ['Commencer', 'Avancer', 'Terminer'];
+    }
     const done = (step.done || 0) >= step.micros.length && step.micros.length > 0;
     const el = document.createElement('div');
     el.className = 'plan-step' + (done ? ' done' : '');
@@ -2253,53 +2262,42 @@ function renderStepsList(steps, container, saveFn, seanceMode) {
     // Step name + rename
     const nameSpan = document.createElement('span');
     nameSpan.className = 'plan-step-name';
-    nameSpan.textContent = (idx + 1) + '. ' + step.name;
+    nameSpan.textContent = step.name;
     const eb = document.createElement('button');
     eb.className = 'edit-btn'; eb.textContent = '✎'; eb.title = 'Renommer';
-    (function(st, ns, btn, i) {
+    (function(st, ns, btn) {
       btn.onclick = function(e) {
         e.stopPropagation();
         const orig = st.name;
         const inp = document.createElement('input');
         inp.value = orig; inp.className = 'inline-input';
-        ns.textContent = (i + 1) + '. '; ns.appendChild(inp);
+        ns.textContent = ''; ns.appendChild(inp);
         btn.style.display = 'none'; inp.focus(); inp.select();
         function doSave() {
           const val = inp.value.trim() || orig;
-          st.name = val; ns.textContent = (i + 1) + '. ' + val; btn.style.display = '';
+          st.name = val; ns.textContent = val; btn.style.display = '';
           if (saveFn) saveFn();
         }
         inp.onblur = doSave;
-        inp.onkeydown = e2 => { if (e2.key === 'Enter') { e2.preventDefault(); doSave(); } if (e2.key === 'Escape') { ns.textContent = (i+1)+'. '+orig; btn.style.display=''; } };
+        inp.onkeydown = e2 => { if (e2.key === 'Enter') { e2.preventDefault(); doSave(); } if (e2.key === 'Escape') { ns.textContent = orig; btn.style.display = ''; } };
       };
-    })(step, nameSpan, eb, idx);
+    })(step, nameSpan, eb);
 
-    // Right: time + count + expand arrow
+    // Delete step button
+    const delStepBtn = document.createElement('button');
+    delStepBtn.className = 'step-del-btn'; delStepBtn.textContent = '🗑'; delStepBtn.title = 'Supprimer';
+    (function(st) {
+      delStepBtn.onclick = function(e) {
+        e.stopPropagation();
+        const i = steps.indexOf(st);
+        if (i !== -1) { steps.splice(i, 1); if (saveFn) saveFn(); }
+        el.remove();
+      };
+    })(step);
+
+    // Right: count + expand arrow
     const right = document.createElement('div');
     right.className = 'plan-step-right';
-
-    // Time (editable)
-    const timeBtn = document.createElement('button');
-    timeBtn.className = 'plan-step-time-btn';
-    timeBtn.textContent = '⏱ ' + (step.duration || 25) + ' min';
-    timeBtn.title = 'Modifier la durée estimée';
-    (function(st, tb) {
-      tb.onclick = function(e) {
-        e.stopPropagation();
-        const orig = st.duration || 25;
-        const inp = document.createElement('input');
-        inp.type = 'number'; inp.min = 1; inp.max = 480; inp.value = orig;
-        inp.className = 'inline-input'; inp.style.cssText += ';width:52px;font-family:Syne,sans-serif;font-weight:700;font-size:12px';
-        tb.replaceWith(inp); inp.focus(); inp.select();
-        function doSave() {
-          const v = parseInt(inp.value) || orig;
-          st.duration = v; tb.textContent = '⏱ ' + v + ' min'; inp.replaceWith(tb);
-          if (saveFn) saveFn();
-        }
-        inp.onblur = doSave;
-        inp.onkeydown = e2 => { if (e2.key === 'Enter') { e2.preventDefault(); doSave(); } if (e2.key === 'Escape') inp.replaceWith(tb); };
-      };
-    })(step, timeBtn);
 
     const countSpan = document.createElement('span');
     countSpan.className = 'plan-step-count';
@@ -2310,8 +2308,8 @@ function renderStepsList(steps, container, saveFn, seanceMode) {
     expandArrow.style.cssText = 'color:var(--muted);font-size:11px;margin-left:2px;transition:transform .2s';
     expandArrow.textContent = '▶';
 
-    right.appendChild(timeBtn); right.appendChild(countSpan); right.appendChild(expandArrow);
-    hdr.appendChild(handle); hdr.appendChild(nameSpan); hdr.appendChild(eb); hdr.appendChild(right);
+    right.appendChild(countSpan); right.appendChild(expandArrow);
+    hdr.appendChild(handle); hdr.appendChild(nameSpan); hdr.appendChild(eb); hdr.appendChild(delStepBtn); hdr.appendChild(right);
 
     /* ── Micros panel (collapsible) ── */
     const microsPanel = document.createElement('div');
@@ -2364,33 +2362,34 @@ function renderStepsList(steps, container, saveFn, seanceMode) {
       row.appendChild(chk); row.appendChild(txt);
       microsPanel.appendChild(row);
     });
-    // Add micro input
-    const addMicroRow = document.createElement('div');
-    addMicroRow.style.cssText = 'display:flex;gap:6px;padding:6px 0 2px';
-    const addMicroInp = document.createElement('input');
-    addMicroInp.className = 'plan-step-add-inp'; addMicroInp.placeholder = 'Nouvelle action…';
-    const addMicroOk = document.createElement('button');
-    addMicroOk.className = 'plan-step-add-ok'; addMicroOk.textContent = '+';
-    function doAddMicro() {
-      const t = addMicroInp.value.trim(); if (!t) return;
-      step.micros.push(t); addMicroInp.value = '';
-      if (saveFn) saveFn();
-      // Re-render this step
-      const parent = el.parentElement;
-      const nextEl = el.nextSibling;
-      const newEl = renderStep(step, idx, wrapEl);
-      const newPanel = newEl.querySelector('.plan-micros');
-      if (newPanel) { newPanel.classList.add('open'); newEl.querySelector('[data-expand]') && (newEl.querySelector('[data-expand]').textContent = '▼'); }
-      parent.insertBefore(newEl, nextEl); el.remove();
+    // Add micro input (default mode only — séances have fixed micros)
+    if (!seanceMode) {
+      const addMicroRow = document.createElement('div');
+      addMicroRow.style.cssText = 'display:flex;gap:6px;padding:6px 0 2px';
+      const addMicroInp = document.createElement('input');
+      addMicroInp.className = 'plan-step-add-inp'; addMicroInp.placeholder = 'Nouvelle action…';
+      const addMicroOk = document.createElement('button');
+      addMicroOk.className = 'plan-step-add-ok'; addMicroOk.textContent = '+';
+      function doAddMicro() {
+        const t = addMicroInp.value.trim(); if (!t) return;
+        step.micros.push(t); addMicroInp.value = '';
+        if (saveFn) saveFn();
+        const parent = el.parentElement;
+        const nextEl = el.nextSibling;
+        const newEl = renderStep(step, idx, wrapEl);
+        const newPanel = newEl.querySelector('.plan-micros');
+        if (newPanel) { newPanel.classList.add('open'); }
+        parent.insertBefore(newEl, nextEl); el.remove();
+      }
+      addMicroOk.onclick = doAddMicro;
+      addMicroInp.onkeydown = e => { if (e.key === 'Enter') doAddMicro(); };
+      addMicroRow.appendChild(addMicroInp); addMicroRow.appendChild(addMicroOk);
+      microsPanel.appendChild(addMicroRow);
     }
-    addMicroOk.onclick = doAddMicro;
-    addMicroInp.onkeydown = e => { if (e.key === 'Enter') doAddMicro(); };
-    addMicroRow.appendChild(addMicroInp); addMicroRow.appendChild(addMicroOk);
-    microsPanel.appendChild(addMicroRow);
 
     // Expand/collapse on header click
     hdr.onclick = function(e) {
-      if (e.target.classList.contains('step-drag-handle') || e.target.classList.contains('edit-btn') || e.target.classList.contains('plan-step-time-btn') || e.target.tagName === 'INPUT') return;
+      if (e.target.classList.contains('step-drag-handle') || e.target.classList.contains('edit-btn') || e.target.classList.contains('step-del-btn') || e.target.tagName === 'INPUT') return;
       const open = microsPanel.classList.toggle('open');
       expandArrow.textContent = open ? '▼' : '▶';
     };
@@ -2932,6 +2931,10 @@ function renderCategoryCard(cat, proj, container) {
   const header = document.createElement('div');
   header.className = 'cat-header';
 
+  // ── TOP ROW: circle + name+editBtn + colBtn + delBtn ──
+  const topRow = document.createElement('div');
+  topRow.className = 'cat-header-top';
+
   // Mini circle
   const circle = document.createElement('div');
   circle.className = 'cat-mini-circle';
@@ -2941,7 +2944,7 @@ function renderCategoryCard(cat, proj, container) {
   pctEl.textContent = pct + '%';
   circle.appendChild(pctEl);
 
-  // Name + info + mode chip
+  // Name column (name + info)
   const nameDiv = document.createElement('div');
   nameDiv.style.cssText = 'flex:1;min-width:0';
   const nameRow = document.createElement('div');
@@ -2968,7 +2971,7 @@ function renderCategoryCard(cat, proj, container) {
   })(cat, nameEl, editBtn);
   nameRow.appendChild(nameEl); nameRow.appendChild(editBtn);
 
-  // Info line (sera mise à jour en temps réel)
+  // Info line (live update)
   const info = document.createElement('div');
   info.style.cssText = 'color:var(--muted);font-size:12px';
 
@@ -2979,24 +2982,23 @@ function renderCategoryCard(cat, proj, container) {
       info.textContent = doneCount + '/' + items.length + ' tâches';
     } else if (cat.mode === 'seance') {
       const totalDone = (cat.steps || []).reduce((a, st) => a + (st.done || 0), 0);
-      const totalM = (cat.steps || []).reduce((a, st) => a + st.micros.length, 0);
+      const totalM = (cat.steps || []).reduce((a, st) => a + (st.micros || []).length, 0);
       info.textContent = totalDone + '/' + totalM + ' actions · ' + (cat.steps || []).length + ' séances';
     } else {
       const totalDone = (cat.steps || []).reduce((a, st) => a + (st.done || 0), 0);
-      const totalM = (cat.steps || []).reduce((a, st) => a + st.micros.length, 0);
+      const totalM = (cat.steps || []).reduce((a, st) => a + (st.micros || []).length, 0);
       info.textContent = totalDone + '/' + totalM + ' actions · ' + (cat.steps || []).length + ' étapes';
     }
-    // Also refresh circle
     const newPct = catPct(cat);
     circle.style.background = 'conic-gradient(var(--accent) ' + (newPct * 3.6) + 'deg, var(--soft) 0)';
     pctEl.textContent = newPct + '%';
   }
   refreshCatInfo();
 
-  // saveFn standard (cocher micros) — met à jour le compteur sans déplacer la carte
+  // saveFn standard (cocher micros) — live counter update
   const catSaveFn = () => { saveProjectChanges(); refreshCatInfo(); };
 
-  // saveFn "bubble" (ajout étape, renommage) — remonte la catégorie en tête + re-render
+  // saveFn "bubble" (ajout étape) — bubble to top + full re-render
   const catBubbleFn = () => {
     if (proj.categories) {
       proj.categories = [cat, ...proj.categories.filter(c => c.id !== cat.id)];
@@ -3007,7 +3009,24 @@ function renderCategoryCard(cat, proj, container) {
 
   nameDiv.appendChild(nameRow); nameDiv.appendChild(info);
 
-  // ── Bouton "Changer de mode" — visible dans le header ──
+  // Collapse button (top-right)
+  const colBtn = document.createElement('button');
+  colBtn.className = 'cat-collapse-top';
+  colBtn.title = 'Réduire / Agrandir';
+  colBtn.textContent = '▼';
+  let catOpen = true;
+
+  // Delete button (top-right)
+  const delBtn = document.createElement('button');
+  delBtn.className = 'cat-del'; delBtn.textContent = '🗑'; delBtn.title = 'Supprimer';
+  (function(cid) { delBtn.onclick = () => deleteCategory(proj, cid); })(cat.id);
+
+  topRow.appendChild(circle); topRow.appendChild(nameDiv); topRow.appendChild(colBtn); topRow.appendChild(delBtn);
+
+  // ── ACTIONS ROW: mode chip + start button ──
+  const actionsRow = document.createElement('div');
+  actionsRow.className = 'cat-header-actions';
+
   const modeLabels = { default: '📋', seance: '📅', vierge: '🎯' };
   const modeBtn = document.createElement('button');
   modeBtn.className = 'cat-mode-chip';
@@ -3015,9 +3034,10 @@ function renderCategoryCard(cat, proj, container) {
   modeBtn.innerHTML = (modeLabels[cat.mode] || '⚙') + ' Mode <span style="opacity:.6;font-size:10px">✎</span>';
   (function(c, p) { modeBtn.onclick = function(e) { e.stopPropagation(); promptChangeCatMode(c, p); }; })(cat, proj);
 
-  // Start button
   const startBtn = document.createElement('button');
-  startBtn.className = 'cat-start-btn'; startBtn.textContent = '▶'; startBtn.title = 'Commencer';
+  startBtn.className = 'cat-start-btn';
+  startBtn.textContent = cat.mode === 'seance' ? '▶ Commencer' : '▶ Démarrer';
+  startBtn.title = 'Commencer';
   if (cat.mode === 'vierge') startBtn.style.display = 'none';
   (function(cid) {
     startBtn.onclick = function() {
@@ -3030,20 +3050,9 @@ function renderCategoryCard(cat, proj, container) {
     };
   })(cat.id);
 
-  // Collapse toggle button
-  const colBtn = document.createElement('button');
-  colBtn.className = 'cat-collapse-btn';
-  colBtn.title = 'Réduire / Agrandir';
-  colBtn.textContent = '▼';
-  let catOpen = true;
+  actionsRow.appendChild(modeBtn); actionsRow.appendChild(startBtn);
 
-  // Delete button
-  const delBtn = document.createElement('button');
-  delBtn.className = 'cat-del'; delBtn.textContent = '🗑'; delBtn.title = 'Supprimer';
-  (function(cid) { delBtn.onclick = () => deleteCategory(proj, cid); })(cat.id);
-
-  header.appendChild(circle); header.appendChild(nameDiv);
-  header.appendChild(modeBtn); header.appendChild(startBtn); header.appendChild(colBtn); header.appendChild(delBtn);
+  header.appendChild(topRow); header.appendChild(actionsRow);
   card.appendChild(header);
 
   // Body — collapsible
