@@ -367,9 +367,13 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .cat-collapse-top:hover { color: var(--text); }
 .cat-start-btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 10px; color: #fff; font: 700 12px 'Syne', sans-serif; padding: 6px 12px; cursor: pointer; transition: transform .12s; white-space: nowrap; }
 .cat-start-btn:active { transform: scale(.95); }
-/* Step delete button */
+/* Step delete + complete circle + micro delete */
 .step-del-btn { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 5px; flex-shrink: 0; opacity: .35; transition: opacity .15s, color .15s; line-height: 1; }
 .step-del-btn:hover { opacity: 1; color: #fc5c7d; }
+.step-complete-circle { width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;transition:background .2s,border-color .2s;padding:0;color:#0b1f0b; }
+.step-complete-circle.done { background:var(--green);border-color:var(--green); }
+.micro-del-btn { background:none;border:none;color:var(--muted);font-size:15px;font-weight:700;cursor:pointer;padding:0 4px;opacity:.25;transition:opacity .15s,color .15s;flex-shrink:0;margin-left:auto;line-height:1; }
+.micro-del-btn:hover { opacity:1;color:#fc5c7d; }
 .cat-steps { padding: 0 12px 14px; }
 .cat-add-btn { width: 100%; border: 1.5px dashed var(--border); border-radius: 16px; background: none; color: var(--muted); font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; padding: 14px; cursor: pointer; margin-bottom: 16px; transition: border-color .2s, color .2s; }
 .cat-add-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -1129,13 +1133,14 @@ async function loadFromFirestore(uid) {
       }
       if (merged.length > cloudProjs.length) uploadNow(uid, merged);
 
-      // QuickTodo : fusion ADDITIVE — on ne perd jamais une tâche locale non encore synchronisée
+      // QuickTodo : cloud est autoritaire, on garde seulement les items locaux absents du cloud
       const localQT  = getQTRaw();
       const cloudQT  = d.quicktodo || [];
-      const mergedQT = [...cloudQT];
-      localQT.forEach(lt => { if (!mergedQT.find(ct => ct.id === lt.id)) mergedQT.push(lt); });
+      const cloudIds = new Set(cloudQT.map(function(i) { return i.id; }));
+      const onlyLocal = localQT.filter(function(i) { return !cloudIds.has(i.id); });
+      const mergedQT = [...cloudQT, ...onlyLocal];
       localStorage.setItem('ft_quicktodo', JSON.stringify(mergedQT));
-      if (mergedQT.length > cloudQT.length) scheduleSync(); // ré-uploade la version complète
+      if (onlyLocal.length > 0) scheduleSync(); // upload les items locaux nouveaux
 
     } else if (localProjs.length > 0) {
       // Pas encore de document Firestore ET on a des projets locaux → premier upload
@@ -1266,9 +1271,19 @@ function getQTRaw() {
   try { return JSON.parse(localStorage.getItem('ft_quicktodo') || '[]'); } catch(e) { return []; }
 }
 function getQT() { return getQTRaw(); }
+let _syncQTTimer = null;
 function saveQT(items) {
   localStorage.setItem('ft_quicktodo', JSON.stringify(items));
-  scheduleSync();
+  // Sync QT immediately (500 ms) — separate from the 2 s project sync
+  if (FB_READY && _fbUser) {
+    clearTimeout(_syncQTTimer);
+    _syncQTTimer = setTimeout(function() {
+      _db.collection('users').doc(_fbUser.uid).set(
+        { quicktodo: items, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      ).catch(function(e) { console.warn('QT sync:', e); });
+    }, 500);
+  }
 }
 const QT_UNDO_SECS = 60; // secondes avant suppression définitive
 let _qtTimer = null;
@@ -1840,10 +1855,13 @@ function showNewProjectModeModal() {
   document.getElementById('npm-minus').onclick = () => { if (sc > 1) { sc--; scEl.textContent = sc; } };
   document.getElementById('npm-plus').onclick  = () => { if (sc < 52) { sc++; scEl.textContent = sc; } };
   document.getElementById('npm-back').onclick  = () => { document.getElementById('npm-s2').style.display = 'none'; document.getElementById('npm-s1').style.display = 'block'; };
-  document.getElementById('npm-confirm-seance').onclick = () => { backdrop.remove(); applyNewProjectMode('seance', sc); };
+  document.getElementById('npm-confirm-seance').onclick = () => {
+    backdrop.remove();
+    promptSeanceMicros(function(selectedMicros) { applyNewProjectMode('seance', sc, selectedMicros); });
+  };
 }
 
-function applyNewProjectMode(mode, seanceCount) {
+function applyNewProjectMode(mode, seanceCount, selectedMicros) {
   const proj = pendingProject;
   if (!proj) return;
 
@@ -1857,9 +1875,10 @@ function applyNewProjectMode(mode, seanceCount) {
   } else if (mode === 'seance') {
     const sc = seanceCount || 6;
     const catId = 'cat_' + proj.id;
+    const micros = (selectedMicros && selectedMicros.length) ? selectedMicros : ['Préparer la séance', 'Travailler le contenu', 'Réviser et consolider'];
     const steps = [];
     for (let i = 1; i <= sc; i++)
-      steps.push(s('Séance ' + i, ['Préparer la séance', 'Travailler le contenu', 'Réviser et consolider'], 'moyenne', 30));
+      steps.push(s('Séance ' + i, [...micros], 'moyenne', 30));
     proj.categories = [{ id: catId, name: proj.name, mode: 'seance', seanceCount: sc, steps }];
     proj.steps = [];
 
@@ -2236,30 +2255,45 @@ function deleteFile(proj, fileName) {
 let _stepDragSrc = null;  // {steps, idx}
 
 function renderStepsList(steps, container, saveFn, seanceMode) {
-  // seanceMode=true → liste séquentielle sans groupes de priorité
   container.innerHTML = '';
+  // Shared rerender: clears and rebuilds the whole list
+  const rerenderList = () => renderStepsList(steps, container, saveFn, seanceMode);
 
-  function renderStep(step, idx, wrapEl) {
-    // Ensure every step has at least default micros
-    if (!step.micros || !step.micros.length) {
-      step.micros = ['Commencer', 'Avancer', 'Terminer'];
-    }
-    const done = (step.done || 0) >= step.micros.length && step.micros.length > 0;
+  function renderStep(step, idx) {
+    if (!step.micros || !step.micros.length) step.micros = ['Commencer', 'Avancer', 'Terminer'];
+    const allDone = (step.done || 0) >= step.micros.length && step.micros.length > 0;
     const el = document.createElement('div');
-    el.className = 'plan-step' + (done ? ' done' : '');
+    el.className = 'plan-step' + (allDone ? ' done' : '');
+    el.dataset.stepIdx = String(idx);
 
-    /* ── Header ── */
     const hdr = document.createElement('div');
     hdr.className = 'plan-step-header';
+
+    // ── Séance: circle checkbox ──
+    if (seanceMode) {
+      const circle = document.createElement('button');
+      circle.className = 'step-complete-circle' + (allDone ? ' done' : '');
+      circle.textContent = allDone ? '✓' : '';
+      circle.title = allDone ? 'Décocher tout' : 'Tout cocher';
+      (function(st, circ) {
+        circ.onclick = function(e) {
+          e.stopPropagation();
+          st.done = (st.done || 0) >= st.micros.length ? 0 : st.micros.length;
+          if (saveFn) saveFn();
+          rerenderList();
+        };
+      })(step, circle);
+      hdr.appendChild(circle);
+    }
 
     // Drag handle
     const handle = document.createElement('span');
     handle.className = 'step-drag-handle';
     handle.title = 'Maintenir pour déplacer';
     handle.textContent = '⠿';
-    handle.draggable = false; // dragging managed below
+    handle.draggable = false;
 
-    // Step name + rename
+    // Name + rename
     const nameSpan = document.createElement('span');
     nameSpan.className = 'plan-step-name';
     nameSpan.textContent = step.name;
@@ -2283,7 +2317,7 @@ function renderStepsList(steps, container, saveFn, seanceMode) {
       };
     })(step, nameSpan, eb);
 
-    // Delete step button
+    // Delete step
     const delStepBtn = document.createElement('button');
     delStepBtn.className = 'step-del-btn'; delStepBtn.textContent = '🗑'; delStepBtn.title = 'Supprimer';
     (function(st) {
@@ -2298,71 +2332,80 @@ function renderStepsList(steps, container, saveFn, seanceMode) {
     // Right: count + expand arrow
     const right = document.createElement('div');
     right.className = 'plan-step-right';
-
     const countSpan = document.createElement('span');
     countSpan.className = 'plan-step-count';
-    const doneCount = step.done || 0;
-    countSpan.textContent = doneCount + '/' + step.micros.length;
-
+    countSpan.textContent = (step.done || 0) + '/' + step.micros.length;
     const expandArrow = document.createElement('span');
-    expandArrow.style.cssText = 'color:var(--muted);font-size:11px;margin-left:2px;transition:transform .2s';
+    expandArrow.style.cssText = 'color:var(--muted);font-size:11px;margin-left:2px';
     expandArrow.textContent = '▶';
-
     right.appendChild(countSpan); right.appendChild(expandArrow);
+
     hdr.appendChild(handle); hdr.appendChild(nameSpan); hdr.appendChild(eb); hdr.appendChild(delStepBtn); hdr.appendChild(right);
 
-    /* ── Micros panel (collapsible) ── */
+    /* ── Micros panel ── */
     const microsPanel = document.createElement('div');
     microsPanel.className = 'plan-micros';
+
     step.micros.forEach(function(micro, mi) {
       const row = document.createElement('div');
       row.className = 'plan-micro-row';
-      const chk = document.createElement('button');
       const isChecked = mi < (step.done || 0);
+
+      const chk = document.createElement('button');
       chk.className = 'plan-micro-check' + (isChecked ? ' checked' : '');
       chk.textContent = isChecked ? '✓' : '';
-      (function(st, mIdx, ckBtn, txtEl) {
-        ckBtn.onclick = function(e) {
-          e.stopPropagation();
-          const cur = st.done || 0;
-          // Toggle: if this micro is done, uncheck it (set done to mIdx); if not, check it
-          if (mIdx < cur) {
-            st.done = mIdx; // uncheck from this micro onward
-          } else {
-            st.done = mIdx + 1; // check up to and including this micro
-          }
-          if (saveFn) saveFn();
-          // re-render just the micros panel inline
-          ckBtn.className = 'plan-micro-check' + (mIdx < st.done ? ' checked' : '');
-          ckBtn.textContent = mIdx < st.done ? '✓' : '';
-          txtEl.className = 'plan-micro-text' + (mIdx < st.done ? ' checked' : '');
-          // Update count
-          countSpan.textContent = st.done + '/' + st.micros.length;
-          const allDone = st.done >= st.micros.length && st.micros.length > 0;
-          el.classList.toggle('done', allDone);
-        };
-      })(step, mi, chk, null);
+
       const txt = document.createElement('span');
       txt.className = 'plan-micro-text' + (isChecked ? ' checked' : '');
       txt.textContent = micro;
-      // Fix: wire chk to txt
+
+      // Delete micro button
+      const delMicro = document.createElement('button');
+      delMicro.className = 'micro-del-btn'; delMicro.textContent = '×'; delMicro.title = 'Supprimer';
+
       (function(st, mIdx, ckBtn, txtEl) {
         ckBtn.onclick = function(e) {
           e.stopPropagation();
           const cur = st.done || 0;
           st.done = mIdx < cur ? mIdx : mIdx + 1;
-          if (saveFn) saveFn();
           ckBtn.className = 'plan-micro-check' + (mIdx < st.done ? ' checked' : '');
           ckBtn.textContent = mIdx < st.done ? '✓' : '';
           txtEl.className = 'plan-micro-text' + (mIdx < st.done ? ' checked' : '');
           countSpan.textContent = st.done + '/' + st.micros.length;
-          el.classList.toggle('done', st.done >= st.micros.length && st.micros.length > 0);
+          const isDone = st.done >= st.micros.length && st.micros.length > 0;
+          el.classList.toggle('done', isDone);
+          if (isDone) {
+            // Fade then move to bottom
+            el.style.transition = 'opacity .35s';
+            el.style.opacity = '0.3';
+            setTimeout(function() {
+              const i = steps.indexOf(st);
+              if (i !== -1) { steps.splice(i, 1); steps.push(st); }
+              if (saveFn) saveFn();
+              rerenderList();
+            }, 350);
+          } else {
+            if (saveFn) saveFn();
+          }
+        };
+        delMicro.onclick = function(e) {
+          e.stopPropagation();
+          st.micros.splice(mIdx, 1);
+          if (mIdx < (st.done || 0)) st.done = Math.max(0, (st.done || 0) - 1);
+          if (saveFn) saveFn();
+          const wasOpen = microsPanel.classList.contains('open');
+          const parent = el.parentElement; const next = el.nextSibling;
+          const newEl = renderStep(st, idx);
+          if (wasOpen) { const np = newEl.querySelector('.plan-micros'); if (np) np.classList.add('open'); }
+          parent.insertBefore(newEl, next); el.remove();
         };
       })(step, mi, chk, txt);
-      row.appendChild(chk); row.appendChild(txt);
+
+      row.appendChild(chk); row.appendChild(txt); row.appendChild(delMicro);
       microsPanel.appendChild(row);
     });
-    // Add micro input (default mode only — séances have fixed micros)
+
+    // Add-micro input (default mode only)
     if (!seanceMode) {
       const addMicroRow = document.createElement('div');
       addMicroRow.style.cssText = 'display:flex;gap:6px;padding:6px 0 2px';
@@ -2374,12 +2417,11 @@ function renderStepsList(steps, container, saveFn, seanceMode) {
         const t = addMicroInp.value.trim(); if (!t) return;
         step.micros.push(t); addMicroInp.value = '';
         if (saveFn) saveFn();
-        const parent = el.parentElement;
-        const nextEl = el.nextSibling;
-        const newEl = renderStep(step, idx, wrapEl);
-        const newPanel = newEl.querySelector('.plan-micros');
-        if (newPanel) { newPanel.classList.add('open'); }
-        parent.insertBefore(newEl, nextEl); el.remove();
+        const wasOpen = microsPanel.classList.contains('open');
+        const parent = el.parentElement; const next = el.nextSibling;
+        const newEl = renderStep(step, idx);
+        if (wasOpen) { const np = newEl.querySelector('.plan-micros'); if (np) np.classList.add('open'); }
+        parent.insertBefore(newEl, next); el.remove();
       }
       addMicroOk.onclick = doAddMicro;
       addMicroInp.onkeydown = e => { if (e.key === 'Enter') doAddMicro(); };
@@ -2387,33 +2429,24 @@ function renderStepsList(steps, container, saveFn, seanceMode) {
       microsPanel.appendChild(addMicroRow);
     }
 
-    // Expand/collapse on header click
+    // Expand / collapse on header click
     hdr.onclick = function(e) {
-      if (e.target.classList.contains('step-drag-handle') || e.target.classList.contains('edit-btn') || e.target.classList.contains('step-del-btn') || e.target.tagName === 'INPUT') return;
+      const t = e.target;
+      if (t.classList.contains('step-drag-handle') || t.classList.contains('edit-btn') ||
+          t.classList.contains('step-del-btn') || t.classList.contains('step-complete-circle') ||
+          t.tagName === 'INPUT') return;
       const open = microsPanel.classList.toggle('open');
       expandArrow.textContent = open ? '▼' : '▶';
     };
 
     el.appendChild(hdr); el.appendChild(microsPanel);
-
-    // ── Drag & drop (mouse + long-press touch) ──
-    setupStepDrag(el, handle, steps, idx, saveFn, wrapEl);
-
+    setupStepDrag(el, handle, steps, idx, saveFn, rerenderList);
     return el;
   }
 
-  function buildList(stepsArr, wrapper) {
-    stepsArr.forEach(function(step, i) {
-      const el = renderStep(step, i, wrapper);
-      wrapper.appendChild(el);
-    });
-  }
-
   if (seanceMode) {
-    // Sequential view — no priority grouping
-    buildList(steps, container);
+    steps.forEach(function(step, i) { container.appendChild(renderStep(step, i)); });
   } else {
-    // Grouped by priority
     const cfg = {
       haute:   { dot: '🔴', label: 'Priorité haute',  color: '#fc5c7d' },
       moyenne: { dot: '🟡', label: 'Priorité moyenne', color: '#fcd45c' },
@@ -2423,29 +2456,25 @@ function renderStepsList(steps, container, saveFn, seanceMode) {
     steps.forEach(function(step) { groups[step.priority || 'moyenne'].push(step); });
     ['haute', 'moyenne', 'faible'].forEach(function(prio) {
       if (!groups[prio].length) return;
-      const g = document.createElement('div');
-      g.className = 'prio-group';
-      const hd = document.createElement('div');
-      hd.className = 'prio-header';
-      hd.style.color = cfg[prio].color;
-      hd.textContent = cfg[prio].dot + ' ' + cfg[prio].label;
+      const g = document.createElement('div'); g.className = 'prio-group';
+      const hd = document.createElement('div'); hd.className = 'prio-header';
+      hd.style.color = cfg[prio].color; hd.textContent = cfg[prio].dot + ' ' + cfg[prio].label;
       g.appendChild(hd);
-      // use real indices in steps array
       groups[prio].forEach(function(step) {
-        const idx = steps.indexOf(step);
-        const el = renderStep(step, idx, g);
-        g.appendChild(el);
+        const realIdx = steps.indexOf(step);
+        g.appendChild(renderStep(step, realIdx));
       });
       container.appendChild(g);
     });
   }
 }
 
-function setupStepDrag(el, handle, steps, idx, saveFn, wrapEl) {
+function setupStepDrag(el, handle, steps, idx, saveFn, rerenderFn) {
+  el.dataset.stepIdx = String(idx);
+
   // ── Mouse drag ──
   handle.addEventListener('mousedown', function(e) {
     e.preventDefault();
-    _stepDragSrc = { el: el, idx: idx, steps: steps, saveFn: saveFn, wrapEl: wrapEl };
     el.classList.add('ghost');
     const onMove = function(me) {
       const target = document.elementFromPoint(me.clientX, me.clientY);
@@ -2461,89 +2490,71 @@ function setupStepDrag(el, handle, steps, idx, saveFn, wrapEl) {
       const target = document.elementFromPoint(me.clientX, me.clientY);
       const stepEl = target && target.closest('.plan-step');
       if (stepEl && stepEl !== el) {
-        const parent = stepEl.parentElement;
-        const children = [...parent.querySelectorAll(':scope > .plan-step')];
-        const toIdx = children.indexOf(stepEl);
-        const fromIdx = children.indexOf(el);
-        if (toIdx !== -1 && fromIdx !== -1 && toIdx !== fromIdx) {
+        const fromIdx = parseInt(el.dataset.stepIdx);
+        const toIdx   = parseInt(stepEl.dataset.stepIdx);
+        if (!isNaN(fromIdx) && !isNaN(toIdx) && fromIdx !== toIdx) {
           const [moved] = steps.splice(fromIdx, 1);
           steps.splice(toIdx, 0, moved);
           if (saveFn) saveFn();
-          // Refresh the container
-          const cont = parent; cont.querySelectorAll(':scope > .plan-step').forEach(c => c.remove());
-          steps.forEach((st, i) => { const ne = renderStep_local(steps, i, saveFn, wrapEl); cont.appendChild(ne); });
+          rerenderFn();
         }
       }
-      _stepDragSrc = null;
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   });
 
   // ── Touch drag (long press 400ms) ──
-  let _touchTimer = null, _touchActive = false, _ghostEl = null;
+  let _tt = null, _ta = false, _ghost = null;
   handle.addEventListener('touchstart', function(e) {
-    _touchTimer = setTimeout(function() {
-      _touchActive = true;
-      el.classList.add('ghost');
-      handle.classList.add('dragging');
-      // Create ghost
-      _ghostEl = el.cloneNode(true);
-      _ghostEl.style.cssText = 'position:fixed;z-index:9999;opacity:.75;pointer-events:none;width:' + el.offsetWidth + 'px;border:2px solid var(--accent)';
-      document.body.appendChild(_ghostEl);
+    _tt = setTimeout(function() {
+      _ta = true; el.classList.add('ghost'); handle.classList.add('dragging');
+      _ghost = el.cloneNode(true);
+      _ghost.style.cssText = 'position:fixed;z-index:9999;opacity:.75;pointer-events:none;width:' + el.offsetWidth + 'px;border:2px solid var(--accent)';
+      document.body.appendChild(_ghost);
     }, 400);
   }, { passive: true });
   handle.addEventListener('touchmove', function(e) {
-    if (!_touchActive) return;
-    e.preventDefault();
+    if (!_ta) return; e.preventDefault();
     const t = e.touches[0];
-    if (_ghostEl) { _ghostEl.style.left = (t.clientX - el.offsetWidth/2) + 'px'; _ghostEl.style.top = (t.clientY - 30) + 'px'; }
+    if (_ghost) { _ghost.style.left = (t.clientX - el.offsetWidth/2) + 'px'; _ghost.style.top = (t.clientY - 30) + 'px'; }
     document.querySelectorAll('.plan-step.drag-over').forEach(d => d.classList.remove('drag-over'));
     const over = document.elementFromPoint(t.clientX, t.clientY);
     const stepEl = over && over.closest('.plan-step');
     if (stepEl && stepEl !== el) stepEl.classList.add('drag-over');
   }, { passive: false });
   handle.addEventListener('touchend', function(e) {
-    clearTimeout(_touchTimer);
-    if (_ghostEl) { _ghostEl.remove(); _ghostEl = null; }
-    if (!_touchActive) return;
-    _touchActive = false; el.classList.remove('ghost'); handle.classList.remove('dragging');
+    clearTimeout(_tt);
+    if (_ghost) { _ghost.remove(); _ghost = null; }
+    if (!_ta) return;
+    _ta = false; el.classList.remove('ghost'); handle.classList.remove('dragging');
     document.querySelectorAll('.plan-step.drag-over').forEach(d => d.classList.remove('drag-over'));
     const t = e.changedTouches[0];
     const over = document.elementFromPoint(t.clientX, t.clientY);
     const stepEl = over && over.closest('.plan-step');
     if (stepEl && stepEl !== el) {
-      const parent = stepEl.parentElement;
-      const children = [...parent.querySelectorAll(':scope > .plan-step')];
-      const toIdx = children.indexOf(stepEl);
-      const fromIdx = children.indexOf(el);
-      if (toIdx !== -1 && fromIdx !== -1 && toIdx !== fromIdx) {
+      const fromIdx = parseInt(el.dataset.stepIdx);
+      const toIdx   = parseInt(stepEl.dataset.stepIdx);
+      if (!isNaN(fromIdx) && !isNaN(toIdx) && fromIdx !== toIdx) {
         const [moved] = steps.splice(fromIdx, 1);
         steps.splice(toIdx, 0, moved);
         if (saveFn) saveFn();
-        const cont = parent; cont.querySelectorAll(':scope > .plan-step').forEach(c => c.remove());
-        steps.forEach((st, i) => { const ne = renderStep_local(steps, i, saveFn, wrapEl); cont.appendChild(ne); });
+        rerenderFn();
       }
     }
   }, { passive: true });
   handle.addEventListener('touchcancel', function() {
-    clearTimeout(_touchTimer); _touchActive = false;
-    if (_ghostEl) { _ghostEl.remove(); _ghostEl = null; }
+    clearTimeout(_tt); _ta = false;
+    if (_ghost) { _ghost.remove(); _ghost = null; }
     el.classList.remove('ghost'); handle.classList.remove('dragging');
   }, { passive: true });
-
-  function renderStep_local(st, i, sf, w) {
-    const tmp = document.createElement('div');
-    const r = renderStep(st[i], i, w);
-    return r;
-  }
 }
 
 // ─── CATEGORY HELPERS ───
 // ─── CATEGORY HELPERS ───
 let _cmProj = null, _cmMode = null, _cmName = '';
 
-function addCategory(proj, name, mode, seanceCount) {
+function addCategory(proj, name, mode, seanceCount, selectedMicros) {
   if (!proj.categories) proj.categories = [];
   if (proj.categories.length === 0 && proj.steps && proj.steps.length > 0) {
     proj.categories.push({ id: 'cat_gen', name: 'Général', mode: 'default', steps: proj.steps });
@@ -2552,9 +2563,10 @@ function addCategory(proj, name, mode, seanceCount) {
   const id = 'cat_' + Date.now();
   let cat;
   if (mode === 'seance') {
+    const micros = (selectedMicros && selectedMicros.length) ? selectedMicros : ['Préparer la séance', 'Travailler le contenu', 'Réviser et consolider'];
     const steps = [];
     for (let i = 1; i <= seanceCount; i++)
-      steps.push(s('Séance ' + i, ['Préparer la séance', 'Travailler le contenu', 'Réviser et consolider'], 'moyenne', 30));
+      steps.push(s('Séance ' + i, [...micros], 'moyenne', 30));
     cat = { id, name, mode: 'seance', seanceCount, steps };
   } else if (mode === 'vierge') {
     cat = { id, name, mode: 'vierge', steps: [], priorities: [
@@ -2813,7 +2825,66 @@ function promptAddCategory(proj) {
   document.getElementById('cm-minus').onclick = () => { if (sc > 1) { sc--; valEl.textContent = sc; } };
   document.getElementById('cm-plus').onclick  = () => { if (sc < 52) { sc++; valEl.textContent = sc; } };
   document.getElementById('cm-back2').onclick = () => { document.getElementById('cm-s3').style.display = 'none'; document.getElementById('cm-s2').style.display = 'block'; };
-  document.getElementById('cm-create').onclick = () => { const n = Number(valEl.textContent) || sc; backdrop.remove(); addCategory(_cmProj, _cmName, 'seance', n); };
+  document.getElementById('cm-create').onclick = () => {
+    const n = Number(valEl.textContent) || sc;
+    backdrop.remove();
+    promptSeanceMicros(function(selectedMicros) {
+      addCategory(_cmProj, _cmName, 'seance', n, selectedMicros);
+    });
+  };
+}
+
+// ─── SÉANCE MICROS PICKER ───
+const SEANCE_MICRO_OPTIONS = [
+  { emoji: '📖', label: 'Lire le cours' },
+  { emoji: '🗂', label: 'Commencer à ficher' },
+  { emoji: '📹', label: 'Regarder la vidéo / cours' },
+  { emoji: '✏️', label: 'Faire les exercices' },
+  { emoji: '📝', label: 'Rédiger un résumé' },
+  { emoji: '🧪', label: 'Tester ses connaissances' },
+  { emoji: '🖊', label: 'Annoter le cours' },
+  { emoji: '🧠', label: 'Faire une carte mentale' },
+  { emoji: '🔁', label: 'Réviser les fiches' },
+  { emoji: '💬', label: 'Expliquer à voix haute' }
+];
+function promptSeanceMicros(onConfirm) {
+  const selected = new Set();
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  const sheet = document.createElement('div');
+  sheet.className = 'cat-modal-sheet';
+  sheet.innerHTML =
+    '<div class="cat-modal-handle"></div>' +
+    '<h2 style="margin-bottom:6px">Sous-tâches pour chaque séance</h2>' +
+    '<p style="color:var(--muted);font-size:13px;margin-bottom:18px">Choisis les actions à répéter dans chaque séance. Tu peux en sélectionner plusieurs ou aucune.</p>' +
+    '<div id="smp-opts" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>' +
+    '<button class="btn" id="smp-confirm">Confirmer →</button>' +
+    '<button class="btn-delete-project" id="smp-skip" style="margin-top:8px;border:none;background:none;color:var(--muted);font-size:13px;padding:10px;display:block;width:100%;cursor:pointer">Aucune sous-tâche</button>';
+  bd.appendChild(sheet); document.body.appendChild(bd);
+  const optsEl = document.getElementById('smp-opts');
+  SEANCE_MICRO_OPTIONS.forEach(function(opt) {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;border:1.5px solid var(--border);background:var(--soft);color:var(--text);font-size:14px;text-align:left;cursor:pointer;transition:all .15s;width:100%';
+    btn.dataset.label = opt.label;
+    btn.innerHTML = '<span style="font-size:20px;flex-shrink:0">' + opt.emoji + '</span><span style="flex:1">' + opt.label + '</span><span class="smp-check" style="font-size:16px;opacity:.3">○</span>';
+    btn.onclick = function() {
+      if (selected.has(opt.label)) {
+        selected.delete(opt.label);
+        btn.style.borderColor = 'var(--border)'; btn.style.background = 'var(--soft)';
+        btn.querySelector('.smp-check').textContent = '○'; btn.querySelector('.smp-check').style.opacity = '.3';
+      } else {
+        selected.add(opt.label);
+        btn.style.borderColor = 'var(--accent)'; btn.style.background = 'rgba(124,92,252,.12)';
+        btn.querySelector('.smp-check').textContent = '✓'; btn.querySelector('.smp-check').style.opacity = '1';
+      }
+    };
+    optsEl.appendChild(btn);
+  });
+  document.getElementById('smp-confirm').onclick = function() {
+    bd.remove(); onConfirm(selected.size ? [...selected] : null);
+  };
+  document.getElementById('smp-skip').onclick = function() { bd.remove(); onConfirm(null); };
+  bd.onclick = function(e) { if (e.target === bd) { bd.remove(); onConfirm(null); } };
 }
 
 // ─── VIERGE BOARD ───
@@ -2995,8 +3066,13 @@ function renderCategoryCard(cat, proj, container) {
   }
   refreshCatInfo();
 
-  // saveFn standard (cocher micros) — live counter update
-  const catSaveFn = () => { saveProjectChanges(); refreshCatInfo(); };
+  // saveFn standard — live counter update + bubble card to top without full re-render
+  const catSaveFn = () => {
+    if (proj.categories) proj.categories = [cat, ...proj.categories.filter(c => c.id !== cat.id)];
+    saveProjectChanges(); refreshCatInfo();
+    const parent = card.parentElement;
+    if (parent && parent.firstChild !== card) parent.insertBefore(card, parent.firstChild);
+  };
 
   // saveFn "bubble" (ajout étape) — bubble to top + full re-render
   const catBubbleFn = () => {
@@ -3050,7 +3126,37 @@ function renderCategoryCard(cat, proj, container) {
     };
   })(cat.id);
 
-  actionsRow.appendChild(modeBtn); actionsRow.appendChild(startBtn);
+  // ── Bouton 📎 Docs ──
+  const docInput = document.createElement('input');
+  docInput.type = 'file'; docInput.multiple = true; docInput.style.display = 'none';
+  const docBtn = document.createElement('button');
+  docBtn.className = 'cat-mode-chip';
+  docBtn.style.cssText += ';background:rgba(92,252,160,.08);border-color:rgba(92,252,160,.25);color:var(--green)';
+  docBtn.innerHTML = '📎 <span style="font-size:10px;opacity:.7">Docs</span>';
+  docBtn.title = 'Ajouter des documents à cette catégorie';
+  docBtn.onclick = function(e) { e.stopPropagation(); docInput.click(); };
+  (function(catId) {
+    docInput.onchange = function() {
+      if (!this.files.length) return;
+      const files = [...this.files];
+      this.value = '';
+      if (!proj.fileCategories) proj.fileCategories = {};
+      const existing = proj.files || [];
+      files.forEach(function(file) {
+        const name = file.name;
+        if (!existing.includes(name)) existing.push(name);
+        proj.fileCategories[name] = catId;
+        file.arrayBuffer().then(function(buf) {
+          FileStore.put(proj.id + ':' + name, { buf: buf, type: file.type || 'application/octet-stream' }).catch(function(){});
+        }).catch(function(){});
+      });
+      proj.files = existing;
+      catBubbleFn();
+    };
+  })(cat.id);
+  card.appendChild(docInput);
+
+  actionsRow.appendChild(modeBtn); actionsRow.appendChild(docBtn); actionsRow.appendChild(startBtn);
 
   header.appendChild(topRow); header.appendChild(actionsRow);
   card.appendChild(header);
@@ -3246,8 +3352,7 @@ function renderPlanPreview(project) {
     addBtn.textContent = '+ Ajouter une matière / catégorie';
     addBtn.onclick = () => promptAddCategory(project);
     planEl.appendChild(addBtn);
-    const total = project.categories.flatMap(c => c.steps).reduce((a, st) => a + (st.duration || 25), 0);
-    document.getElementById('pp-total').innerHTML = 'Durée estimée : <strong>' + total + ' min</strong>';
+    document.getElementById('pp-total').style.display = 'none';
     document.getElementById('btn-start-project').textContent = 'Commencer →';
   } else {
     renderStepsList(project.steps || [], planEl, saveProjectChanges);
@@ -3256,8 +3361,7 @@ function renderPlanPreview(project) {
     addBtn.textContent = '+ Organiser par matières / catégories';
     addBtn.onclick = () => promptAddCategory(project);
     planEl.appendChild(addBtn);
-    const total = (project.steps || []).reduce((a, st) => a + (st.duration || 25), 0);
-    document.getElementById('pp-total').innerHTML = 'Durée estimée : <strong>' + total + ' min</strong>';
+    document.getElementById('pp-total').style.display = 'none';
     document.getElementById('btn-start-project').textContent = 'Commencer →';
   }
   document.getElementById('btn-delete-project').style.display = pendingProject ? 'none' : 'block';
