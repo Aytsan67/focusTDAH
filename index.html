@@ -961,8 +961,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div class="step-dots" id="s-dots"></div>
   </div>
   <div class="task-name" id="s-task-name"></div>
-  <div class="micro-box">
-    <span class="micro-arrow">→</span>
+  <div class="micro-box" id="micro-box">
     <span class="micro-text" id="s-micro"></span>
   </div>
   <div class="timer-wrap">
@@ -3569,12 +3568,16 @@ function renderSession() {
   if (!step) { finishProject(); return; }
 
   const idx = getCurrentStepIdx(p);
-  const micro = step.micros.length ? step.micros[step.done || 0] : step.name;
-
   const activeSteps = getActiveSteps(p);
   document.getElementById('s-step-label').textContent = 'Étape ' + (idx + 1) + ' / ' + activeSteps.length;
   document.getElementById('s-task-name').textContent = step.name;
-  document.getElementById('s-micro').textContent = micro;
+  const microBox = document.getElementById('micro-box');
+  if (step.micros.length) {
+    microBox.style.display = '';
+    document.getElementById('s-micro').textContent = step.micros[step.done || 0];
+  } else {
+    microBox.style.display = 'none';
+  }
   document.getElementById('s-mode-label').textContent = MODES[currentMode].label;
 
   const dotsEl = document.getElementById('s-dots');
