@@ -565,6 +565,18 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .settings-add-inp:focus { border-color: var(--accent); }
 .settings-add-btn { border: none; border-radius: 12px; background: var(--accent); color: #fff; font: 700 16px 'Syne', sans-serif; padding: 12px 18px; cursor: pointer; }
 .settings-primary-badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(124,92,252,.15); color: var(--accent); font-weight: 700; }
+.ritalin-settings-card {
+  background: rgba(124,92,252,.07); border: 1.5px solid rgba(124,92,252,.22);
+  border-radius: 18px; padding: 16px 18px; margin-bottom: 20px;
+}
+.ritalin-settings-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+.ritalin-answer-row { display: flex; gap: 8px; margin-top: 12px; }
+.rs-answer-btn { flex: 1; border-radius: 12px; font: 700 13px 'Syne', sans-serif; padding: 11px; cursor: pointer; transition: all .15s; }
+.rs-answer-btn.oui { border: 1.5px solid rgba(92,252,160,.35); background: rgba(92,252,160,.08); color: var(--green); }
+.rs-answer-btn.oui.active { background: rgba(92,252,160,.22); border-color: var(--green); }
+.rs-answer-btn.non { border: 1.5px solid var(--border); background: var(--soft); color: var(--muted); }
+.rs-answer-btn.non.active { border-color: rgba(252,92,125,.5); background: rgba(252,92,125,.1); color: rgba(252,92,125,.85); }
+.ritalin-settings-note { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 10px; }
 
 /* ── BLOCKED: SUPPL FLOW ── */
 .suppl-q { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #fcba5c; margin-bottom: 14px; }
@@ -1323,11 +1335,16 @@ function goToApp(user) {
 }
 
 function checkRitalinReminder() {
-  const today = new Date().toDateString();
-  if (localStorage.getItem('focustdah_ritalin_date') === today) return;
-  localStorage.setItem('focustdah_ritalin_date', today);
+  if (!getSettings().ritalinEnabled) return;
+  if (getRitalinAnswer() !== null) return; // déjà répondu aujourd'hui
+  showRitalinModal();
+}
 
+function showRitalinModal() {
+  const existing = document.getElementById('ritalin-modal-el');
+  if (existing) existing.remove();
   const modal = document.createElement('div');
+  modal.id = 'ritalin-modal-el';
   modal.className = 'ritalin-modal';
   modal.innerHTML = `
     <div class="ritalin-sheet">
@@ -1340,8 +1357,8 @@ function checkRitalinReminder() {
       </div>
     </div>`;
   document.body.appendChild(modal);
-  modal.querySelector('#ritalin-yes').onclick = () => modal.remove();
-  modal.querySelector('#ritalin-no').onclick = () => modal.remove();
+  modal.querySelector('#ritalin-yes').onclick = () => { setRitalinAnswer('oui'); modal.remove(); };
+  modal.querySelector('#ritalin-no').onclick  = () => { setRitalinAnswer('non'); modal.remove(); };
 }
 
 function initAuth() {
@@ -1431,25 +1448,38 @@ const DEFAULT_MICRO_PRESETS = [
 function getSettings() {
   try {
     const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
-    // Merge with defaults so new keys are always present
     const modes = (raw.modes || DEFAULT_MODES).map(m => {
       const def = DEFAULT_MODES.find(d => d.id === m.id);
       return def ? Object.assign({}, def, m) : m;
     });
     return {
-      drinks:       raw.drinks       || DEFAULT_DRINKS,
-      supplements:  raw.supplements  || DEFAULT_SUPPLEMENTS,
-      modes:        modes.length ? modes : DEFAULT_MODES,
-      microPresets: raw.microPresets || DEFAULT_MICRO_PRESETS,
+      drinks:           raw.drinks           || DEFAULT_DRINKS,
+      supplements:      raw.supplements      || DEFAULT_SUPPLEMENTS,
+      modes:            modes.length ? modes : DEFAULT_MODES,
+      microPresets:     raw.microPresets     || DEFAULT_MICRO_PRESETS,
+      ritalinEnabled:   raw.ritalinEnabled   !== undefined ? raw.ritalinEnabled : true,
     };
   } catch(e) {
-    return { drinks: DEFAULT_DRINKS, supplements: DEFAULT_SUPPLEMENTS, modes: DEFAULT_MODES, microPresets: DEFAULT_MICRO_PRESETS };
+    return { drinks: DEFAULT_DRINKS, supplements: DEFAULT_SUPPLEMENTS, modes: DEFAULT_MODES, microPresets: DEFAULT_MICRO_PRESETS, ritalinEnabled: true };
   }
 }
 function saveSettings(s) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
 }
 function getSeanceMicroOptions() { return getSettings().microPresets; }
+
+// Ritaline daily answer helpers
+function getRitalinAnswer() {
+  const today = new Date().toDateString();
+  if (localStorage.getItem('focustdah_ritalin_date') !== today) return null;
+  return localStorage.getItem('focustdah_ritalin_answer') || null; // 'oui' | 'non'
+}
+function setRitalinAnswer(answer) {
+  const today = new Date().toDateString();
+  localStorage.setItem('focustdah_ritalin_date', today);
+  localStorage.setItem('focustdah_ritalin_answer', answer);
+}
+function hasTakenRitalin() { return getRitalinAnswer() === 'oui'; }
 
 // ─── STORAGE ───
 const STORE = 'tache_v3';
@@ -3735,6 +3765,7 @@ function openSettings() {
   sheet.innerHTML = `
     <div class="cat-modal-handle"></div>
     <h2 style="margin-bottom:16px">Paramètres ⚙️</h2>
+    <div id="st-ritalin-section"></div>
     <div class="settings-tabs" id="st-tabs">
       <button class="settings-tab active" data-tab="micros">🔬 Micros</button>
       <button class="settings-tab" data-tab="modes">⏱ Modes</button>
@@ -3745,6 +3776,8 @@ function openSettings() {
   bd.appendChild(sheet);
   document.body.appendChild(bd);
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+
+  renderRitalinSettingsCard(document.getElementById('st-ritalin-section'));
 
   function switchTab(tab) {
     bd.querySelectorAll('.settings-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
@@ -3757,6 +3790,58 @@ function openSettings() {
   }
   bd.querySelectorAll('.settings-tab').forEach(t => { t.onclick = () => switchTab(t.dataset.tab); });
   switchTab('micros');
+}
+
+function renderRitalinSettingsCard(container) {
+  const s = getSettings();
+  const answer = getRitalinAnswer(); // 'oui' | 'non' | null
+  const today = new Date().toDateString();
+  const hasAnsweredToday = answer !== null;
+
+  container.innerHTML = `
+    <div class="ritalin-settings-card">
+      <div class="ritalin-settings-title">
+        💊 Ritaline
+        <label class="settings-toggle">
+          <input type="checkbox" id="rs-toggle" ${s.ritalinEnabled ? 'checked' : ''}>
+          <span class="settings-toggle-track"></span>
+        </label>
+      </div>
+      <div id="rs-body" style="${s.ritalinEnabled ? '' : 'opacity:.4;pointer-events:none'}">
+        <div style="color:var(--muted);font-size:13px;margin-bottom:10px">
+          ${hasAnsweredToday
+            ? `Ta réponse d'aujourd'hui :`
+            : `Tu n'as pas encore répondu aujourd'hui.`}
+        </div>
+        <div class="ritalin-answer-row">
+          <button class="rs-answer-btn oui ${answer === 'oui' ? 'active' : ''}" id="rs-oui">✓ Oui</button>
+          <button class="rs-answer-btn non ${answer === 'non' ? 'active' : ''}" id="rs-non">Non</button>
+        </div>
+        ${!hasAnsweredToday ? `<button id="rs-ask-now" style="margin-top:10px;background:none;border:none;color:var(--accent);font:600 13px 'DM Sans',sans-serif;cursor:pointer;padding:0">Poser la question maintenant →</button>` : ''}
+        <p class="ritalin-settings-note">La question s'affiche une fois par jour au démarrage.</p>
+      </div>
+    </div>`;
+
+  // Toggle enable/disable
+  container.querySelector('#rs-toggle').onchange = e => {
+    const ns = getSettings(); ns.ritalinEnabled = e.target.checked; saveSettings(ns);
+    container.querySelector('#rs-body').style.cssText = e.target.checked ? '' : 'opacity:.4;pointer-events:none';
+  };
+
+  // Changer la réponse
+  function updateAnswer(val) {
+    setRitalinAnswer(val);
+    container.querySelectorAll('.rs-answer-btn').forEach(b => b.classList.remove('active'));
+    container.querySelector(`#rs-${val === 'oui' ? 'oui' : 'non'}`).classList.add('active');
+    const askBtn = container.querySelector('#rs-ask-now');
+    if (askBtn) askBtn.remove();
+    container.querySelector('[style*="réponse"]') && (container.querySelector('[style*="réponse"]').textContent = "Ta réponse d'aujourd'hui :");
+  }
+  container.querySelector('#rs-oui').onclick = () => updateAnswer('oui');
+  container.querySelector('#rs-non').onclick = () => updateAnswer('non');
+
+  const askNow = container.querySelector('#rs-ask-now');
+  if (askNow) askNow.onclick = () => { document.getElementById('settings-modal-bd').remove(); showRitalinModal(); };
 }
 
 function renderSettingsMicros(container, s) {
