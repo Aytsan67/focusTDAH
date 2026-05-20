@@ -1218,6 +1218,7 @@ function initLanding() {
 let currentProject = null;
 let currentMode = '2min';
 let pendingProject = null;
+let isNewProjectFlow = false; // vrai pendant la création d'un nouveau projet
 
 // ─── FILE OPTIONS STATE ───
 let foMode = null, foScope = null, foApplyCategory = null;
@@ -1324,6 +1325,7 @@ cName.oninput = cGoal.oninput = () => { btnCreate.disabled = cName.value.trim().
 
 btnCreate.onclick = () => {
   pendingProject = buildProject(cName.value.trim(), cGoal.value.trim(), []);
+  isNewProjectFlow = true;
   cName.value = ''; cGoal.value = '';
   btnCreate.disabled = true;
   document.getElementById('files-area').style.display = 'none';
@@ -1626,7 +1628,12 @@ async function applyFileOptions() {
 
 // ─── PLAN PREVIEW ───
 document.getElementById('back-plan-preview').onclick = () => {
-  if (pendingProject) { show('create-files'); } else { renderHome(); show('home'); }
+  if (isNewProjectFlow) {
+    // Encore dans le flow de création → retour aux fichiers
+    show('create-files');
+  } else {
+    renderHome(); show('home');
+  }
 };
 
 // ─── INLINE RENAMING ───
@@ -1687,6 +1694,7 @@ document.getElementById('btn-start-project').onclick = () => {
     currentProject = pendingProject;
     pendingProject = null;
   }
+  isNewProjectFlow = false;
   const proj = currentProject;
   if (proj && proj.categories && proj.categories.length > 0) {
     const firstIncomplete = proj.categories.find(c => c.steps.some(st => (st.done || 0) < st.micros.length));
@@ -1974,6 +1982,18 @@ function renderFilesSection(proj, container) {
 
 // ─── PLAN PREVIEW RENDER ───
 function renderPlanPreview(project) {
+  // ── Sauvegarde immédiate dès que le plan est prêt ──
+  if (pendingProject && pendingProject.id === project.id) {
+    const list = getProjects();
+    if (!list.find(p => p.id === pendingProject.id)) {
+      list.unshift(pendingProject);
+      saveProjects(list);
+    }
+    setActiveId(pendingProject.id);
+    currentProject = pendingProject;
+    pendingProject = null;
+  }
+
   const pct = globalPct(project);
   document.getElementById('pp-circle').style.background =
     'conic-gradient(var(--accent) ' + (pct * 3.6) + 'deg, var(--soft) 0)';
