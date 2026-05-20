@@ -873,14 +873,42 @@ function scheduleSync() {
 
 async function loadFromFirestore(uid) {
   try {
-    const snap = await _db.collection('users').doc(uid).get();
+    const snap       = await _db.collection('users').doc(uid).get();
+    const localProjs = getProjectsRaw();
+
     if (snap.exists) {
       const d = snap.data();
-      if (d.projects)  localStorage.setItem('tache_v3',       JSON.stringify(d.projects));
-      if (d.activeId)  localStorage.setItem('tache_active',   d.activeId);
-      if (d.quicktodo) localStorage.setItem('ft_quicktodo',   JSON.stringify(d.quicktodo));
+      const cloudProjs = d.projects || [];
+
+      // Fusion : garde tous les projets des deux sources (cloud prioritaire pour les doublons)
+      const merged = [...cloudProjs];
+      localProjs.forEach(lp => {
+        if (!merged.find(cp => cp.id === lp.id)) merged.push(lp);
+      });
+
+      localStorage.setItem('tache_v3', JSON.stringify(merged));
+      if (d.activeId)  localStorage.setItem('tache_active',  d.activeId);
+      if (d.quicktodo) localStorage.setItem('ft_quicktodo',  JSON.stringify(d.quicktodo));
+
+      // Si on a ajouté des projets locaux qui n'étaient pas dans le cloud → upload immédiat
+      if (merged.length > cloudProjs.length) {
+        uploadNow(uid, merged);
+      }
+    } else {
+      // Aucune donnée cloud → upload immédiat de tout ce qui est en local
+      uploadNow(uid, localProjs);
     }
   } catch(e) { console.warn('Firestore load:', e); }
+}
+
+function uploadNow(uid, projects) {
+  if (!_db) return;
+  _db.collection('users').doc(uid).set({
+    projects:  projects,
+    activeId:  localStorage.getItem('tache_active') || null,
+    quicktodo: getQTRaw(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(e => console.warn('Firestore upload:', e));
 }
 
 function renderUserPill(user) {
