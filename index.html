@@ -256,6 +256,9 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
 .block-timer { background: var(--soft); border: 1.5px solid var(--border) !important; color: var(--text); }
 .block-timer .b-sub { color: var(--muted); }
+.block-blocked { background: rgba(252,92,125,.08); border: 1.5px solid rgba(252,92,125,.28) !important; color: var(--text); }
+.block-blocked .b-title { color: #fc5c7d; }
+.block-blocked .b-sub { color: var(--muted); }
 
 .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0 24px; }
 .preset-btn {
@@ -630,6 +633,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <h1>Tu veux faire quoi <em>maintenant</em> ?</h1>
     <p class="sub">Je m'occupe du reste.</p>
   </div>
+  <button class="block-btn block-blocked" id="btn-blocked-home">
+    <span class="b-title">🆘 Je suis bloqué</span>
+    <span class="b-sub">Énergie, stratégies et méthodes pour te relancer</span>
+  </button>
   <button class="block-btn block-main" id="btn-new">
     <span class="b-title">Nouveau projet ✦</span>
     <span class="b-sub">Transforme une idée floue en plan prêt à démarrer</span>
@@ -1304,6 +1311,7 @@ function renderHome() {
 
 document.getElementById('btn-new').onclick = () => show('create');
 document.getElementById('back-home').onclick = () => show('landing');
+document.getElementById('btn-blocked-home').onclick = () => showBlockedEnergy('home');
 document.getElementById('back-create').onclick = () => { renderHome(); show('home'); };
 document.getElementById('back-mode').onclick = () => { renderHome(); show('home'); };
 
