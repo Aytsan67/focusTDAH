@@ -1001,6 +1001,7 @@ async function applyFileOptions() {
     var targetCat = (proj.categories || []).find(function(c) { return c.id === foApplyCategory; });
     if (targetCat && newSteps.length) {
       targetCat.steps = mergeProgress(targetCat.steps, newSteps);
+      proj.categories = [targetCat].concat(proj.categories.filter(function(c) { return c.id !== foApplyCategory; }));
     }
   }
   if (!pendingProject && currentProject) {
@@ -1534,6 +1535,10 @@ function advanceMicro() {
   const step = getCurrentStep(p);
   if (!step) return;
   step.done = Math.min((step.done || 0) + 1, step.micros.length);
+  if (p.categories && p.categories.length > 0 && currentCategoryId) {
+    const activeCat = p.categories.find(c => c.id === currentCategoryId);
+    if (activeCat) p.categories = [activeCat].concat(p.categories.filter(c => c.id !== currentCategoryId));
+  }
   saveProjects(projects);
   currentProject = p;
   clearInterval(tInterval); tRunning = false;
