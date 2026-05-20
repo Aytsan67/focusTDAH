@@ -896,32 +896,38 @@ async function loadFromFirestore(uid) {
     const localProjs = getProjectsRaw();
 
     if (snap.exists) {
-      const d = snap.data();
+      const d          = snap.data();
       const cloudProjs = d.projects || [];
 
-      // Fusion : garde tous les projets des deux sources (cloud prioritaire pour les doublons)
+      // Fusion ADDITIVE uniquement : on ne retire jamais de projets
       const merged = [...cloudProjs];
       localProjs.forEach(lp => {
         if (!merged.find(cp => cp.id === lp.id)) merged.push(lp);
       });
 
-      localStorage.setItem('tache_v3', JSON.stringify(merged));
-      if (d.activeId)  localStorage.setItem('tache_active',  d.activeId);
-      if (d.quicktodo) localStorage.setItem('ft_quicktodo',  JSON.stringify(d.quicktodo));
+      // On met à jour le localStorage seulement si on gagne des projets (jamais de perte)
+      if (merged.length >= localProjs.length) {
+        localStorage.setItem('tache_v3', JSON.stringify(merged));
+        if (d.activeId)  localStorage.setItem('tache_active',  d.activeId);
+        if (d.quicktodo) localStorage.setItem('ft_quicktodo',  JSON.stringify(d.quicktodo));
+      }
 
-      // Si on a ajouté des projets locaux qui n'étaient pas dans le cloud → upload immédiat
+      // Upload vers Firestore seulement si on a des projets à ajouter
       if (merged.length > cloudProjs.length) {
         uploadNow(uid, merged);
       }
-    } else {
-      // Aucune donnée cloud → upload immédiat de tout ce qui est en local
+
+    } else if (localProjs.length > 0) {
+      // Pas encore de document Firestore ET on a des projets locaux → premier upload
       uploadNow(uid, localProjs);
     }
+    // Si les deux sont vides → on ne fait rien (jamais d'upload de tableau vide)
   } catch(e) { console.warn('Firestore load:', e); }
 }
 
 function uploadNow(uid, projects) {
-  if (!_db) return;
+  // Garde-fou : on ne remplace jamais le cloud par un tableau vide
+  if (!_db || !projects || projects.length === 0) return;
   _db.collection('users').doc(uid).set({
     projects:  projects,
     activeId:  localStorage.getItem('tache_active') || null,
