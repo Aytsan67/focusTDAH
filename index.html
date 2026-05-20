@@ -578,6 +578,57 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .rs-answer-btn.non.active { border-color: rgba(252,92,125,.5); background: rgba(252,92,125,.1); color: rgba(252,92,125,.85); }
 .ritalin-settings-note { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 10px; }
 
+/* ── REBOUND BANNER (landing) ── */
+.rebound-banner {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; border-radius: 16px;
+  border: 1.5px solid rgba(252,186,92,.32);
+  background: rgba(252,186,92,.07);
+  margin-bottom: 16px; animation: up .28s ease;
+}
+.rebound-banner.active-rebound { border-color: rgba(252,92,125,.38); background: rgba(252,92,125,.07); }
+.rebound-banner-icon { font-size: 22px; flex: 0 0 auto; }
+.rebound-banner-body { flex: 1; min-width: 0; }
+.rebound-banner-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #fcba5c; margin-bottom: 3px; }
+.rebound-banner-title.is-rebound { color: #fc5c7d; }
+.rebound-banner-sub { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.rebound-banner-close { background: none; border: none; color: var(--muted); font-size: 18px; padding: 0 2px; cursor: pointer; flex: 0 0 auto; line-height: 1; }
+
+/* ── PHASE STRIP (mode-select) ── */
+.phase-strip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: 14px;
+  background: var(--soft); border: 1px solid var(--border);
+  margin-bottom: 16px; font-size: 13px; color: var(--muted);
+}
+.phase-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px; }
+.phase-dot.montee  { background: #fcba5c; }
+.phase-dot.pic     { background: var(--green); box-shadow: 0 0 7px rgba(92,252,160,.6); }
+.phase-dot.descente { background: #fc9f5c; }
+.phase-dot.rebound { background: #fc5c7d; box-shadow: 0 0 7px rgba(252,92,125,.5); animation: pulseDot 1.4s infinite; }
+@keyframes pulseDot { 0%,100%{opacity:1}50%{opacity:.3} }
+.mode-rec-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:10px; font-weight:700; margin-top:6px; }
+.mode-rec-badge.green { background:rgba(92,252,160,.14); color:var(--green); }
+.mode-rec-badge.orange { background:rgba(252,186,92,.14); color:#fcba5c; }
+
+/* ── REBOUND BLOCKED CARD ── */
+.rebound-blocked-card {
+  background: rgba(252,92,125,.07); border: 1.5px solid rgba(252,92,125,.3);
+  border-radius: 18px; padding: 16px 18px; margin-bottom: 20px;
+}
+
+/* ── RITALIN TIME STEP (modal) ── */
+.rm-time-input {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 14px;
+  background: var(--soft); color: var(--text);
+  font: 700 26px 'Syne', sans-serif; padding: 16px;
+  text-align: center; outline: none; margin-bottom: 14px;
+}
+.rm-time-input:focus { border-color: var(--accent); }
+.ritalin-type-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.ritalin-type-btn { flex:1; border:1.5px solid var(--border); border-radius:12px; background:var(--soft); color:var(--muted); font:600 13px 'DM Sans',sans-serif; padding:12px; cursor:pointer; transition:all .15s; text-align:center; }
+.ritalin-type-btn.active { border-color:var(--accent); background:rgba(124,92,252,.12); color:var(--accent); }
+
 /* ── BLOCKED: SUPPL FLOW ── */
 .suppl-q { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #fcba5c; margin-bottom: 14px; }
 .suppl-yn { display: flex; gap: 10px; margin-bottom: 4px; }
@@ -851,6 +902,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <span class="work-btn-sub">Mes projets, mon plan, mes timers</span>
   </button>
 
+  <div id="rebound-banner-slot"></div>
+
   <div class="quicktodo">
     <div class="qt-header">
       <span class="qt-title">📋 Ma liste rapide</span>
@@ -1018,6 +1071,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <div id="ms-name" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;line-height:1.2;margin-bottom:6px"></div>
   <p class="sub" id="ms-goal"></p>
   <h2 style="margin-bottom:16px">Comment tu veux travailler ?</h2>
+  <div id="ms-phase-strip"></div>
   <div class="mode-cards">
     <button class="mode-card" data-mode="2min">
       <span class="mode-emoji">⚡</span>
@@ -1100,6 +1154,9 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- BLOCKED: ÉNERGIE -->
 <section class="screen" id="blocked-energy">
   <button class="back" id="back-blocked-energy">← Retour</button>
+
+  <!-- Rebound Ritaline détecté -->
+  <div id="rebound-blocked-card" class="rebound-blocked-card" style="display:none"></div>
 
   <!-- Étape 1 : compléments -->
   <div id="suppl-card" class="suppl-card">
@@ -1332,6 +1389,10 @@ function goToApp(user) {
   initLanding();
   renderHome();
   checkRitalinReminder();
+  // Si déjà répondu "oui" avec une heure enregistrée, lancer le watch
+  if (hasTakenRitalin() && localStorage.getItem('focustdah_ritalin_time')) {
+    startReboundWatch();
+  }
 }
 
 function checkRitalinReminder() {
@@ -1343,22 +1404,66 @@ function checkRitalinReminder() {
 function showRitalinModal() {
   const existing = document.getElementById('ritalin-modal-el');
   if (existing) existing.remove();
+  const now = new Date();
+  const defaultTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
   const modal = document.createElement('div');
   modal.id = 'ritalin-modal-el';
   modal.className = 'ritalin-modal';
   modal.innerHTML = `
     <div class="ritalin-sheet">
-      <span class="ritalin-emoji">💊</span>
-      <div class="ritalin-title">As-tu pris ta Ritaline ?</div>
-      <p class="ritalin-sub">Vérifie avant de commencer ta journée — ça fait toute la différence ✦</p>
-      <div class="ritalin-btns">
-        <button class="ritalin-yes" id="ritalin-yes">✓ Oui, c'est fait !</button>
-        <button class="ritalin-no" id="ritalin-no">Pas encore / je n'en prends pas</button>
+      <div id="rm-s1">
+        <span class="ritalin-emoji">💊</span>
+        <div class="ritalin-title">As-tu pris ta Ritaline ?</div>
+        <p class="ritalin-sub">Vérifie avant de commencer ta journée — ça fait toute la différence ✦</p>
+        <div class="ritalin-btns">
+          <button class="ritalin-yes" id="ritalin-yes">✓ Oui, c'est fait !</button>
+          <button class="ritalin-no" id="ritalin-no">Pas encore / je n'en prends pas</button>
+        </div>
+      </div>
+      <div id="rm-s2" style="display:none">
+        <span class="ritalin-emoji">⏰</span>
+        <div class="ritalin-title">À quelle heure ?</div>
+        <p class="ritalin-sub">Je t'alerterai avant le rebound et suggérerai les bons modes de travail.</p>
+        <input type="time" id="rm-time" class="rm-time-input" value="${defaultTime}">
+        <div style="color:var(--muted);font-size:13px;margin-bottom:8px">Type de Ritaline :</div>
+        <div class="ritalin-type-row">
+          <button class="ritalin-type-btn active" id="rt-ir">⚡ IR · 4 heures</button>
+          <button class="ritalin-type-btn" id="rt-lp">🌊 LP · 8-12 heures</button>
+        </div>
+        <div class="ritalin-btns">
+          <button class="ritalin-yes" id="rm-confirm">C'est noté ✓</button>
+          <button class="ritalin-no" id="rm-skip">Passer cette étape</button>
+        </div>
       </div>
     </div>`;
   document.body.appendChild(modal);
-  modal.querySelector('#ritalin-yes').onclick = () => { setRitalinAnswer('oui'); modal.remove(); };
-  modal.querySelector('#ritalin-no').onclick  = () => { setRitalinAnswer('non'); modal.remove(); };
+  let selType = 'IR';
+  modal.querySelector('#ritalin-yes').onclick = () => {
+    setRitalinAnswer('oui');
+    modal.querySelector('#rm-s1').style.display = 'none';
+    modal.querySelector('#rm-s2').style.display = 'block';
+  };
+  modal.querySelector('#ritalin-no').onclick = () => { setRitalinAnswer('non'); modal.remove(); };
+  modal.querySelector('#rt-ir').onclick = () => {
+    selType = 'IR';
+    modal.querySelector('#rt-ir').classList.add('active');
+    modal.querySelector('#rt-lp').classList.remove('active');
+  };
+  modal.querySelector('#rt-lp').onclick = () => {
+    selType = 'LP';
+    modal.querySelector('#rt-lp').classList.add('active');
+    modal.querySelector('#rt-ir').classList.remove('active');
+  };
+  modal.querySelector('#rm-confirm').onclick = () => {
+    const t = modal.querySelector('#rm-time').value;
+    if (t) {
+      localStorage.setItem('focustdah_ritalin_time', t);
+      localStorage.setItem('focustdah_ritalin_type', selType);
+    }
+    modal.remove();
+    startReboundWatch();
+  };
+  modal.querySelector('#rm-skip').onclick = () => modal.remove();
 }
 
 function initAuth() {
@@ -1480,6 +1585,97 @@ function setRitalinAnswer(answer) {
   localStorage.setItem('focustdah_ritalin_answer', answer);
 }
 function hasTakenRitalin() { return getRitalinAnswer() === 'oui'; }
+
+// ─── RITALIN PHASE SYSTEM ───
+const RITALIN_PROFILES = {
+  IR: { onset: 20, peakEnd: 150, reboundStart: 195, end: 270 },  // ~4.5h
+  LP: { onset: 30, peakEnd: 480, reboundStart: 570, end: 660 },  // ~11h
+};
+function _takenDate() {
+  const timeStr = localStorage.getItem('focustdah_ritalin_time');
+  if (!timeStr) return null;
+  const [h, m] = timeStr.split(':').map(Number);
+  const d = new Date(); d.setHours(h, m, 0, 0);
+  if (d > new Date()) d.setDate(d.getDate() - 1);
+  return d;
+}
+function getRitalinPhase() {
+  if (!hasTakenRitalin()) return null;
+  const taken = _takenDate();
+  if (!taken) return 'unknown';
+  const type = localStorage.getItem('focustdah_ritalin_type') || 'IR';
+  const p = RITALIN_PROFILES[type];
+  const min = (Date.now() - taken) / 60000;
+  if (min < 0) return 'avant';
+  if (min < p.onset) return 'montee';
+  if (min < p.peakEnd) return 'pic';
+  if (min < p.reboundStart) return 'descente';
+  if (min < p.end + 90) return 'rebound';
+  return 'fini';
+}
+function getMinutesToRebound() {
+  const taken = _takenDate();
+  if (!taken) return null;
+  const type = localStorage.getItem('focustdah_ritalin_type') || 'IR';
+  const p = RITALIN_PROFILES[type];
+  return Math.round(p.reboundStart - (Date.now() - taken) / 60000);
+}
+
+// ─── REBOUND WATCH ───
+let _reboundInterval = null;
+function startReboundWatch() {
+  if (_reboundInterval) clearInterval(_reboundInterval);
+  checkReboundAlert();
+  _reboundInterval = setInterval(checkReboundAlert, 60000);
+}
+function checkReboundAlert() {
+  const slot = document.getElementById('rebound-banner-slot');
+  if (!slot) return;
+  if (!hasTakenRitalin() || !localStorage.getItem('focustdah_ritalin_time')) {
+    slot.innerHTML = ''; return;
+  }
+  const phase = getRitalinPhase();
+  const minLeft = getMinutesToRebound();
+  if (phase === 'rebound') {
+    _showReboundBanner(slot, true);
+  } else if (phase === 'descente' && minLeft !== null && minLeft <= 45) {
+    _showReboundBanner(slot, false, minLeft);
+  } else {
+    // Clear only if not already dismissed by user
+    if (!slot.dataset.dismissed) slot.innerHTML = '';
+  }
+}
+function _showReboundBanner(slot, isRebound, minLeft) {
+  if (slot.dataset.dismissed === '1') return;
+  if (slot.querySelector('.rebound-banner')) return;
+  const div = document.createElement('div');
+  div.className = 'rebound-banner' + (isRebound ? ' active-rebound' : '');
+  div.innerHTML = `
+    <span class="rebound-banner-icon">${isRebound ? '⚠️' : '⏰'}</span>
+    <div class="rebound-banner-body">
+      <div class="rebound-banner-title${isRebound ? ' is-rebound' : ''}">
+        ${isRebound ? 'Rebound Ritaline en cours' : `Rebound estimé dans ~${minLeft} min`}
+      </div>
+      <p class="rebound-banner-sub">
+        ${isRebound
+          ? "Irritabilité, fatigue, crash de concentration : c'est chimique, pas ta faute. Mange quelque chose, repose-toi."
+          : "Termine tes tâches importantes maintenant — bientôt l'effet baisse. Planifie des choses douces ensuite."}
+      </p>
+    </div>
+    <button class="rebound-banner-close">✕</button>`;
+  div.querySelector('.rebound-banner-close').onclick = () => {
+    slot.innerHTML = '';
+    slot.dataset.dismissed = '1';
+    setTimeout(() => { delete slot.dataset.dismissed; }, 30 * 60000); // reset après 30min
+  };
+  slot.innerHTML = '';
+  slot.appendChild(div);
+  if (isRebound && Notification && Notification.permission === 'granted') {
+    new Notification('focusTDAH — Rebound Ritaline', {
+      body: "Ton cerveau récupère. Mange quelque chose et privilégie les tâches douces.",
+    });
+  }
+}
 
 // ─── STORAGE ───
 const STORE = 'tache_v3';
@@ -3742,10 +3938,39 @@ function renderModeSelect() {
   const p = currentProject;
   document.getElementById('ms-name').textContent = p.name;
   document.getElementById('ms-goal').textContent = p.goal || 'On y va, une micro-action à la fois.';
-  // Show/hide cards based on settings
+
+  // ── Phase strip ──
+  const strip = document.getElementById('ms-phase-strip');
+  const phase = getRitalinPhase();
+  const phaseInfo = {
+    montee:   { dot: 'montee',   text: 'Ritaline en montée — préfère les sessions courtes pour l\'instant' },
+    pic:      { dot: 'pic',      text: 'Pic Ritaline actif ✦ — idéal pour les tâches longues et intenses' },
+    descente: { dot: 'descente', text: 'Ritaline en descente — commence maintenant avant le rebound' },
+    rebound:  { dot: 'rebound',  text: 'Rebound probable — va doucement, mode 2 minutes recommandé' },
+  };
+  const pd = phaseInfo[phase];
+  strip.innerHTML = pd
+    ? `<div class="phase-strip"><div class="phase-dot ${pd.dot}"></div><span>${pd.text}</span></div>`
+    : '';
+
+  // ── Recommended modes per phase ──
+  const recModes = { montee: ['2min','micro'], pic: ['reverse','one'], descente: ['2min','one'], rebound: ['2min','micro'] };
+  const rec = recModes[phase] || [];
+  const isRebound = phase === 'rebound';
+
+  // ── Show/hide + badges ──
   const enabledModes = getSettings().modes.filter(m => m.enabled).map(m => m.id);
   document.querySelectorAll('.mode-card').forEach(card => {
-    card.style.display = enabledModes.includes(card.dataset.mode) ? '' : 'none';
+    const id = card.dataset.mode;
+    card.style.display = enabledModes.includes(id) ? '' : 'none';
+    const old = card.querySelector('.mode-rec-badge');
+    if (old) old.remove();
+    if (rec.includes(id) && enabledModes.includes(id)) {
+      const badge = document.createElement('span');
+      badge.className = 'mode-rec-badge ' + (isRebound ? 'orange' : 'green');
+      badge.textContent = isRebound ? '☯ Adapté au rebound' : '✦ Recommandé maintenant';
+      card.querySelector('div').appendChild(badge);
+    }
   });
 }
 
@@ -3794,9 +4019,10 @@ function openSettings() {
 
 function renderRitalinSettingsCard(container) {
   const s = getSettings();
-  const answer = getRitalinAnswer(); // 'oui' | 'non' | null
-  const today = new Date().toDateString();
-  const hasAnsweredToday = answer !== null;
+  const answer = getRitalinAnswer();
+  const hasAnswered = answer !== null;
+  const savedTime = localStorage.getItem('focustdah_ritalin_time') || '';
+  const savedType = localStorage.getItem('focustdah_ritalin_type') || 'IR';
 
   container.innerHTML = `
     <div class="ritalin-settings-card">
@@ -3809,33 +4035,57 @@ function renderRitalinSettingsCard(container) {
       </div>
       <div id="rs-body" style="${s.ritalinEnabled ? '' : 'opacity:.4;pointer-events:none'}">
         <div style="color:var(--muted);font-size:13px;margin-bottom:10px">
-          ${hasAnsweredToday
-            ? `Ta réponse d'aujourd'hui :`
-            : `Tu n'as pas encore répondu aujourd'hui.`}
+          ${hasAnswered ? "Ta réponse d'aujourd'hui :" : "Tu n'as pas encore répondu aujourd'hui."}
         </div>
         <div class="ritalin-answer-row">
           <button class="rs-answer-btn oui ${answer === 'oui' ? 'active' : ''}" id="rs-oui">✓ Oui</button>
           <button class="rs-answer-btn non ${answer === 'non' ? 'active' : ''}" id="rs-non">Non</button>
         </div>
-        ${!hasAnsweredToday ? `<button id="rs-ask-now" style="margin-top:10px;background:none;border:none;color:var(--accent);font:600 13px 'DM Sans',sans-serif;cursor:pointer;padding:0">Poser la question maintenant →</button>` : ''}
+        <div id="rs-time-section" style="${answer === 'oui' ? '' : 'display:none'}; margin-top:14px">
+          <div style="color:var(--muted);font-size:13px;margin-bottom:8px">Heure de prise :</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+            <input type="time" id="rs-time" class="rm-time-input" style="font-size:18px;padding:10px;flex:1" value="${savedTime}">
+          </div>
+          <div style="color:var(--muted);font-size:13px;margin-bottom:8px">Type :</div>
+          <div class="ritalin-type-row">
+            <button class="ritalin-type-btn ${savedType === 'IR' ? 'active' : ''}" id="rs-ir">⚡ IR · 4h</button>
+            <button class="ritalin-type-btn ${savedType === 'LP' ? 'active' : ''}" id="rs-lp">🌊 LP · 8-12h</button>
+          </div>
+          <button id="rs-save-time" style="width:100%;border:none;border-radius:12px;background:var(--accent);color:#fff;font:700 13px 'Syne',sans-serif;padding:11px;cursor:pointer">Enregistrer l'heure →</button>
+        </div>
+        ${!hasAnswered ? `<button id="rs-ask-now" style="margin-top:10px;background:none;border:none;color:var(--accent);font:600 13px 'DM Sans',sans-serif;cursor:pointer;padding:0">Poser la question maintenant →</button>` : ''}
         <p class="ritalin-settings-note">La question s'affiche une fois par jour au démarrage.</p>
       </div>
     </div>`;
 
-  // Toggle enable/disable
   container.querySelector('#rs-toggle').onchange = e => {
     const ns = getSettings(); ns.ritalinEnabled = e.target.checked; saveSettings(ns);
     container.querySelector('#rs-body').style.cssText = e.target.checked ? '' : 'opacity:.4;pointer-events:none';
   };
 
-  // Changer la réponse
+  let currentType = savedType;
+  function setType(t) {
+    currentType = t;
+    container.querySelector('#rs-ir').classList.toggle('active', t === 'IR');
+    container.querySelector('#rs-lp').classList.toggle('active', t === 'LP');
+  }
+  container.querySelector('#rs-ir').onclick = () => setType('IR');
+  container.querySelector('#rs-lp').onclick = () => setType('LP');
+
+  const saveTimeBtn = container.querySelector('#rs-save-time');
+  if (saveTimeBtn) saveTimeBtn.onclick = () => {
+    const t = container.querySelector('#rs-time').value;
+    if (t) { localStorage.setItem('focustdah_ritalin_time', t); localStorage.setItem('focustdah_ritalin_type', currentType); startReboundWatch(); }
+    saveTimeBtn.textContent = 'Enregistré ✓';
+    setTimeout(() => { saveTimeBtn.textContent = 'Enregistrer l\'heure →'; }, 1500);
+  };
+
   function updateAnswer(val) {
     setRitalinAnswer(val);
     container.querySelectorAll('.rs-answer-btn').forEach(b => b.classList.remove('active'));
     container.querySelector(`#rs-${val === 'oui' ? 'oui' : 'non'}`).classList.add('active');
-    const askBtn = container.querySelector('#rs-ask-now');
-    if (askBtn) askBtn.remove();
-    container.querySelector('[style*="réponse"]') && (container.querySelector('[style*="réponse"]').textContent = "Ta réponse d'aujourd'hui :");
+    container.querySelector('#rs-time-section').style.display = val === 'oui' ? '' : 'none';
+    const askBtn = container.querySelector('#rs-ask-now'); if (askBtn) askBtn.remove();
   }
   container.querySelector('#rs-oui').onclick = () => updateAnswer('oui');
   container.querySelector('#rs-non').onclick = () => updateAnswer('non');
@@ -4314,6 +4564,20 @@ function showBlockedEnergy(from) {
   document.getElementById('suppl-card').style.display = 'block';
   document.getElementById('suppl-options').style.display = 'none';
   document.getElementById('energy-section').style.display = 'none';
+
+  // ── Rebound Ritaline détecté ──
+  const reboundCard = document.getElementById('rebound-blocked-card');
+  const phase = getRitalinPhase();
+  if (phase === 'rebound' && hasTakenRitalin()) {
+    reboundCard.style.display = 'block';
+    reboundCard.innerHTML = `
+      <div style="color:#fc5c7d;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:8px">⚠️ Tu es probablement en rebound de Ritaline</div>
+      <p style="color:var(--muted);font-size:13px;line-height:1.6">C'est une cause <strong style="color:var(--text)">chimique</strong>, pas un manque de volonté. L'effet de ta médication baisse — c'est normal et temporaire.<br><br>
+      <strong style="color:var(--text)">Ce qui aide vraiment en rebound :</strong><br>
+      🍽 Manger quelque chose · 💧 Boire de l'eau · 😴 Pause complète · ✏️ Tâche ultra-simple</p>`;
+  } else {
+    reboundCard.style.display = 'none';
+  }
   document.getElementById('energy-boost-hint').style.display = 'none';
   document.getElementById('btn-energy-next').disabled = true;
 
