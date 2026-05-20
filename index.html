@@ -1602,7 +1602,10 @@ document.getElementById('btn-new').onclick = () => show('create');
 document.getElementById('back-home').onclick = () => show('landing');
 document.getElementById('btn-blocked-home').onclick = () => showBlockedEnergy('home');
 document.getElementById('back-create').onclick = () => { renderHome(); show('home'); };
-document.getElementById('back-mode').onclick = () => { renderHome(); show('home'); };
+document.getElementById('back-mode').onclick = () => {
+  if (currentProject) { renderPlanPreview(currentProject); show('plan-preview'); }
+  else { renderHome(); show('home'); }
+};
 
 // ─── CREATE ───
 const cName = document.getElementById('c-name');
@@ -3652,7 +3655,11 @@ function finishProject() {
 document.getElementById('c-next').onclick = () => { renderSession(); show('session'); };
 document.getElementById('c-home').onclick = () => { renderHome(); show('home'); };
 document.getElementById('f-home').onclick = () => { renderHome(); show('home'); };
-document.getElementById('back-session').onclick = () => { clearInterval(tInterval); tRunning = false; renderHome(); show('home'); };
+document.getElementById('back-session').onclick = () => {
+  clearInterval(tInterval); tRunning = false;
+  if (currentProject) { renderPlanPreview(currentProject); show('plan-preview'); }
+  else { renderHome(); show('home'); }
+};
 
 // ─── NOTIFICATIONS ───
 const NOTIF_ICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#7c5cfc"/><text x="32" y="44" font-size="32" text-anchor="middle" fill="white">✦</text></svg>');
