@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Tache</title>
+<title>focusTDAH</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -322,15 +322,129 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .cat-steps { padding: 0 12px 14px; }
 .cat-add-btn { width: 100%; border: 1.5px dashed var(--border); border-radius: 16px; background: none; color: var(--muted); font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; padding: 14px; cursor: pointer; margin-bottom: 16px; transition: border-color .2s, color .2s; }
 .cat-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── LANDING ── */
+#landing {
+  display: none;
+  min-height: 100vh;
+  padding: 48px 22px 60px;
+  background: var(--bg);
+  flex-direction: column;
+  align-items: stretch;
+}
+#landing.active { display: flex; }
+.landing-logo-row { display: flex; align-items: center; gap: 0; margin-bottom: 6px; }
+.landing-tagline { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+
+.work-btn {
+  display: block; width: 100%; border: none; border-radius: 24px;
+  padding: 28px 26px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800;
+  text-align: left; line-height: 1.15;
+  box-shadow: 0 8px 32px rgba(124,92,252,.38);
+  transition: transform .15s, box-shadow .15s;
+  margin-bottom: 32px;
+  cursor: pointer;
+}
+.work-btn:active { transform: scale(.97); box-shadow: 0 4px 16px rgba(124,92,252,.28); }
+.work-btn-sub { display: block; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 400; opacity: .78; margin-top: 5px; }
+
+/* ── QUICK TODO ── */
+.quicktodo {
+  flex: 1;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.qt-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.qt-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+.qt-add-btn {
+  border: none; border-radius: 10px;
+  background: rgba(124,92,252,.15); color: var(--accent);
+  font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+  padding: 7px 13px; cursor: pointer; transition: background .15s;
+}
+.qt-add-btn:hover { background: rgba(124,92,252,.28); }
+.qt-input-wrap { padding: 12px 16px 4px; }
+.qt-input {
+  width: 100%; border: 1.5px solid var(--accent); border-radius: 12px;
+  background: var(--soft); color: var(--text);
+  font: 15px 'DM Sans', sans-serif; padding: 13px 16px; outline: none;
+}
+.qt-input::placeholder { color: var(--muted); opacity: 1; }
+.qt-list { flex: 1; padding: 6px 10px 10px; overflow-y: auto; }
+.qt-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 10px; border-radius: 12px;
+  transition: background .12s;
+}
+.qt-item:hover { background: var(--soft); }
+.qt-check {
+  width: 22px; height: 22px; min-width: 22px; border-radius: 50%;
+  border: 2px solid var(--border); background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .15s, background .15s; font-size: 12px;
+}
+.qt-item.checked .qt-check { border-color: var(--green); background: var(--green); color: #0b1f0b; }
+.qt-text {
+  flex: 1; font-size: 14px; line-height: 1.4;
+  word-break: break-word; transition: color .15s, text-decoration .15s;
+}
+.qt-item.checked .qt-text { color: var(--muted); text-decoration: line-through; }
+.qt-del {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: 15px; padding: 4px 6px; border-radius: 6px; opacity: 0;
+  transition: opacity .15s, color .15s;
+}
+.qt-item:hover .qt-del { opacity: .55; }
+.qt-del:hover { opacity: 1 !important; color: #fc5c7d; }
+.qt-empty {
+  text-align: center; color: var(--muted); font-size: 13px; line-height: 1.7;
+  padding: 28px 20px;
+}
 </style>
 </head>
 <body>
 <main>
 
+<!-- LANDING -->
+<section class="screen active" id="landing">
+  <div class="landing-logo-row">
+    <span class="logo" style="font-size:26px">✦ focusTDAH</span>
+  </div>
+  <p class="landing-tagline">Ton espace de travail TDAH</p>
+
+  <button class="work-btn" id="btn-work">
+    Je veux travailler →
+    <span class="work-btn-sub">Mes projets, mon plan, mes timers</span>
+  </button>
+
+  <div class="quicktodo">
+    <div class="qt-header">
+      <span class="qt-title">📋 Ma liste rapide</span>
+      <button class="qt-add-btn" id="qt-add">+ Ajouter</button>
+    </div>
+    <div id="qt-input-wrap" class="qt-input-wrap" style="display:none">
+      <input id="qt-input" class="qt-input" placeholder="Nouvelle tâche… (Entrée pour valider)">
+    </div>
+    <div id="qt-list" class="qt-list"></div>
+  </div>
+</section>
+
 <!-- HOME -->
-<section class="screen active" id="home">
+<section class="screen" id="home">
+  <button class="back" id="back-home">← Ma liste</button>
   <div style="margin-bottom:32px">
-    <span class="logo">✦ Tache</span>
+    <span class="logo">✦ focusTDAH</span>
     <h1>Tu veux faire quoi <em>maintenant</em> ?</h1>
     <p class="sub">Je m'occupe du reste.</p>
   </div>
@@ -628,6 +742,86 @@ function show(id) {
   window.scrollTo(0, 0);
 }
 
+// ─── QUICK TODO ───
+function getQT() {
+  try { return JSON.parse(localStorage.getItem('ft_quicktodo') || '[]'); } catch(e) { return []; }
+}
+function saveQT(items) {
+  localStorage.setItem('ft_quicktodo', JSON.stringify(items));
+}
+function renderQT() {
+  const items = getQT();
+  const listEl = document.getElementById('qt-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  if (!items.length) {
+    listEl.innerHTML = '<p class="qt-empty">Rien ici pour l\'instant.<br>Ajoute tes tâches du moment !</p>';
+    return;
+  }
+  // show unchecked first, then checked
+  const sorted = [...items.filter(i => !i.done), ...items.filter(i => i.done)];
+  sorted.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'qt-item' + (item.done ? ' checked' : '');
+    row.dataset.id = item.id;
+    row.innerHTML = `
+      <button class="qt-check" data-id="${item.id}">${item.done ? '✓' : ''}</button>
+      <span class="qt-text">${item.text.replace(/</g,'&lt;')}</span>
+      <button class="qt-del" data-id="${item.id}" title="Supprimer">✕</button>
+    `;
+    row.querySelector('.qt-check').onclick = () => qtToggle(item.id);
+    row.querySelector('.qt-del').onclick  = () => qtDelete(item.id);
+    listEl.appendChild(row);
+  });
+}
+function qtAdd(text) {
+  const t = text.trim();
+  if (!t) return;
+  const items = getQT();
+  items.push({ id: String(Date.now()), text: t, done: false });
+  saveQT(items);
+  renderQT();
+}
+function qtToggle(id) {
+  const items = getQT();
+  const idx = items.findIndex(i => i.id === id);
+  if (idx !== -1) { items[idx].done = !items[idx].done; saveQT(items); renderQT(); }
+}
+function qtDelete(id) {
+  saveQT(getQT().filter(i => i.id !== id));
+  renderQT();
+}
+
+// Landing screen handlers (set up after DOM ready — wired below)
+function initLanding() {
+  const btnWork = document.getElementById('btn-work');
+  if (btnWork) btnWork.onclick = () => { renderHome(); show('home'); };
+
+  const qtAddBtn = document.getElementById('qt-add');
+  const qtInputWrap = document.getElementById('qt-input-wrap');
+  const qtInput = document.getElementById('qt-input');
+
+  if (qtAddBtn) qtAddBtn.onclick = () => {
+    const open = qtInputWrap.style.display !== 'none';
+    qtInputWrap.style.display = open ? 'none' : 'block';
+    if (!open) { qtInput.focus(); }
+  };
+  if (qtInput) {
+    qtInput.onkeydown = e => {
+      if (e.key === 'Enter') {
+        qtAdd(qtInput.value);
+        qtInput.value = '';
+        qtInputWrap.style.display = 'none';
+      }
+      if (e.key === 'Escape') {
+        qtInput.value = '';
+        qtInputWrap.style.display = 'none';
+      }
+    };
+  }
+  renderQT();
+}
+
 // ─── STATE ───
 let currentProject = null;
 let currentMode = '2min';
@@ -724,6 +918,7 @@ function renderHome() {
 }
 
 document.getElementById('btn-new').onclick = () => show('create');
+document.getElementById('back-home').onclick = () => show('landing');
 document.getElementById('back-create').onclick = () => { renderHome(); show('home'); };
 document.getElementById('back-mode').onclick = () => { renderHome(); show('home'); };
 
@@ -1766,6 +1961,7 @@ document.getElementById('ft-opt-home').onclick = () => {
 };
 
 // ─── INIT ───
+initLanding();
 renderHome();
 </script>
 </body>
