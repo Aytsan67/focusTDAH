@@ -193,6 +193,20 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
 .section-label { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
 
+.notif-banner {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 18px; border-radius: 18px;
+  background: var(--soft); border: 1.5px solid var(--border);
+  margin-top: 16px;
+}
+.notif-icon { font-size: 22px; flex: 0 0 auto; padding-top: 2px; }
+.notif-body { flex: 1; }
+.notif-body strong { display: block; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.notif-body p { color: var(--muted); font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+.notif-btns { display: flex; gap: 8px; }
+.notif-yes { border: none; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; padding: 9px 16px; cursor: pointer; }
+.notif-no { border: 1px solid var(--border); border-radius: 10px; background: none; color: var(--muted); font-size: 13px; padding: 9px 14px; cursor: pointer; }
+
 .block-timer { background: var(--soft); border: 1.5px solid var(--border) !important; color: var(--text); }
 .block-timer .b-sub { color: var(--muted); }
 
@@ -278,6 +292,17 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <span class="b-title">Timer libre ⏱</span>
     <span class="b-sub">Travaille par intervalles, sans créer de projet</span>
   </button>
+  <div id="notif-banner" class="notif-banner" style="display:none">
+    <span class="notif-icon">🔔</span>
+    <div class="notif-body">
+      <strong>Activer les notifications ?</strong>
+      <p>Reçois une alerte quand ton timer se termine, même si l'écran est verrouillé.</p>
+      <div class="notif-btns">
+        <button class="notif-yes" id="notif-yes">Activer</button>
+        <button class="notif-no" id="notif-no">Plus tard</button>
+      </div>
+    </div>
+  </div>
   <div id="home-proj-wrap" style="margin-top:28px;display:none">
     <div class="section-label">Mes projets</div>
     <div id="home-proj-list" class="proj-list"></div>
@@ -478,6 +503,7 @@ function renderHome() {
     contBtn.onclick = () => show('create');
   }
 
+  checkNotifBanner();
   const wrap = document.getElementById('home-proj-wrap');
   const listEl = document.getElementById('home-proj-list');
   if (projects.length > 0) {
@@ -727,6 +753,7 @@ document.getElementById('t-toggle').onclick = function() {
         tRunning = false;
         document.getElementById('t-toggle').textContent = '▶ Rejouer';
         document.getElementById('s-timer').textContent = '✓';
+        sendNotif('Timer terminé ⏸', 'Fais une pause ou continue ta session.');
       }
     }, 1000);
   }
@@ -773,6 +800,34 @@ document.getElementById('c-next').onclick = () => { renderSession(); show('sessi
 document.getElementById('c-home').onclick = () => { renderHome(); show('home'); };
 document.getElementById('f-home').onclick = () => { renderHome(); show('home'); };
 document.getElementById('back-session').onclick = () => { clearInterval(tInterval); tRunning = false; renderHome(); show('home'); };
+
+// ─── NOTIFICATIONS ───
+const NOTIF_ICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#7c5cfc"/><text x="32" y="44" font-size="32" text-anchor="middle" fill="white">✦</text></svg>');
+
+function sendNotif(title, body) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try { new Notification(title, { body, icon: NOTIF_ICON, tag: 'tache' }); } catch(e) {}
+}
+
+function checkNotifBanner() {
+  const banner = document.getElementById('notif-banner');
+  if (!('Notification' in window) || Notification.permission !== 'default' || localStorage.getItem('notif-dismissed')) {
+    banner.style.display = 'none';
+  } else {
+    banner.style.display = 'flex';
+  }
+}
+
+document.getElementById('notif-yes').onclick = () => {
+  Notification.requestPermission().then(p => {
+    checkNotifBanner();
+    if (p === 'granted') sendNotif('Notifications activées ✓', 'Tu seras alertée dès qu\'un timer se termine.');
+  });
+};
+document.getElementById('notif-no').onclick = () => {
+  localStorage.setItem('notif-dismissed', '1');
+  document.getElementById('notif-banner').style.display = 'none';
+};
 
 // ─── TIMER LIBRE ───
 let ftDuration = 0, ftRemain = 0, ftTotal = 0;
@@ -889,11 +944,12 @@ document.getElementById('ft-stop').onclick = () => {
 function showFtEndPanel() {
   const panel = document.getElementById('ft-end-panel');
   const mins = Math.round(ftTotal / 60);
-  document.getElementById('ft-end-title').textContent = ftIsPause ? 'Pause terminée !' : 'Session ' + ftSession + ' terminée !';
-  document.getElementById('ft-end-sub').textContent = ftIsPause
-    ? 'Tu es prête à reprendre ?'
-    : mins + ' minutes de focus. Bien joué.';
+  const endTitle = ftIsPause ? 'Pause terminée !' : 'Session ' + ftSession + ' terminée !';
+  const endSub = ftIsPause ? 'Tu es prête à reprendre ?' : mins + ' minutes de focus. Bien joué.';
+  document.getElementById('ft-end-title').textContent = endTitle;
+  document.getElementById('ft-end-sub').textContent = endSub;
   panel.style.display = 'block';
+  sendNotif(endTitle, endSub);
 }
 
 document.getElementById('ft-opt-again').onclick = () => {
