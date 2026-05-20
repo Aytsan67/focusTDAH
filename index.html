@@ -232,6 +232,9 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .file-add-btn:hover { border-color: var(--accent); color: var(--accent); }
 .btn-delete-project { display: block; width: 100%; border: 1.5px solid rgba(252,92,125,.25); border-radius: 14px; background: none; color: rgba(252,92,125,.6); font-size: 13px; padding: 13px; cursor: pointer; margin-top: 10px; transition: border-color .2s, color .2s; }
 .btn-delete-project:hover { border-color: #fc5c7d; color: #fc5c7d; }
+.edit-btn { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 6px; flex: 0 0 auto; opacity: .45; transition: opacity .2s, color .2s; line-height: 1; }
+.edit-btn:hover { opacity: 1; color: var(--accent); }
+.inline-input { background: transparent; border: none; border-bottom: 1.5px solid var(--accent); color: var(--text); font: inherit; outline: none; padding: 1px 0; min-width: 40px; max-width: 100%; }
 .pp-update-msg { text-align: center; color: var(--green); font-size: 13px; font-weight: 700; margin-bottom: 10px; transition: opacity .3s; }
 
 .block-timer { background: var(--soft); border: 1.5px solid var(--border) !important; color: var(--text); }
@@ -385,8 +388,11 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
         <div class="pp-pct-label">fait</div>
       </div>
     </div>
-    <div>
-      <div class="pp-title" id="pp-proj-name"></div>
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <div class="pp-title" id="pp-proj-name" style="margin-bottom:0"></div>
+        <button class="edit-btn" id="pp-edit-name" title="Renommer">✎</button>
+      </div>
       <div class="pp-goal" id="pp-proj-goal"></div>
     </div>
   </div>
@@ -760,6 +766,39 @@ document.getElementById('back-plan-preview').onclick = () => {
   if (pendingProject) { show('create-files'); } else { renderHome(); show('home'); }
 };
 
+// ─── INLINE RENAMING ───
+function saveProjectChanges() {
+  if (pendingProject || !currentProject) return;
+  const list = getProjects();
+  const idx = list.findIndex(p => p.id === currentProject.id);
+  if (idx !== -1) { list[idx] = currentProject; saveProjects(list); }
+}
+
+document.getElementById('pp-edit-name').onclick = function() {
+  const proj = pendingProject || currentProject;
+  if (!proj) return;
+  const el = document.getElementById('pp-proj-name');
+  const orig = proj.name;
+  const inp = document.createElement('input');
+  inp.value = orig;
+  inp.className = 'inline-input';
+  inp.style.cssText += ';font-family:inherit;font-size:inherit;font-weight:inherit';
+  el.replaceWith(inp);
+  inp.focus(); inp.select();
+  function save() {
+    const val = inp.value.trim() || orig;
+    proj.name = val;
+    el.textContent = val;
+    inp.replaceWith(el);
+    saveProjectChanges();
+  }
+  inp.onblur = save;
+  inp.onkeydown = function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); save(); }
+    if (e.key === 'Escape') { inp.replaceWith(el); }
+  };
+};
+
 document.getElementById('pp-files-input').onchange = function() {
   const newNames = [...this.files].map(f => f.name);
   if (!newNames.length) return;
@@ -848,9 +887,56 @@ function renderPlanPreview(project) {
       const done = (item.step.done || 0) >= item.step.micros.length;
       const el = document.createElement('div');
       el.className = 'plan-step' + (done ? ' done' : '');
-      el.innerHTML = '<span class="plan-step-name">' + (item.i + 1) + '. ' + item.step.name + '</span>' +
-        '<div class="plan-step-right"><span class="plan-step-time">⏱ ' + (item.step.duration || 25) + ' min</span>' +
-        '<span class="plan-step-count">' + item.step.micros.length + ' actions</span></div>';
+
+      const nameWrap = document.createElement('div');
+      nameWrap.style.cssText = 'display:flex;align-items:center;gap:4px;flex:1;margin-right:10px;min-width:0';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'plan-step-name';
+      nameSpan.textContent = (item.i + 1) + '. ' + item.step.name;
+
+      const eb = document.createElement('button');
+      eb.className = 'edit-btn';
+      eb.textContent = '✎';
+      eb.title = 'Renommer';
+      (function(si, ns, btn) {
+        btn.onclick = function(e) {
+          e.stopPropagation();
+          const proj = pendingProject || currentProject;
+          if (!proj) return;
+          const orig = si.step.name;
+          const inp = document.createElement('input');
+          inp.value = orig;
+          inp.className = 'inline-input';
+          ns.textContent = (si.i + 1) + '. ';
+          ns.appendChild(inp);
+          btn.style.display = 'none';
+          inp.focus(); inp.select();
+          function save() {
+            const val = inp.value.trim() || orig;
+            proj.steps[si.i].name = val;
+            ns.textContent = (si.i + 1) + '. ' + val;
+            btn.style.display = '';
+            saveProjectChanges();
+          }
+          inp.onblur = save;
+          inp.onkeydown = function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); save(); }
+            if (e.key === 'Escape') { ns.textContent = (si.i + 1) + '. ' + orig; btn.style.display = ''; }
+          };
+        };
+      })(item, nameSpan, eb);
+
+      nameWrap.appendChild(nameSpan);
+      nameWrap.appendChild(eb);
+
+      const right = document.createElement('div');
+      right.className = 'plan-step-right';
+      right.innerHTML = '<span class="plan-step-time">⏱ ' + (item.step.duration || 25) + ' min</span>' +
+        '<span class="plan-step-count">' + item.step.micros.length + ' actions</span>';
+
+      el.appendChild(nameWrap);
+      el.appendChild(right);
       g.appendChild(el);
     });
     planEl.appendChild(g);
