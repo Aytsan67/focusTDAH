@@ -348,8 +348,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .cat-collapse-btn:hover { color:var(--text); }
 .cat-body { overflow:hidden;max-height:2000px;transition:max-height .3s cubic-bezier(.22,1,.36,1); }
 .cat-body.collapsed { max-height:0; }
-.cat-mode-chip { display:inline-flex;align-items:center;gap:3px;background:rgba(124,92,252,.1);border:none;border-radius:8px;color:var(--accent);font-size:11px;font-weight:700;padding:3px 9px;cursor:pointer;transition:background .15s;font-family:inherit;margin-top:5px; }
-.cat-mode-chip:hover { background:rgba(124,92,252,.22); }
+.cat-mode-chip { display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,252,.12);border:1px solid rgba(124,92,252,.25);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer;transition:background .15s,border-color .15s;font-family:inherit;flex-shrink:0;white-space:nowrap; }
+.cat-mode-chip:hover { background:rgba(124,92,252,.25);border-color:var(--accent); }
 
 /* ── MODAL CATÉGORIE ── */
 .cat-modal-backdrop {
@@ -643,6 +643,13 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   word-break: break-word; transition: color .15s, text-decoration .15s;
 }
 .qt-item.checked .qt-text { color: var(--muted); text-decoration: line-through; }
+.qt-undo {
+  flex-shrink: 0; background: rgba(92,252,160,.12); border: 1px solid rgba(92,252,160,.25);
+  border-radius: 8px; color: var(--green); font-size: 11px; font-weight: 700;
+  padding: 4px 8px; cursor: pointer; white-space: nowrap; font-family: inherit;
+  transition: background .15s;
+}
+.qt-undo:hover { background: rgba(92,252,160,.22); }
 .qt-del {
   background: none; border: none; color: var(--muted); cursor: pointer;
   font-size: 15px; padding: 4px 6px; border-radius: 6px; opacity: 0;
@@ -650,6 +657,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .qt-item:hover .qt-del { opacity: .55; }
 .qt-del:hover { opacity: 1 !important; color: #fc5c7d; }
+@keyframes qt-vanish { 0%{opacity:1;transform:none} 100%{opacity:0;transform:translateX(24px) scaleY(.6)} }
+.qt-item.vanishing { animation: qt-vanish .35s ease forwards; pointer-events:none; }
 .qt-empty {
   text-align: center; color: var(--muted); font-size: 13px; line-height: 1.7;
   padding: 28px 20px;
@@ -1084,17 +1093,20 @@ async function loadFromFirestore(uid) {
         if (!merged.find(cp => cp.id === lp.id)) merged.push(lp);
       });
 
-      // On met à jour le localStorage seulement si on gagne des projets (jamais de perte)
+      // Projets : mise à jour additive uniquement
       if (merged.length >= localProjs.length) {
         localStorage.setItem('tache_v3', JSON.stringify(merged));
-        if (d.activeId)  localStorage.setItem('tache_active',  d.activeId);
-        if (d.quicktodo) localStorage.setItem('ft_quicktodo',  JSON.stringify(d.quicktodo));
+        if (d.activeId) localStorage.setItem('tache_active', d.activeId);
       }
+      if (merged.length > cloudProjs.length) uploadNow(uid, merged);
 
-      // Upload vers Firestore seulement si on a des projets à ajouter
-      if (merged.length > cloudProjs.length) {
-        uploadNow(uid, merged);
-      }
+      // QuickTodo : fusion ADDITIVE — on ne perd jamais une tâche locale non encore synchronisée
+      const localQT  = getQTRaw();
+      const cloudQT  = d.quicktodo || [];
+      const mergedQT = [...cloudQT];
+      localQT.forEach(lt => { if (!mergedQT.find(ct => ct.id === lt.id)) mergedQT.push(lt); });
+      localStorage.setItem('ft_quicktodo', JSON.stringify(mergedQT));
+      if (mergedQT.length > cloudQT.length) scheduleSync(); // ré-uploade la version complète
 
     } else if (localProjs.length > 0) {
       // Pas encore de document Firestore ET on a des projets locaux → premier upload
@@ -1229,45 +1241,145 @@ function saveQT(items) {
   localStorage.setItem('ft_quicktodo', JSON.stringify(items));
   scheduleSync();
 }
+const QT_UNDO_SECS = 60; // secondes avant suppression définitive
+let _qtTimer = null;
+
 function renderQT() {
+  const now = Date.now();
   const items = getQT();
   const listEl = document.getElementById('qt-list');
   if (!listEl) return;
   listEl.innerHTML = '';
-  if (!items.length) {
+
+  // Supprimer silencieusement les tâches expirées (> 60s)
+  const alive = items.filter(i => !i.checkedAt || (now - i.checkedAt) < QT_UNDO_SECS * 1000);
+  if (alive.length !== items.length) { saveQT(alive); }
+
+  if (!alive.length) {
     listEl.innerHTML = '<p class="qt-empty">Rien ici pour l\'instant.<br>Ajoute tes tâches du moment !</p>';
     return;
   }
-  // show unchecked first, then checked
-  const sorted = [...items.filter(i => !i.done), ...items.filter(i => i.done)];
+
+  // Tâches non cochées d'abord, cochées ensuite
+  const sorted = [...alive.filter(i => !i.done), ...alive.filter(i => i.done)];
   sorted.forEach(item => {
     const row = document.createElement('div');
     row.className = 'qt-item' + (item.done ? ' checked' : '');
     row.dataset.id = item.id;
-    row.innerHTML = `
-      <button class="qt-check" data-id="${item.id}">${item.done ? '✓' : ''}</button>
-      <span class="qt-text">${item.text.replace(/</g,'&lt;')}</span>
-      <button class="qt-del" data-id="${item.id}" title="Supprimer">✕</button>
-    `;
-    row.querySelector('.qt-check').onclick = () => qtToggle(item.id);
-    row.querySelector('.qt-del').onclick  = () => qtDelete(item.id);
+
+    const chk = document.createElement('button');
+    chk.className = 'qt-check';
+    chk.textContent = item.done ? '✓' : '';
+    chk.onclick = () => qtToggle(item.id);
+
+    const txt = document.createElement('span');
+    txt.className = 'qt-text';
+    txt.textContent = item.text;
+
+    row.appendChild(chk);
+    row.appendChild(txt);
+
+    if (item.done && item.checkedAt) {
+      // Bouton Annuler avec décompte
+      const secsLeft = Math.max(0, Math.ceil((QT_UNDO_SECS * 1000 - (now - item.checkedAt)) / 1000));
+      const undoBtn = document.createElement('button');
+      undoBtn.className = 'qt-undo';
+      undoBtn.dataset.id = item.id;
+      undoBtn.textContent = 'Annuler (' + secsLeft + 's)';
+      undoBtn.onclick = () => qtUndo(item.id);
+      row.appendChild(undoBtn);
+    } else {
+      const del = document.createElement('button');
+      del.className = 'qt-del';
+      del.textContent = '✕';
+      del.title = 'Supprimer';
+      del.onclick = () => qtDeleteAnim(item.id, row);
+      row.appendChild(del);
+    }
+
     listEl.appendChild(row);
   });
+
+  // Relancer le timer de mise à jour si des tâches cochées existent
+  clearInterval(_qtTimer);
+  const hasPending = alive.some(i => i.done && i.checkedAt);
+  if (hasPending) {
+    _qtTimer = setInterval(() => {
+      const nowI = Date.now();
+      const current = getQT();
+      // Supprimer les expirées avec animation
+      current.forEach(i => {
+        if (i.done && i.checkedAt && (nowI - i.checkedAt) >= QT_UNDO_SECS * 1000) {
+          const el = document.querySelector('.qt-item[data-id="' + i.id + '"]');
+          if (el && !el.classList.contains('vanishing')) {
+            el.classList.add('vanishing');
+            setTimeout(() => {
+              saveQT(getQT().filter(x => x.id !== i.id));
+              renderQT();
+            }, 350);
+          }
+        }
+      });
+      // Mettre à jour les décomptes
+      document.querySelectorAll('.qt-undo[data-id]').forEach(btn => {
+        const id = btn.dataset.id;
+        const it = getQT().find(x => x.id === id);
+        if (it && it.checkedAt) {
+          const s = Math.max(0, Math.ceil((QT_UNDO_SECS * 1000 - (nowI - it.checkedAt)) / 1000));
+          btn.textContent = 'Annuler (' + s + 's)';
+        }
+      });
+    }, 1000);
+  }
 }
+
 function qtAdd(text) {
   const t = text.trim();
   if (!t) return;
   const items = getQT();
-  items.push({ id: String(Date.now()), text: t, done: false });
+  items.unshift({ id: String(Date.now()), text: t, done: false }); // ajoute en tête
   saveQT(items);
   renderQT();
 }
+
 function qtToggle(id) {
   const items = getQT();
   const idx = items.findIndex(i => i.id === id);
-  if (idx !== -1) { items[idx].done = !items[idx].done; saveQT(items); renderQT(); }
+  if (idx === -1) return;
+  if (items[idx].done) {
+    // Décocher → revenir à l'état normal
+    items[idx].done = false;
+    delete items[idx].checkedAt;
+  } else {
+    // Cocher → démarrer le décompte de 60s
+    items[idx].done = true;
+    items[idx].checkedAt = Date.now();
+  }
+  saveQT(items);
+  renderQT();
 }
-function qtDelete(id) {
+
+function qtUndo(id) {
+  // Annuler : décocher et supprimer le timestamp
+  const items = getQT();
+  const idx = items.findIndex(i => i.id === id);
+  if (idx !== -1) {
+    items[idx].done = false;
+    delete items[idx].checkedAt;
+    saveQT(items);
+    renderQT();
+  }
+}
+
+function qtDeleteAnim(id, rowEl) {
+  rowEl.classList.add('vanishing');
+  setTimeout(() => {
+    saveQT(getQT().filter(i => i.id !== id));
+    renderQT();
+  }, 350);
+}
+
+function qtDelete(id) { // garde-fou pour compatibilité
   saveQT(getQT().filter(i => i.id !== id));
   renderQT();
 }
@@ -1598,6 +1710,123 @@ function openProject(p) {
   show('plan-preview');
 }
 
+// ─── MODAL : CHOISIR LE MODE DU NOUVEAU PROJET ───
+function showNewProjectModeModal() {
+  if (!pendingProject) return;
+  const existing = document.getElementById('new-proj-mode-modal');
+  if (existing) existing.remove();
+  const grad = 'background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent';
+
+  const backdrop = document.createElement('div');
+  backdrop.id = 'new-proj-mode-modal';
+  backdrop.className = 'cat-modal-backdrop';
+  // pas de fermeture au clic fond (obligatoire de choisir)
+
+  const sheet = document.createElement('div');
+  sheet.className = 'cat-modal-sheet';
+  sheet.onclick = e => e.stopPropagation();
+
+  sheet.innerHTML = `
+    <div class="cat-modal-handle"></div>
+    <h2 style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;margin-bottom:8px">
+      Comment organiser <em style="font-style:normal;${grad}">ton plan</em> ?
+    </h2>
+    <p style="color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:20px">Tu pourras toujours changer de mode plus tard.</p>
+    <div id="npm-s1">
+      <button class="cm-mode-card npm-card" data-mode="default">
+        <div class="cm-mode-emoji">📋</div>
+        <div><div class="cm-mode-title">Plan automatique</div><div class="cm-mode-desc">L'appli génère des étapes : Démarrer → Avancer → Terminer</div></div>
+      </button>
+      <button class="cm-mode-card npm-card" data-mode="seance">
+        <div class="cm-mode-emoji">📅</div>
+        <div><div class="cm-mode-title">Par séances</div><div class="cm-mode-desc">Séance 1, Séance 2… Parfait pour les cours sur plusieurs sessions</div></div>
+      </button>
+      <button class="cm-mode-card npm-card" data-mode="vierge">
+        <div class="cm-mode-emoji">🎯</div>
+        <div><div class="cm-mode-title">Mode vierge</div><div class="cm-mode-desc">Tableau Priorité haute / moyenne / basse — tu organises toi-même</div></div>
+      </button>
+      <button class="cm-mode-card npm-card" data-mode="cats">
+        <div class="cm-mode-emoji">📚</div>
+        <div><div class="cm-mode-title">Par matières / catégories</div><div class="cm-mode-desc">Plusieurs matières ou domaines dans le même projet</div></div>
+      </button>
+    </div>
+    <div id="npm-s2" style="display:none">
+      <button class="cat-modal-back" id="npm-back">← Retour</button>
+      <h2 style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:6px">Combien de <em style="font-style:normal;${grad}">séances</em> ?</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Chaque séance sera une étape dans ton plan.</p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;margin:16px 0 28px">
+        <button id="npm-minus" style="width:46px;height:46px;border-radius:50%;border:1.5px solid var(--border);background:var(--soft);color:var(--text);font-size:24px;cursor:pointer">−</button>
+        <span id="npm-sc-val" style="font-family:Syne,sans-serif;font-size:44px;font-weight:800;min-width:64px;text-align:center">6</span>
+        <button id="npm-plus"  style="width:46px;height:46px;border-radius:50%;border:1.5px solid var(--border);background:var(--soft);color:var(--text);font-size:24px;cursor:pointer">+</button>
+      </div>
+      <button class="btn" id="npm-confirm-seance">Créer le plan →</button>
+    </div>`;
+
+  backdrop.appendChild(sheet);
+  document.body.appendChild(backdrop);
+
+  // Mode cards
+  sheet.querySelectorAll('.npm-card').forEach(card => {
+    card.onclick = () => {
+      const mode = card.dataset.mode;
+      if (mode === 'seance') {
+        document.getElementById('npm-s1').style.display = 'none';
+        document.getElementById('npm-s2').style.display = 'block';
+      } else {
+        backdrop.remove();
+        applyNewProjectMode(mode, null);
+      }
+    };
+  });
+
+  // Séances count
+  let sc = 6;
+  const scEl = document.getElementById('npm-sc-val');
+  document.getElementById('npm-minus').onclick = () => { if (sc > 1) { sc--; scEl.textContent = sc; } };
+  document.getElementById('npm-plus').onclick  = () => { if (sc < 52) { sc++; scEl.textContent = sc; } };
+  document.getElementById('npm-back').onclick  = () => { document.getElementById('npm-s2').style.display = 'none'; document.getElementById('npm-s1').style.display = 'block'; };
+  document.getElementById('npm-confirm-seance').onclick = () => { backdrop.remove(); applyNewProjectMode('seance', sc); };
+}
+
+function applyNewProjectMode(mode, seanceCount) {
+  const proj = pendingProject;
+  if (!proj) return;
+
+  if (mode === 'default') {
+    // Plan auto — les étapes ont déjà été générées dans pendingProject.steps via buildPlan
+    // Si pas d'étapes (création sans fichiers ni hint), on génère maintenant
+    if (!proj.steps || !proj.steps.length) {
+      proj.steps = generateSteps(proj.name, proj.goal || '', '');
+    }
+
+  } else if (mode === 'seance') {
+    const sc = seanceCount || 6;
+    const catId = 'cat_' + proj.id;
+    const steps = [];
+    for (let i = 1; i <= sc; i++)
+      steps.push(s('Séance ' + i, ['Préparer la séance', 'Travailler le contenu', 'Réviser et consolider'], 'moyenne', 30));
+    proj.categories = [{ id: catId, name: proj.name, mode: 'seance', seanceCount: sc, steps }];
+    proj.steps = [];
+
+  } else if (mode === 'vierge') {
+    const catId = 'cat_' + proj.id;
+    proj.categories = [{ id: catId, name: proj.name, mode: 'vierge', steps: [], priorities: [
+      { id: catId + '_h', name: '🔴 Priorité haute',   color: '#fc5c7d', items: [] },
+      { id: catId + '_m', name: '🟡 Priorité moyenne', color: '#fcba5c', items: [] },
+      { id: catId + '_b', name: '🟢 Priorité basse',   color: '#5cfca0', items: [] }
+    ]}];
+    proj.steps = [];
+
+  } else if (mode === 'cats') {
+    // Par catégories : créer le projet sans étapes, l'utilisateur ajoutera des catégories
+    proj.steps = [];
+    proj.categories = [];
+  }
+
+  renderPlanPreview(proj);
+  show('plan-preview');
+}
+
 // ─── CREATE FILES ───
 document.getElementById('back-create-files').onclick = () => show('create');
 document.getElementById('btn-yes-files').onclick = () => {
@@ -1605,8 +1834,7 @@ document.getElementById('btn-yes-files').onclick = () => {
 };
 document.getElementById('btn-no-files').onclick = () => {
   pendingProject.files = [];
-  renderPlanPreview(pendingProject);
-  show('plan-preview');
+  showNewProjectModeModal();
 };
 document.getElementById('files-input').onchange = function() {
   if (!this.files.length) return;
@@ -1615,8 +1843,7 @@ document.getElementById('files-input').onchange = function() {
   showFileOptions(fileList, 'create');
 };
 document.getElementById('btn-build-plan').onclick = () => {
-  renderPlanPreview(pendingProject);
-  show('plan-preview');
+  showNewProjectModeModal();
 };
 
 // ─── FILE OPTIONS SCREEN ───
@@ -2449,15 +2676,15 @@ function renderCategoryCard(cat, proj, container) {
     info.textContent = totalDone + '/' + totalM + ' actions · ' + (cat.steps || []).length + ' étapes';
   }
 
-  // Mode chip (click to change mode)
-  const modeLabels = { default: '📋 Défaut', seance: '📅 Séances', vierge: '🎯 Vierge' };
-  const modeChip = document.createElement('button');
-  modeChip.className = 'cat-mode-chip';
-  modeChip.textContent = (modeLabels[cat.mode] || cat.mode) + ' ✎';
-  modeChip.title = 'Changer de mode';
-  (function(c, p) { modeChip.onclick = function(e) { e.stopPropagation(); promptChangeCatMode(c, p); }; })(cat, proj);
+  nameDiv.appendChild(nameRow); nameDiv.appendChild(info);
 
-  nameDiv.appendChild(nameRow); nameDiv.appendChild(info); nameDiv.appendChild(modeChip);
+  // ── Bouton "Changer de mode" — visible dans le header ──
+  const modeLabels = { default: '📋', seance: '📅', vierge: '🎯' };
+  const modeBtn = document.createElement('button');
+  modeBtn.className = 'cat-mode-chip';
+  modeBtn.title = 'Changer de mode';
+  modeBtn.innerHTML = (modeLabels[cat.mode] || '⚙') + ' Mode <span style="opacity:.6;font-size:10px">✎</span>';
+  (function(c, p) { modeBtn.onclick = function(e) { e.stopPropagation(); promptChangeCatMode(c, p); }; })(cat, proj);
 
   // Start button
   const startBtn = document.createElement('button');
@@ -2487,7 +2714,7 @@ function renderCategoryCard(cat, proj, container) {
   (function(cid) { delBtn.onclick = () => deleteCategory(proj, cid); })(cat.id);
 
   header.appendChild(circle); header.appendChild(nameDiv);
-  header.appendChild(startBtn); header.appendChild(colBtn); header.appendChild(delBtn);
+  header.appendChild(modeBtn); header.appendChild(startBtn); header.appendChild(colBtn); header.appendChild(delBtn);
   card.appendChild(header);
 
   // Body — collapsible
