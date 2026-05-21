@@ -1306,6 +1306,38 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   padding: 2px 8px; font: 700 12px 'DM Mono', monospace;
   color: var(--accent); margin-top: 4px;
 }
+.setup-step-progress {
+  font-size: 13px; font-weight: 700; color: var(--muted);
+  letter-spacing: .04em; margin-bottom: 28px; text-align: center;
+}
+.setup-step-big-emoji {
+  font-size: 64px; text-align: center; display: block; margin-bottom: 20px;
+}
+.setup-step-big-title {
+  font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800;
+  color: var(--text); margin-bottom: 14px; line-height: 1.25; text-align: center;
+}
+.setup-step-big-desc {
+  font-size: 16px; color: var(--muted); line-height: 1.65;
+  text-align: center; margin-bottom: 28px;
+}
+.setup-name-block {
+  background: rgba(124,92,252,.1); border: 2px solid rgba(124,92,252,.35);
+  border-radius: 18px; padding: 20px; text-align: center; margin-bottom: 20px;
+}
+.setup-name-label {
+  font-size: 13px; color: var(--muted); margin-bottom: 10px;
+}
+.setup-name-value {
+  font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
+  color: var(--accent); letter-spacing: .02em;
+}
+.setup-warning {
+  background: rgba(252,186,92,.07); border: 1.5px solid rgba(252,186,92,.3);
+  border-radius: 14px; padding: 14px 16px; font-size: 13px;
+  color: var(--muted); line-height: 1.55; margin-bottom: 22px;
+}
+.setup-warning strong { color: #fcba5c; }
 
 /* ── CHECK-IN MODAL ── */
 .checkin-sheet {
@@ -1746,44 +1778,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   </button>
 </section>
 
-<!-- RACCOURCIS SETUP -->
+<!-- RACCOURCIS SETUP (rendu dynamique étape par étape) -->
 <section class="screen" id="shortcuts-setup">
   <button class="back" id="back-shortcuts-setup">← Retour</button>
-  <div style="text-align:center;margin-bottom:20px">
-    <span style="font-size:48px;display:block;margin-bottom:10px">📱</span>
-    <h1 style="margin:0 0 6px">Configure ton <em>raccourci</em></h1>
-    <p class="sub" style="margin:0">À faire une seule fois. Ensuite c'est automatique.</p>
-  </div>
-  <div class="setup-step">
-    <div class="setup-step-num">1</div>
-    <div class="setup-step-body">
-      <div class="setup-step-title">Ouvre l'app Raccourcis</div>
-      <div class="setup-step-desc">L'icône bleue avec des engrenages colorés. Elle est déjà installée sur ton iPhone.</div>
-    </div>
-  </div>
-  <div class="setup-step">
-    <div class="setup-step-num">2</div>
-    <div class="setup-step-body">
-      <div class="setup-step-title">Crée un nouveau raccourci</div>
-      <div class="setup-step-desc">Appuie sur <strong style="color:var(--text)">+</strong> en haut à droite de l'écran.</div>
-    </div>
-  </div>
-  <div class="setup-step">
-    <div class="setup-step-num">3</div>
-    <div class="setup-step-body">
-      <div class="setup-step-title">Ajoute l'action "Définir le mode de concentration"</div>
-      <div class="setup-step-desc">Cherche <strong style="color:var(--text)">concentration</strong> dans la barre de recherche. Sélectionne l'action. Configure sur <strong style="color:var(--text)">Activer</strong> · choisis <strong style="color:var(--text)">Ne pas déranger</strong> ou ton Focus préféré.</div>
-    </div>
-  </div>
-  <div class="setup-step">
-    <div class="setup-step-num">4</div>
-    <div class="setup-step-body">
-      <div class="setup-step-title">Nomme le raccourci exactement comme ça :</div>
-      <div class="setup-step-desc">Appuie sur le nom en haut et écris :<br><span class="setup-step-code">FocusTDAH</span><br>Puis appuie sur <strong style="color:var(--text)">Terminé</strong>.</div>
-    </div>
-  </div>
-  <button class="btn" id="btn-shortcuts-done" style="margin-top:8px">✓ C'est fait — tester le raccourci</button>
-  <button class="btn-ghost" id="btn-shortcuts-skip" style="width:100%;justify-content:center;margin-top:10px">Passer — je ferai ça plus tard</button>
+  <div id="shortcuts-setup-content"></div>
 </section>
 
 <!-- BLOQUÉ : AVANT (qu'est-ce que tu faisais ?) -->
@@ -4901,7 +4899,6 @@ function renderSettingsMicros(container, s) {
     const row = document.createElement('div');
     row.className = 'settings-item';
     row.innerHTML = `
-      <span class="settings-item-emoji">${item.emoji}</span>
       <div class="settings-item-label">${item.label}${item.primary ? ' <span class="settings-primary-badge">Principal</span>' : ''}</div>
       <label class="settings-toggle" title="Principal">
         <input type="checkbox" ${item.primary ? 'checked' : ''}>
@@ -4940,7 +4937,6 @@ function renderSettingsModes(container, s) {
     const row = document.createElement('div');
     row.className = 'settings-item';
     row.innerHTML = `
-      <span class="settings-item-emoji">${mode.emoji}</span>
       <div class="settings-item-label">
         <div>${mode.label}</div>
         <div class="settings-item-meta">${mode.duration} min · ${mode.desc}</div>
@@ -4962,7 +4958,6 @@ function renderSettingsList(container, s, key, title, defaultEmoji) {
     const row = document.createElement('div');
     row.className = 'settings-item';
     row.innerHTML = `
-      <span class="settings-item-emoji">${item.emoji}</span>
       <span class="settings-item-label">${item.label}</span>
       <button class="settings-item-del">✕</button>`;
     row.querySelector('.settings-item-del').onclick = () => {
@@ -5501,7 +5496,7 @@ function showFocusModal(from) {
       modal.remove();
       // Store return context and go to setup guide
       localStorage.setItem('ft_shortcuts_return_from', from);
-      show('shortcuts-setup');
+      startShortcutGuide(); show('shortcuts-setup');
     };
   }
 }
@@ -5510,6 +5505,97 @@ function showShortcutsSetupReturn() {
   const from = localStorage.getItem('ft_shortcuts_return_from') || 'aide-menu';
   localStorage.removeItem('ft_shortcuts_return_from');
   showBlockedBefore(from);
+}
+
+// ── Guide raccourci étape par étape ──
+const SHORTCUT_GUIDE_STEPS = [
+  {
+    emoji: '📱',
+    title: 'Ouvre l\'app Raccourcis',
+    desc: 'L\'icône bleue avec des engrenages colorés. Elle est déjà installée sur ton iPhone — cherche-la dans tes apps ou via la recherche Spotlight.'
+  },
+  {
+    emoji: '+',
+    title: 'Appuie sur + pour créer un raccourci',
+    desc: 'Le bouton <strong style="color:var(--text)">+</strong> se trouve en haut à droite de l\'écran principal de l\'app Raccourcis.'
+  },
+  {
+    emoji: '🌙',
+    title: 'Ajoute l\'action "Définir le mode de concentration"',
+    desc: 'Dans la barre de recherche en bas, tape <strong style="color:var(--text)">concentration</strong>. Sélectionne l\'action. Règle-la sur <strong style="color:var(--text)">Activer</strong> et choisis <strong style="color:var(--text)">Ne pas déranger</strong> ou ton Focus préféré.'
+  },
+  {
+    emoji: '✏️',
+    title: 'Nomme le raccourci',
+    desc: 'Appuie sur le nom en haut et écris exactement ce nom, puis appuie sur <strong style="color:var(--text)">Terminé</strong>.',
+    isNameStep: true
+  }
+];
+
+let shortcutGuideStep = 0;
+
+function startShortcutGuide() {
+  shortcutGuideStep = 0;
+  renderShortcutStep();
+}
+
+function renderShortcutStep() {
+  const total = SHORTCUT_GUIDE_STEPS.length;
+  const c = document.getElementById('shortcuts-setup-content');
+  if (!c) return;
+
+  if (shortcutGuideStep >= total) {
+    // Écran final
+    c.innerHTML = `
+      <div style="text-align:center;margin-bottom:24px">
+        <span style="font-size:64px;display:block;margin-bottom:16px">🎉</span>
+        <div class="setup-step-big-title">C'est configuré !</div>
+        <p class="setup-step-big-desc">Appuie sur le bouton pour tester. Ton iPhone devrait activer le mode Focus.</p>
+      </div>
+      <div class="setup-warning">
+        <strong>⚠️ Si ça ne fonctionne pas</strong><br>
+        Vérifie que ton raccourci s'appelle exactement <strong style="color:var(--text)">FocusTDAH</strong> — une seule lettre différente, un espace en trop, ou une majuscule manquante et ça ne marchera pas.
+      </div>
+      <button class="btn" id="ssg-test" style="margin-bottom:10px">▶ Tester le raccourci maintenant</button>
+      <button class="btn-outline" id="ssg-skip" style="width:100%;margin-top:4px">Terminer sans tester</button>`;
+    document.getElementById('ssg-test').onclick = () => {
+      localStorage.setItem(LS_SHORTCUTS_READY, 'true');
+      triggerShortcut();
+      showShortcutsSetupReturn();
+    };
+    document.getElementById('ssg-skip').onclick = () => {
+      localStorage.setItem(LS_SHORTCUTS_READY, 'true');
+      showShortcutsSetupReturn();
+    };
+    return;
+  }
+
+  const step = SHORTCUT_GUIDE_STEPS[shortcutGuideStep];
+  const isLast = shortcutGuideStep === total - 1;
+  const emojiHtml = step.emoji.length <= 2
+    ? `<span class="setup-step-big-emoji">${step.emoji}</span>`
+    : `<span class="setup-step-big-emoji" style="font-size:52px;font-family:'Syne',sans-serif;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">${step.emoji}</span>`;
+
+  const nameBlock = step.isNameStep ? `
+    <div class="setup-name-block">
+      <div class="setup-name-label">Nom du raccourci :</div>
+      <div class="setup-name-value">FocusTDAH</div>
+    </div>` : '';
+
+  c.innerHTML = `
+    <div class="setup-step-progress">Étape ${shortcutGuideStep + 1} / ${total}</div>
+    ${emojiHtml}
+    <div class="setup-step-big-title">${step.title}</div>
+    <div class="setup-step-big-desc">${step.desc}</div>
+    ${nameBlock}
+    <button class="btn" id="ssg-next">${isLast ? 'Terminé →' : 'Suivant →'}</button>
+    <button class="btn-ghost" id="ssg-later" style="width:100%;justify-content:center;margin-top:10px">Passer — je ferai ça plus tard</button>`;
+
+  document.getElementById('ssg-next').onclick = () => {
+    shortcutGuideStep++;
+    renderShortcutStep();
+  };
+  document.getElementById('ssg-later').onclick = () => showShortcutsSetupReturn();
 }
 
 // ── FAB Focus persistant ──
@@ -5522,7 +5608,7 @@ function showShortcutsSetupReturn() {
       const isSetup = localStorage.getItem(LS_SHORTCUTS_READY) === 'true';
       if (!isSetup) {
         localStorage.setItem('ft_shortcuts_return_from', 'home');
-        show('shortcuts-setup');
+        startShortcutGuide(); show('shortcuts-setup');
       } else {
         fab.classList.add('focus-on');
         triggerShortcut();
@@ -6575,13 +6661,10 @@ document.getElementById('back-blocked-action').onclick  = () => {
 };
 document.getElementById('back-blocked-type').onclick    = () => show('blocked-before');
 document.getElementById('back-friction-strategies').onclick = () => show('blocked-type');
-document.getElementById('back-shortcuts-setup').onclick = () => showShortcutsSetupReturn();
-document.getElementById('btn-shortcuts-done').onclick   = () => {
-  localStorage.setItem(LS_SHORTCUTS_READY, 'true');
-  triggerShortcut();
-  showShortcutsSetupReturn();
+document.getElementById('back-shortcuts-setup').onclick = () => {
+  if (shortcutGuideStep > 0) { shortcutGuideStep--; renderShortcutStep(); }
+  else { showShortcutsSetupReturn(); }
 };
-document.getElementById('btn-shortcuts-skip').onclick  = () => showShortcutsSetupReturn();
 document.getElementById('back-blocked-before').onclick  = () => show(transitionReturnFrom);
 document.getElementById('back-blocked-transition').onclick = () => { clearTransitionTimers(); show('blocked-before'); };
 document.getElementById('btn-transition-skip').onclick  = () => { clearTransitionTimers(); showBlockedV2(transitionReturnFrom); };
