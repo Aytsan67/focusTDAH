@@ -855,6 +855,170 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   text-align: center; color: var(--muted); font-size: 13px; line-height: 1.7;
   padding: 28px 20px;
 }
+
+/* ── HOME ZONES ── */
+.home-zone-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 10px; margin-top: 2px; padding-left: 4px;
+}
+.block-panic {
+  background: rgba(252,92,125,.09); border: 1.5px solid rgba(252,92,125,.32) !important;
+  color: var(--text);
+}
+.block-panic .b-title { color: #fc5c7d; }
+.block-panic .b-sub { color: var(--muted); }
+.block-reset {
+  background: rgba(92,252,160,.07); border: 1.5px solid rgba(92,252,160,.25) !important;
+  color: var(--text);
+}
+.block-reset .b-title { color: var(--green); }
+.block-reset .b-sub { color: var(--muted); }
+
+/* ── FRICTION GRID (bloqué V2) ── */
+.friction-grid { display: grid; gap: 10px; }
+.friction-card {
+  width: 100%; display: flex; align-items: center; gap: 14px;
+  border: 1.5px solid var(--border); border-radius: 18px;
+  background: var(--card); color: var(--text); padding: 16px 18px;
+  text-align: left; transition: border-color .15s, background .15s; cursor: pointer;
+}
+.friction-card:active { border-color: var(--accent); background: rgba(124,92,252,.08); }
+.friction-card.friction-energy { border-color: rgba(252,186,92,.28); background: rgba(252,186,92,.05); }
+.friction-card.friction-energy:active { background: rgba(252,186,92,.12); }
+.friction-emoji { font-size: 28px; flex: 0 0 auto; }
+.friction-info { flex: 1; }
+.friction-label { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.friction-desc { color: var(--muted); font-size: 12px; line-height: 1.4; }
+
+/* ── MODE PANIQUE ── */
+.panic-launch-btn {
+  background: linear-gradient(135deg, #fc5c7d, #fc875c);
+  display: block; width: 100%; border: none; border-radius: 18px;
+  color: #fff; font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700;
+  padding: 19px; transition: transform .13s; margin-top: 8px; cursor: pointer;
+}
+.panic-launch-btn:active { transform: scale(.97); }
+.panic-launch-btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+.panic-deadline-badge {
+  display: inline-block; padding: 6px 16px; border-radius: 999px;
+  background: rgba(252,92,125,.12); border: 1px solid rgba(252,92,125,.3);
+  color: #fc5c7d; font-size: 13px; font-weight: 700; margin-bottom: 16px;
+}
+.panic-focus-card {
+  background: rgba(252,92,125,.07); border: 1.5px solid rgba(252,92,125,.25);
+  border-radius: 18px; padding: 18px 20px; margin-bottom: 22px;
+}
+.panic-focus-label {
+  color: rgba(252,92,125,.7); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.panic-task-display {
+  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.3;
+  color: var(--text);
+}
+.panic-timer-num {
+  font-family: 'Syne', sans-serif; font-size: 62px; font-weight: 800;
+  text-align: center; background: linear-gradient(135deg, #fc5c7d, #fc875c);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  line-height: 1; margin-bottom: 14px;
+}
+.panic-mantra {
+  text-align: center; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  color: rgba(252,92,125,.65); margin-top: 18px; letter-spacing: .04em;
+}
+
+/* ── RESET COGNITIF ── */
+.reset-step {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 18px; border-radius: 18px;
+  background: var(--card); border: 1.5px solid var(--border);
+  margin-bottom: 10px; transition: border-color .2s, background .2s;
+}
+.reset-step.done {
+  border-color: rgba(92,252,160,.3); background: rgba(92,252,160,.05);
+}
+.reset-step.locked { opacity: .4; }
+.reset-step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--soft); border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--muted); flex: 0 0 28px; margin-top: 2px;
+}
+.reset-step.done .reset-step-num { background: rgba(92,252,160,.15); border-color: var(--green); color: var(--green); }
+.reset-step-body { flex: 1; }
+.reset-step-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.reset-step-desc { color: var(--muted); font-size: 12px; line-height: 1.4; margin-bottom: 10px; }
+.active-step-btn {
+  border: none; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; font: 700 13px 'Syne', sans-serif; padding: 10px 18px; cursor: pointer;
+  transition: transform .13s;
+}
+.active-step-btn:active { transform: scale(.97); }
+.reset-active-card {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 22px 20px; animation: up .28s ease;
+}
+.reset-active-title {
+  font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
+  margin-bottom: 8px; text-align: center;
+}
+.reset-active-sub { color: var(--muted); font-size: 13px; text-align: center; margin-bottom: 18px; }
+.reset-complete-btn {
+  width: 100%; border: none; border-radius: 16px;
+  background: linear-gradient(135deg, var(--green), #3de88a);
+  color: #0b1f0b; font: 700 15px 'Syne', sans-serif; padding: 16px; cursor: pointer;
+  transition: transform .13s; margin-top: 12px;
+}
+.reset-complete-btn:active { transform: scale(.97); }
+.reset-victory-input {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 14px;
+  background: var(--soft); color: var(--text);
+  font: 15px 'DM Sans', sans-serif; padding: 14px 16px; outline: none;
+  resize: none; margin-bottom: 4px;
+}
+.reset-victory-input:focus { border-color: var(--accent); }
+.reset-victory-input::placeholder { color: var(--muted); }
+.reset-relaunch-card {
+  text-align: center; padding: 22px 20px;
+  background: rgba(92,252,160,.05); border: 1.5px solid rgba(92,252,160,.2);
+  border-radius: 20px; margin-top: 10px; animation: pop .35s cubic-bezier(.34,1.56,.64,1);
+}
+.reset-relaunch-emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+.reset-relaunch-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+.reset-relaunch-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+/* ── BRAIN DUMP ── */
+.brain-dump-hint {
+  background: rgba(124,92,252,.07); border: 1px solid rgba(124,92,252,.2);
+  border-radius: 14px; padding: 12px 16px; font-size: 13px; color: var(--muted);
+  line-height: 1.55; margin-bottom: 16px;
+}
+.brain-dump-area {
+  width: 100%; min-height: 220px; border: 1.5px solid var(--border); border-radius: 18px;
+  background: var(--card); color: var(--text);
+  font: 15px 'DM Sans', sans-serif; padding: 18px; outline: none; resize: none;
+  transition: border-color .2s; line-height: 1.6;
+}
+.brain-dump-area:focus { border-color: var(--accent); }
+.brain-dump-area::placeholder { color: var(--muted); opacity: 1; }
+
+/* ── DOPAMINE TOAST ── */
+.dopamine-toast {
+  position: fixed; bottom: calc(env(safe-area-inset-bottom) + 80px); left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; border-radius: 999px; padding: 12px 22px;
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+  white-space: nowrap; z-index: 800;
+  box-shadow: 0 6px 24px rgba(124,92,252,.45);
+  animation: toastIn .35s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+}
+.dopamine-toast.fading { animation: toastOut .4s ease forwards; }
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(20px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+@keyframes toastOut { from{opacity:1;transform:translateX(-50%) translateY(0)} to{opacity:0;transform:translateX(-50%) translateY(-16px)} }
 </style>
 </head>
 <body>
@@ -919,15 +1083,14 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- HOME -->
 <section class="screen" id="home">
   <button class="back" id="back-home">← Ma liste</button>
-  <div style="margin-bottom:32px">
+  <div style="margin-bottom:20px">
     <span class="logo">✦ focusTDAH</span>
     <h1>Tu veux faire quoi <em>maintenant</em> ?</h1>
     <p class="sub">Je m'occupe du reste.</p>
   </div>
-  <button class="block-btn block-blocked" id="btn-blocked-home">
-    <span class="b-title">🆘 Je suis bloqué</span>
-    <span class="b-sub">Énergie, stratégies et méthodes pour te relancer</span>
-  </button>
+
+  <!-- ZONE 1 : DÉMARRER -->
+  <div class="home-zone-label">🚀 Démarrer</div>
   <button class="block-btn block-main" id="btn-new">
     <span class="b-title">Nouveau projet ✦</span>
     <span class="b-sub">Transforme une idée floue en plan prêt à démarrer</span>
@@ -940,6 +1103,32 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <span class="b-title">Timer libre ⏱</span>
     <span class="b-sub">Travaille par intervalles, sans créer de projet</span>
   </button>
+
+  <!-- ZONE 2 : JE SUIS BLOQUÉ -->
+  <div class="home-zone-label" style="margin-top:6px">🆘 Je suis bloqué</div>
+  <button class="block-btn block-blocked" id="btn-blocked-home">
+    <span class="b-title">Qu'est-ce qui me bloque ?</span>
+    <span class="b-sub">Brouillard · Panique · Vide · Évitement · et plus</span>
+  </button>
+
+  <!-- ZONE 3 : URGENCE -->
+  <div class="home-zone-label" style="margin-top:6px">🔥 Urgence</div>
+  <button class="block-btn block-panic" id="btn-mode-panique">
+    <span class="b-title">Mode panique 🔥</span>
+    <span class="b-sub">Deadline proche · Une seule action · Survie</span>
+  </button>
+
+  <!-- ZONE 4 : SE RESSOURCER -->
+  <div class="home-zone-label" style="margin-top:6px">🧘 Me ressourcer</div>
+  <button class="block-btn block-reset" id="btn-reset-cognitif">
+    <span class="b-title">Reset cognitif 🧘</span>
+    <span class="b-sub">Respiration · Corps · Clarté · Nouveau départ</span>
+  </button>
+  <button class="block-btn block-secondary" id="btn-brain-dump">
+    <span class="b-title">Vider mon cerveau 🧠</span>
+    <span class="b-sub">Écrire tout ce qui tourne en boucle pour libérer l'espace mental</span>
+  </button>
+
   <div id="notif-banner" class="notif-banner" style="display:none">
     <span class="notif-icon">🔔</span>
     <div class="notif-body">
@@ -951,7 +1140,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
       </div>
     </div>
   </div>
-  <div id="home-proj-wrap" style="margin-top:28px;display:none">
+  <div id="home-proj-wrap" style="margin-top:24px;display:none">
     <div class="section-label">Mes projets</div>
     <div id="home-proj-list" class="proj-list"></div>
   </div>
@@ -1196,6 +1385,108 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <section class="screen" id="blocked-action">
   <button class="back" id="back-blocked-action">← Changer de stratégie</button>
   <div id="blocked-action-content"></div>
+</section>
+
+<!-- BLOQUÉ V2 : TYPE DE FRICTION -->
+<section class="screen" id="blocked-type">
+  <button class="back" id="back-blocked-type">← Retour</button>
+  <h1>Qu'est-ce qui te <em>bloque</em> ?</h1>
+  <p class="sub">Dis-moi exactement, je vais t'aider à sortir de là.</p>
+  <div class="friction-grid" id="friction-grid"></div>
+</section>
+
+<!-- BLOQUÉ V2 : STRATÉGIES PAR FRICTION -->
+<section class="screen" id="blocked-friction-strategies">
+  <button class="back" id="back-friction-strategies">← Changer de type</button>
+  <div id="friction-strat-header"></div>
+  <div id="friction-strat-list"></div>
+</section>
+
+<!-- MODE PANIQUE -->
+<section class="screen" id="mode-panique">
+  <button class="back" id="back-mode-panique">← Retour</button>
+  <div style="text-align:center;margin-bottom:20px">
+    <span style="font-size:52px;display:block;margin-bottom:10px">🔥</span>
+    <h1 style="margin:0 0 6px">Mode <em>panique</em></h1>
+    <p class="sub" style="margin-bottom:0">Deadline proche. On garde le cap. Une seule chose à la fois.</p>
+  </div>
+  <div id="panic-setup">
+    <div class="field">
+      <label>C'est pour quand ?</label>
+      <input id="panic-deadline" type="text" placeholder="Ex : dans 2h, demain 9h, ce soir…" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Qu'est-ce qui DOIT être fait ?</label>
+      <textarea id="panic-task" placeholder="La chose la plus importante à livrer en ce moment…" rows="3"></textarea>
+    </div>
+    <button class="btn panic-launch-btn" id="btn-activate-panic" disabled>🔥 Activer le mode survie</button>
+  </div>
+  <div id="panic-active" style="display:none">
+    <div class="panic-deadline-badge" id="panic-deadline-badge"></div>
+    <div class="panic-focus-card">
+      <div class="panic-focus-label">TA SEULE MISSION :</div>
+      <div class="panic-task-display" id="panic-task-display"></div>
+    </div>
+    <div class="panic-timer-num" id="panic-timer-num">25:00</div>
+    <div class="timer-track" style="margin-bottom:18px"><div class="timer-bar" id="panic-timer-bar" style="width:100%;background:linear-gradient(90deg,#fc5c7d,#fc875c)"></div></div>
+    <div class="timer-btns">
+      <button class="t-start" id="panic-toggle" style="background:linear-gradient(135deg,#fc5c7d,#fc875c)">▶ Commencer</button>
+      <button class="t-reset" id="panic-reset">↺</button>
+    </div>
+    <div class="panic-mantra">🔥 Une chose. Maintenant. C'est tout.</div>
+    <button class="btn-outline" id="btn-panic-done" style="margin-top:16px">✓ C'est fait — je souffle</button>
+    <button class="btn-ghost" id="btn-panic-new-round" style="width:100%;justify-content:center">↺ Nouveau round</button>
+  </div>
+</section>
+
+<!-- RESET COGNITIF -->
+<section class="screen" id="reset-cognitif">
+  <button class="back" id="back-reset-cognitif">← Retour</button>
+  <h1>Reset <em>cognitif</em></h1>
+  <p class="sub">3 minutes pour toi. Ton cerveau en a besoin avant de continuer.</p>
+  <div id="reset-steps-wrap">
+    <div class="reset-step" id="rs-breath">
+      <div class="reset-step-num">1</div>
+      <div class="reset-step-body">
+        <div class="reset-step-title">🌬 Respiration 4-7-8</div>
+        <div class="reset-step-desc">3 cycles · ~1 minute · Calme le système nerveux</div>
+        <button class="reset-step-btn active-step-btn" id="btn-rs-breath">Commencer →</button>
+      </div>
+    </div>
+    <div class="reset-step locked" id="rs-stretch">
+      <div class="reset-step-num">2</div>
+      <div class="reset-step-body">
+        <div class="reset-step-title">🙆 Étirement rapide</div>
+        <div class="reset-step-desc">30 secondes · Cou, épaules, dos</div>
+      </div>
+    </div>
+    <div class="reset-step locked" id="rs-water">
+      <div class="reset-step-num">3</div>
+      <div class="reset-step-body">
+        <div class="reset-step-title">💧 Boire de l'eau</div>
+        <div class="reset-step-desc">Un grand verre · Le cerveau en a besoin</div>
+      </div>
+    </div>
+    <div class="reset-step locked" id="rs-victory">
+      <div class="reset-step-num">4</div>
+      <div class="reset-step-body">
+        <div class="reset-step-title">🏆 Mini victoire</div>
+        <div class="reset-step-desc">Une chose que tu as accomplie aujourd'hui</div>
+      </div>
+    </div>
+  </div>
+  <div id="reset-active-content" style="display:none"></div>
+</section>
+
+<!-- BRAIN DUMP -->
+<section class="screen" id="brain-dump">
+  <button class="back" id="back-brain-dump">← Retour</button>
+  <h1>Vide ton <em>cerveau</em></h1>
+  <p class="sub">Écris tout ce qui tourne en boucle. Rien à organiser — juste vider.</p>
+  <div class="brain-dump-hint">💡 Pensées, peurs, tâches oubliées, idées aléatoires, stress… tout y passe.</div>
+  <textarea class="brain-dump-area" id="brain-dump-text" placeholder="Je pense à…&#10;Je dois…&#10;J'ai oublié de…&#10;Je suis stressé par…&#10;J'ai peur que…&#10;J'aurais dû…"></textarea>
+  <button class="btn" id="btn-brain-dump-done" style="margin-top:16px">✓ C'est noté — retour au travail</button>
+  <button class="btn-outline" id="btn-brain-dump-clear">🗑 Effacer tout</button>
 </section>
 
 <!-- TIMER SETUP -->
@@ -2011,7 +2302,10 @@ function renderHome() {
 
 document.getElementById('btn-new').onclick = () => show('create');
 document.getElementById('back-home').onclick = () => show('landing');
-document.getElementById('btn-blocked-home').onclick = () => showBlockedEnergy('home');
+document.getElementById('btn-blocked-home').onclick = () => showBlockedV2('home');
+document.getElementById('btn-mode-panique').onclick = () => showModePanique();
+document.getElementById('btn-reset-cognitif').onclick = () => showResetCognitif();
+document.getElementById('btn-brain-dump').onclick = () => show('brain-dump');
 document.getElementById('back-create').onclick = () => { renderHome(); show('home'); };
 document.getElementById('back-mode').onclick = () => {
   if (currentProject) { renderPlanPreview(currentProject); show('plan-preview'); }
@@ -4330,7 +4624,7 @@ function advanceMicro() {
   }
 }
 
-document.getElementById('btn-done').onclick = advanceMicro;
+document.getElementById('btn-done').onclick = () => { showDopamineToast(); advanceMicro(); };
 document.getElementById('btn-skip').onclick = advanceMicro;
 
 function finishProject() {
@@ -4533,6 +4827,349 @@ document.getElementById('ft-opt-home').onclick = () => {
 let blockedEnergy = 0;
 let blockedCalledFrom = 'session';
 let breathInterval = null, pauseInterval = null, stretchInterval = null, twoMinInterval = null;
+let selectedFrictionType = null;
+
+const FRICTION_TYPES = [
+  { id:'brouillard', emoji:'🌫', label:'Brouillard mental',    desc:'Je ne sais pas par où commencer',            strategies:['2min','switch','breathing'] },
+  { id:'panique',    emoji:'😰', label:'Panique / Anxiété',    desc:'C\'est trop grand, trop important',           strategies:['breathing','2min','pause'] },
+  { id:'hyper',      emoji:'⚡', label:'Hyperactivité',         desc:'Impossible de m\'asseoir et me concentrer',   strategies:['stretch','2min','switch'] },
+  { id:'vide',       emoji:'😶', label:'Vide / Sans motivation', desc:'Aucune énergie, aucune envie de rien',       strategies:['pause','2min','stretch'] },
+  { id:'saturation', emoji:'🤯', label:'Saturation',            desc:'Trop d\'infos, trop de choses en même temps', strategies:['breathing','switch','pause'] },
+  { id:'evitement',  emoji:'🙈', label:'Évitement',             desc:'Je repousse, je procrastine',                 strategies:['2min','switch','breathing'] },
+  { id:'fatigue',    emoji:'😓', label:'Fatigue physique',      desc:'Corps épuisé, j\'ai besoin de récupérer',     strategies:['pause','stretch','breathing'] },
+  { id:'decision',   emoji:'🤔', label:'Décision impossible',   desc:'Je n\'arrive pas à choisir par quoi commencer', strategies:['2min','switch','breathing'] },
+];
+
+const DOPAMINE_MESSAGES = [
+  '🔥 Tu l\'as fait !',
+  '⚡ Le momentum est lancé.',
+  '✨ Dopamine libérée — continue.',
+  '🎯 Exactement comme prévu.',
+  '💪 Tu prouve que tu peux le faire.',
+  '🚀 Chaque micro-action compte.',
+  '🏆 Une victoire de plus.',
+  '✓ Ton cerveau TDAH vient de gagner un round.',
+  '🌟 Tu avances, vraiment.',
+  '🎉 Bien joué. Action suivante.',
+];
+
+function showBlockedV2(from) {
+  blockedCalledFrom = from || 'session';
+  renderFrictionGrid();
+  show('blocked-type');
+}
+
+function renderFrictionGrid() {
+  const grid = document.getElementById('friction-grid');
+  grid.innerHTML = '';
+  FRICTION_TYPES.forEach(ft => {
+    const card = document.createElement('button');
+    card.className = 'friction-card';
+    card.innerHTML = `<span class="friction-emoji">${ft.emoji}</span><div class="friction-info"><div class="friction-label">${ft.label}</div><div class="friction-desc">${ft.desc}</div></div>`;
+    card.onclick = () => {
+      selectedFrictionType = ft;
+      showFrictionStrategies(ft);
+    };
+    grid.appendChild(card);
+  });
+  const energyCard = document.createElement('button');
+  energyCard.className = 'friction-card friction-energy';
+  energyCard.innerHTML = `<span class="friction-emoji">⚡</span><div class="friction-info"><div class="friction-label">Manque d'énergie</div><div class="friction-desc">Je suis physiquement ou mentalement épuisé</div></div>`;
+  energyCard.onclick = () => showBlockedEnergy(blockedCalledFrom);
+  grid.appendChild(energyCard);
+}
+
+function showFrictionStrategies(ft) {
+  const header = document.getElementById('friction-strat-header');
+  header.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <span style="font-size:36px">${ft.emoji}</span>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">${ft.label}</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:2px">${ft.desc}</div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Choisis la stratégie qui te parle le plus maintenant.</p>`;
+  const list = document.getElementById('friction-strat-list');
+  list.innerHTML = '';
+  ft.strategies.forEach((id, i) => {
+    const s = STRATEGIES_DATA.find(x => x.id === id);
+    if (!s) return;
+    const card = document.createElement('button');
+    card.className = 'strategy-card';
+    card.innerHTML = `
+      <div class="strategy-emoji">${s.emoji}</div>
+      <div class="strategy-info">
+        <div class="strategy-title">${s.title}</div>
+        <div class="strategy-desc">${s.desc}</div>
+        <span class="strategy-badge ${i === 0 ? 'badge-recommended' : s.badgeClass}">${i === 0 ? '★ Recommandé pour toi' : s.badge}</span>
+      </div>`;
+    card.onclick = () => startStrategy(id);
+    list.appendChild(card);
+  });
+  show('blocked-friction-strategies');
+}
+
+function showDopamineToast(msg) {
+  const existing = document.querySelector('.dopamine-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'dopamine-toast';
+  toast.textContent = msg || DOPAMINE_MESSAGES[Math.floor(Math.random() * DOPAMINE_MESSAGES.length)];
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('fading');
+    setTimeout(() => toast.remove(), 400);
+  }, 2200);
+}
+
+// ════════════════════════════════════════════════
+// ─── MODE PANIQUE ───
+// ════════════════════════════════════════════════
+let panicTimerSec = 25 * 60;
+let panicTimerInterval = null;
+let panicTimerRunning = false;
+const PANIC_DURATION = 25 * 60;
+
+function showModePanique() {
+  document.getElementById('panic-setup').style.display = 'block';
+  document.getElementById('panic-active').style.display = 'none';
+  document.getElementById('panic-deadline').value = '';
+  document.getElementById('panic-task').value = '';
+  document.getElementById('btn-activate-panic').disabled = true;
+  clearPanicTimer();
+  show('mode-panique');
+}
+
+function activatePanicMode() {
+  const deadline = document.getElementById('panic-deadline').value.trim();
+  const task = document.getElementById('panic-task').value.trim();
+  document.getElementById('panic-setup').style.display = 'none';
+  document.getElementById('panic-active').style.display = 'block';
+  document.getElementById('panic-deadline-badge').textContent = deadline ? '⏰ ' + deadline : '';
+  document.getElementById('panic-deadline-badge').style.display = deadline ? 'inline-block' : 'none';
+  document.getElementById('panic-task-display').textContent = task;
+  panicTimerSec = PANIC_DURATION;
+  panicTimerRunning = false;
+  renderPanicTimer();
+}
+
+function renderPanicTimer() {
+  document.getElementById('panic-timer-num').textContent = fmt(panicTimerSec);
+  const pct = (panicTimerSec / PANIC_DURATION) * 100;
+  document.getElementById('panic-timer-bar').style.width = pct + '%';
+  document.getElementById('panic-toggle').textContent = panicTimerRunning ? '⏸ Pause' : '▶ Commencer';
+}
+
+function togglePanicTimer() {
+  if (panicTimerRunning) {
+    clearInterval(panicTimerInterval);
+    panicTimerRunning = false;
+  } else {
+    panicTimerRunning = true;
+    panicTimerInterval = setInterval(() => {
+      panicTimerSec--;
+      renderPanicTimer();
+      if (panicTimerSec <= 0) {
+        clearInterval(panicTimerInterval);
+        panicTimerRunning = false;
+        panicTimerSec = 0;
+        renderPanicTimer();
+        showDopamineToast('🔥 Round terminé ! Tu as tenu.');
+        if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+      }
+    }, 1000);
+  }
+  renderPanicTimer();
+}
+
+function resetPanicTimer(autoStart) {
+  clearInterval(panicTimerInterval);
+  panicTimerRunning = false;
+  panicTimerSec = PANIC_DURATION;
+  renderPanicTimer();
+  if (autoStart) togglePanicTimer();
+}
+
+function clearPanicTimer() {
+  clearInterval(panicTimerInterval);
+  panicTimerRunning = false;
+}
+
+// ════════════════════════════════════════════════
+// ─── RESET COGNITIF ───
+// ════════════════════════════════════════════════
+let resetCurrentStep = 0;
+const RESET_STEPS = ['breath','stretch','water','victory'];
+
+function showResetCognitif() {
+  resetCurrentStep = 0;
+  RESET_STEPS.forEach(s => {
+    const el = document.getElementById('rs-' + s);
+    if (el) { el.classList.remove('done','locked'); }
+  });
+  document.getElementById('rs-stretch').classList.add('locked');
+  document.getElementById('rs-water').classList.add('locked');
+  document.getElementById('rs-victory').classList.add('locked');
+  const btn = document.getElementById('btn-rs-breath');
+  if (btn) btn.style.display = 'block';
+  document.getElementById('reset-steps-wrap').style.display = 'block';
+  document.getElementById('reset-active-content').style.display = 'none';
+  show('reset-cognitif');
+}
+
+function startResetStep(step) {
+  const activeEl = document.getElementById('reset-active-content');
+  document.getElementById('reset-steps-wrap').style.display = 'none';
+  activeEl.style.display = 'block';
+
+  if (step === 'breath') {
+    activeEl.innerHTML = `
+      <div class="reset-active-card">
+        <div class="reset-active-title">🌬 Respiration 4-7-8</div>
+        <div class="reset-active-sub">Inspire 4s · Retiens 7s · Expire 8s — 3 cycles</div>
+        <div class="breath-wrap" style="padding:20px 0 10px">
+          <div class="breath-circle-outer" id="rc-circle">
+            <div>
+              <div class="breath-count" id="rc-count">4</div>
+            </div>
+          </div>
+          <div class="breath-phase" id="rc-phase">Inspire…</div>
+          <div class="breath-cycle-dots">
+            <div class="breath-dot" id="rc-d0"></div>
+            <div class="breath-dot" id="rc-d1"></div>
+            <div class="breath-dot" id="rc-d2"></div>
+          </div>
+        </div>
+      </div>`;
+    startResetBreath();
+  } else if (step === 'stretch') {
+    let sec = 30;
+    activeEl.innerHTML = `
+      <div class="reset-active-card">
+        <div class="reset-active-title">🙆 Étirement rapide</div>
+        <div class="reset-active-sub">Incline doucement la tête de chaque côté, roule les épaules.</div>
+        <div class="action-timer-num" id="rc-stretch-num">0:30</div>
+        <div class="action-timer-track"><div class="action-timer-bar" id="rc-stretch-bar" style="width:100%"></div></div>
+        <button class="reset-complete-btn" id="rc-stretch-skip">Passer →</button>
+      </div>`;
+    const iv = setInterval(() => {
+      sec--;
+      document.getElementById('rc-stretch-num').textContent = fmt(sec);
+      const pct = (sec / 30) * 100;
+      const bar = document.getElementById('rc-stretch-bar');
+      if (bar) bar.style.width = pct + '%';
+      if (sec <= 0) { clearInterval(iv); completeResetStep('stretch'); }
+    }, 1000);
+    document.getElementById('rc-stretch-skip').onclick = () => { clearInterval(iv); completeResetStep('stretch'); };
+  } else if (step === 'water') {
+    activeEl.innerHTML = `
+      <div class="reset-active-card" style="text-align:center">
+        <div style="font-size:56px;margin-bottom:12px">💧</div>
+        <div class="reset-active-title">Boire de l'eau</div>
+        <div class="reset-active-sub">Lève-toi, va boire un grand verre d'eau.<br>Ton cerveau fonctionne mieux hydraté.</div>
+        <button class="reset-complete-btn" id="rc-water-done">✓ C'est fait</button>
+      </div>`;
+    document.getElementById('rc-water-done').onclick = () => completeResetStep('water');
+  } else if (step === 'victory') {
+    activeEl.innerHTML = `
+      <div class="reset-active-card">
+        <div class="reset-active-title">🏆 Ta mini victoire</div>
+        <div class="reset-active-sub">Une chose que tu as quand même réussie aujourd'hui — même minuscule.</div>
+        <textarea class="reset-victory-input" id="rc-victory-text" placeholder="Aujourd'hui j'ai réussi à…" rows="3"></textarea>
+        <button class="reset-complete-btn" id="rc-victory-done">✓ Valider et relancer</button>
+      </div>`;
+    document.getElementById('rc-victory-done').onclick = () => {
+      const txt = document.getElementById('rc-victory-text').value.trim();
+      completeResetStep('victory', txt);
+    };
+  }
+}
+
+let rcBreathPhase = 'inhale', rcBreathCount = 4, rcBreathCycles = 0;
+let rcBreathInterval = null;
+const RC_BREATH = { inhale:{label:'Inspire…',dur:4,cls:'expand',next:'hold'}, hold:{label:'Retiens…',dur:7,cls:'hold',next:'exhale'}, exhale:{label:'Expire…',dur:8,cls:'exhale',next:'inhale'} };
+
+function startResetBreath() {
+  rcBreathPhase = 'inhale'; rcBreathCount = 4; rcBreathCycles = 0;
+  updateRCBreath();
+  rcBreathInterval = setInterval(() => {
+    rcBreathCount--;
+    const countEl = document.getElementById('rc-count');
+    if (countEl) countEl.textContent = rcBreathCount;
+    if (rcBreathCount <= 0) {
+      const cfg = RC_BREATH[rcBreathPhase];
+      const next = cfg.next;
+      rcBreathPhase = next;
+      if (next === 'inhale') {
+        rcBreathCycles++;
+        const dot = document.getElementById('rc-d' + (rcBreathCycles - 1));
+        if (dot) dot.classList.add('done');
+        if (rcBreathCycles >= 3) {
+          clearInterval(rcBreathInterval);
+          completeResetStep('breath');
+          return;
+        }
+      }
+      rcBreathCount = RC_BREATH[rcBreathPhase].dur;
+      updateRCBreath();
+    }
+  }, 1000);
+}
+
+function updateRCBreath() {
+  const cfg = RC_BREATH[rcBreathPhase];
+  const phaseEl = document.getElementById('rc-phase');
+  const circleEl = document.getElementById('rc-circle');
+  const countEl = document.getElementById('rc-count');
+  if (phaseEl) phaseEl.textContent = cfg.label;
+  if (countEl) countEl.textContent = rcBreathCount;
+  if (circleEl) { circleEl.className = 'breath-circle-outer ' + cfg.cls; }
+}
+
+function completeResetStep(step, victoryText) {
+  clearInterval(rcBreathInterval);
+  const idx = RESET_STEPS.indexOf(step);
+  const stepEl = document.getElementById('rs-' + step);
+  if (stepEl) stepEl.classList.add('done');
+  resetCurrentStep = idx + 1;
+  if (resetCurrentStep >= RESET_STEPS.length) {
+    showResetComplete(victoryText);
+    return;
+  }
+  const nextStep = RESET_STEPS[resetCurrentStep];
+  const nextEl = document.getElementById('rs-' + nextStep);
+  if (nextEl) nextEl.classList.remove('locked');
+  document.getElementById('reset-steps-wrap').style.display = 'block';
+  document.getElementById('reset-active-content').style.display = 'none';
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'active-step-btn';
+  nextBtn.textContent = 'Commencer →';
+  nextBtn.style.display = 'block';
+  nextBtn.onclick = () => startResetStep(nextStep);
+  const body = nextEl.querySelector('.reset-step-body');
+  const existing = body.querySelector('.active-step-btn');
+  if (!existing) body.appendChild(nextBtn);
+}
+
+function showResetComplete(victoryText) {
+  const activeEl = document.getElementById('reset-active-content');
+  document.getElementById('reset-steps-wrap').style.display = 'none';
+  activeEl.style.display = 'block';
+  activeEl.innerHTML = `
+    <div class="reset-relaunch-card">
+      <span class="reset-relaunch-emoji">✨</span>
+      <div class="reset-relaunch-title">Reset terminé !</div>
+      <div class="reset-relaunch-sub">${victoryText ? '"' + victoryText + '"<br><br>' : ''}Ton cerveau est prêt pour un nouveau départ.</div>
+      <button class="btn" id="btn-after-reset">🚀 Retour au travail</button>
+      <button class="btn-outline" id="btn-after-reset-home" style="margin-top:10px">← Retour à l'accueil</button>
+    </div>`;
+  showDopamineToast('✨ Reset réussi — nouveau départ !');
+  document.getElementById('btn-after-reset').onclick = () => show('home');
+  document.getElementById('btn-after-reset-home').onclick = () => show('landing');
+}
+
+
 
 const STRATEGIES_DATA = [
   { id:'breathing', emoji:'🌬️', title:'Respiration 4-7-8',    desc:'Calme le système nerveux en moins de 2 min',          badge:'Très efficace',        badgeClass:'badge-recommended' },
@@ -4906,18 +5543,58 @@ function showDone(type) {
 function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
 
 // ── Event handlers ──
-document.getElementById('btn-blocked').onclick          = () => showBlockedEnergy('session');
+document.getElementById('btn-blocked').onclick          = () => showBlockedV2('session');
 document.getElementById('btn-energy-next').onclick      = () => showBlockedStrategies();
-document.getElementById('back-blocked-energy').onclick  = () => show(blockedCalledFrom);
+document.getElementById('back-blocked-energy').onclick  = () => show('blocked-type');
 document.getElementById('back-blocked-strategies').onclick = () => show('blocked-energy');
 document.getElementById('back-blocked-action').onclick  = () => {
   clearInterval(breathInterval); clearInterval(pauseInterval);
   clearInterval(stretchInterval); clearInterval(twoMinInterval);
   show('blocked-strategies');
 };
+document.getElementById('back-blocked-type').onclick    = () => show(blockedCalledFrom);
+document.getElementById('back-friction-strategies').onclick = () => show('blocked-type');
+document.getElementById('back-mode-panique').onclick    = () => { clearPanicTimer(); show('home'); };
+document.getElementById('back-reset-cognitif').onclick  = () => show('home');
+document.getElementById('back-brain-dump').onclick      = () => show('home');
+document.getElementById('btn-brain-dump-done').onclick  = () => {
+  localStorage.setItem('focustdah_brain_dump', document.getElementById('brain-dump-text').value);
+  show('home');
+};
+document.getElementById('btn-brain-dump-clear').onclick = () => {
+  if (confirm('Effacer tout le contenu ?')) {
+    document.getElementById('brain-dump-text').value = '';
+    localStorage.removeItem('focustdah_brain_dump');
+  }
+};
+
+// Panic mode inputs
+document.getElementById('panic-deadline').oninput = document.getElementById('panic-task').oninput = () => {
+  const dl = document.getElementById('panic-deadline').value.trim();
+  const tk = document.getElementById('panic-task').value.trim();
+  document.getElementById('btn-activate-panic').disabled = !tk;
+};
+document.getElementById('btn-activate-panic').onclick = () => activatePanicMode();
+document.getElementById('panic-toggle').onclick       = () => togglePanicTimer();
+document.getElementById('panic-reset').onclick        = () => resetPanicTimer();
+document.getElementById('btn-panic-done').onclick     = () => {
+  clearPanicTimer();
+  showDopamineToast('🔥 Mission accomplie — tu l\'as fait !');
+  renderHome(); show('home');
+};
+document.getElementById('btn-panic-new-round').onclick = () => resetPanicTimer(true);
+
+// Reset cognitif steps
+document.getElementById('btn-rs-breath').onclick = () => startResetStep('breath');
 
 // ─── INIT ───
 initAuth();
+
+// Load brain dump from localStorage
+(function() {
+  const saved = localStorage.getItem('focustdah_brain_dump');
+  if (saved) document.getElementById('brain-dump-text').value = saved;
+})();
 </script>
 </body>
 </html>
