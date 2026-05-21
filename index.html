@@ -5213,34 +5213,38 @@ function showFedUpModal(pauseFn, resumeFn) {
 }
 
 // Pause/resume helpers for each timer type
-function pauseSessionTimer()  { if (tRunning) { tRunning = false; clearInterval(tInterval); releaseWakeLock(); } }
+function pauseSessionTimer() {
+  if (tRunning) { tRunning = false; clearInterval(tInterval); tEndTimestamp = null; releaseWakeLock(); }
+}
 function resumeSessionTimer() {
   if (!tRunning && tRemain > 0) {
     tRunning = true;
+    tEndTimestamp = Date.now() + tRemain * 1000;
     startContinuousFocus();
     requestWakeLock();
     tInterval = setInterval(() => {
-      tRemain--;
-      const pct = (tRemain / tTotal) * 100;
+      tRemain = Math.max(0, Math.ceil((tEndTimestamp - Date.now()) / 1000));
       document.getElementById('s-timer').textContent = Math.floor(tRemain/60)+':'+String(tRemain%60).padStart(2,'0');
-      document.getElementById('s-timer-bar').style.width = pct + '%';
-      if (tRemain <= 0) { clearInterval(tInterval); tRunning = false; }
+      document.getElementById('s-timer-bar').style.width = (tRemain / tTotal * 100) + '%';
+      if (tRemain <= 0) onSessionTimerEnd();
     }, 1000);
     document.getElementById('t-toggle').textContent = '⏸ Pause';
   }
 }
-function pauseFreeTimer()  { if (ftRunning) { ftRunning = false; clearInterval(ftInterval); releaseWakeLock(); } }
+function pauseFreeTimer() {
+  if (ftRunning) { ftRunning = false; clearInterval(ftInterval); ftEndTimestamp = null; releaseWakeLock(); }
+}
 function resumeFreeTimer() {
   if (!ftRunning && ftRemain > 0) {
     ftRunning = true;
+    ftEndTimestamp = Date.now() + ftRemain * 1000;
     startContinuousFocus();
     requestWakeLock();
     ftInterval = setInterval(() => {
-      ftRemain--;
-      const pct = (ftRemain / ftTotal) * 100;
+      ftRemain = Math.max(0, Math.ceil((ftEndTimestamp - Date.now()) / 1000));
       document.getElementById('ft-num').textContent = Math.floor(ftRemain/60)+':'+String(ftRemain%60).padStart(2,'0');
-      document.getElementById('ft-bar').style.width = pct + '%';
-      if (ftRemain <= 0) { clearInterval(ftInterval); ftRunning = false; }
+      document.getElementById('ft-bar').style.width = (1 - ftRemain / ftTotal) * 100 + '%';
+      if (ftRemain <= 0) onFtTimerEnd();
     }, 1000);
     document.getElementById('ft-toggle').textContent = '⏸ Pause';
   }
@@ -5262,6 +5266,7 @@ const MODES = {
   'one':     { label: 'Une seule chose',  time: 1200 }
 };
 let tRemain = 120, tTotal = 120, tRunning = false, tInterval = null;
+let tEndTimestamp = null, ftEndTimestamp = null;
 
 function startSession() {
   renderSession();
@@ -5353,22 +5358,14 @@ document.getElementById('t-toggle').onclick = function() {
     if (tRemain <= 0) return;
     maybeAskFocus();
     tRunning = true;
+    tEndTimestamp = Date.now() + tRemain * 1000;
     startContinuousFocus();
     requestWakeLock();
     document.getElementById('t-toggle').textContent = '⏸ Pause';
     tInterval = setInterval(function() {
-      tRemain--;
+      tRemain = Math.max(0, Math.ceil((tEndTimestamp - Date.now()) / 1000));
       renderTimerDisplay();
-      if (tRemain <= 0) {
-        clearInterval(tInterval);
-        tRunning = false;
-        document.getElementById('t-toggle').textContent = '▶ Rejouer';
-        document.getElementById('s-timer').textContent = '✓';
-        sendNotif('Timer terminé ⏸', 'Fais une pause ou continue ta session.');
-        addBehaviorEvent('complete');
-        releaseWakeLock();
-        playTimerEndSound();
-      }
+      if (tRemain <= 0) onSessionTimerEnd();
     }, 1000);
   }
 };
@@ -5543,23 +5540,14 @@ document.getElementById('ft-toggle').onclick = function() {
     if (ftRemain <= 0) return;
     maybeAskFocus();
     ftRunning = true;
+    ftEndTimestamp = Date.now() + ftRemain * 1000;
     startContinuousFocus();
     requestWakeLock();
     this.textContent = '⏸ Pause';
     ftInterval = setInterval(() => {
-      ftRemain--;
+      ftRemain = Math.max(0, Math.ceil((ftEndTimestamp - Date.now()) / 1000));
       renderFtTimer();
-      if (ftRemain <= 0) {
-        clearInterval(ftInterval);
-        ftRunning = false;
-        document.getElementById('ft-num').textContent = '✓';
-        document.getElementById('ft-toggle').style.display = 'none';
-        document.getElementById('ft-stop').style.display = 'none';
-        addBehaviorEvent('complete');
-        releaseWakeLock();
-        playTimerEndSound();
-        showFtEndPanel();
-      }
+      if (ftRemain <= 0) onFtTimerEnd();
     }, 1000);
   }
 };
@@ -5740,14 +5728,23 @@ async function requestWakeLock() {
 function releaseWakeLock() {
   if (wakeLock) { wakeLock.release(); wakeLock = null; }
 }
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && (tRunning || ftRunning)) requestWakeLock();
-});
 
-// ─── TIMER END SOUND ───
+// ─── AUDIO (AudioContext persistant, déverrouillé sur geste utilisateur) ───
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+function unlockAudio() {
+  try { const c = getAudioCtx(); if (c.state === 'suspended') c.resume(); } catch(e) {}
+}
+document.addEventListener('touchend', unlockAudio, { passive: true });
+document.addEventListener('click',    unlockAudio, { passive: true });
+
 function playTimerEndSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
     [[880, 0, 0.4], [1109, 0.38, 0.4], [660, 0.76, 0.7]].forEach(([freq, start, dur]) => {
       const osc = ctx.createOscillator();
       const g   = ctx.createGain();
@@ -5761,6 +5758,46 @@ function playTimerEndSound() {
     });
   } catch(e) {}
 }
+
+// ─── HELPERS FIN DE TIMER ───
+function onSessionTimerEnd() {
+  clearInterval(tInterval);
+  tRunning = false;
+  tEndTimestamp = null;
+  document.getElementById('t-toggle').textContent = '▶ Rejouer';
+  document.getElementById('s-timer').textContent = '✓';
+  sendNotif('Timer terminé ⏸', 'Fais une pause ou continue ta session.');
+  addBehaviorEvent('complete');
+  releaseWakeLock();
+  playTimerEndSound();
+}
+function onFtTimerEnd() {
+  clearInterval(ftInterval);
+  ftRunning = false;
+  ftEndTimestamp = null;
+  document.getElementById('ft-num').textContent = '✓';
+  document.getElementById('ft-toggle').style.display = 'none';
+  document.getElementById('ft-stop').style.display   = 'none';
+  addBehaviorEvent('complete');
+  releaseWakeLock();
+  playTimerEndSound();
+  showFtEndPanel();
+}
+
+// ─── RESYNC AU RETOUR EN PREMIER PLAN ───
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (tRunning && tEndTimestamp) {
+    tRemain = Math.max(0, Math.ceil((tEndTimestamp - Date.now()) / 1000));
+    if (tRemain <= 0) { onSessionTimerEnd(); }
+    else { renderTimerDisplay(); requestWakeLock(); }
+  }
+  if (ftRunning && ftEndTimestamp) {
+    ftRemain = Math.max(0, Math.ceil((ftEndTimestamp - Date.now()) / 1000));
+    if (ftRemain <= 0) { onFtTimerEnd(); }
+    else { renderFtTimer(); requestWakeLock(); }
+  }
+});
 
 // ─── PROGRAMME ADAPTÉ AU FOCUS ───
 document.getElementById('btn-auto-program').onclick = () => {
