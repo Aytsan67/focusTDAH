@@ -131,7 +131,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .reentry-btn:active { background:var(--soft); }
 
 /* Streak badge */
-.streak-badge { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#ff9800,#ef5350); color:#fff; border-radius:20px; padding:6px 14px; font:700 13px 'DM Sans',sans-serif; cursor:default; }
 
 /* HALT check */
 .halt-item { display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--border); font-size:14px; color:var(--text); }
@@ -1589,7 +1588,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="back" id="back-home">← Ma liste</button>
   <div style="margin-bottom:20px">
     <span class="logo">✦ focusTDAH</span>
-    <div id="home-streak-wrap" style="display:none;margin-top:6px;margin-bottom:4px"></div>
     <h1>Tu veux faire quoi <em>maintenant</em> ?</h1>
     <p class="sub">Je m'occupe du reste.</p>
   </div>
@@ -2940,7 +2938,6 @@ function renderHome() {
   }
 
   checkNotifBanner();
-  renderStreakBadge();
   renderDailyPlanPreview();
   const wrap = document.getElementById('home-proj-wrap');
   const listEl = document.getElementById('home-proj-list');
@@ -5834,7 +5831,6 @@ function onSessionTimerEnd() {
   addBehaviorEvent('complete');
   releaseWakeLock();
   playTimerEndSound();
-  recordSession();
   setTimeout(showFocusCheckIn, 900);
 }
 function onFtTimerEnd() {
@@ -5847,7 +5843,6 @@ function onFtTimerEnd() {
   addBehaviorEvent('complete');
   releaseWakeLock();
   playTimerEndSound();
-  recordSession();
   showFtEndPanel();
   setTimeout(showFocusCheckIn, 900);
 }
@@ -8074,44 +8069,6 @@ document.getElementById('btn-panic-micro-skip').onclick = () => advancePanicMicr
 
 // Reset cognitif steps
 document.getElementById('btn-rs-breath').onclick = () => startResetStep('breath');
-
-// ─── STREAKS & RÉCOMPENSES ───
-function getRewardsData() {
-  try { return JSON.parse(localStorage.getItem('ft_rewards') || '{}'); } catch(e) { return {}; }
-}
-function saveRewardsData(d) { localStorage.setItem('ft_rewards', JSON.stringify(d)); }
-
-function recordSession() {
-  const d = getRewardsData();
-  const today = new Date().toDateString();
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
-  if (d.lastDay === today) {
-    d.todaySessions = (d.todaySessions || 0) + 1;
-  } else if (d.lastDay === yesterday) {
-    d.streak = (d.streak || 0) + 1;
-    d.todaySessions = 1;
-    d.lastDay = today;
-  } else {
-    d.streak = 1;
-    d.todaySessions = 1;
-    d.lastDay = today;
-  }
-  saveRewardsData(d);
-  if (d.streak >= 2) {
-    setTimeout(() => showDopamineToast('🔥 ' + d.streak + ' jours de suite ! Continue comme ça.', 3500), 1400);
-  }
-}
-
-function renderStreakBadge() {
-  const wrap = document.getElementById('home-streak-wrap');
-  if (!wrap) return;
-  const d = getRewardsData();
-  const today = new Date().toDateString();
-  if (!d.streak || d.lastDay !== today) { wrap.style.display = 'none'; return; }
-  const sessions = d.todaySessions || 1;
-  wrap.style.display = 'block';
-  wrap.innerHTML = '<span class="streak-badge">🔥 ' + d.streak + ' jour' + (d.streak > 1 ? 's' : '') + ' · ' + sessions + ' session' + (sessions > 1 ? 's' : '') + ' aujourd\'hui</span>';
-}
 
 // ─── HALT CHECK ───
 function checkHALT(onPass) {
