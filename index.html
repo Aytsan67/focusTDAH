@@ -11,6 +11,7 @@
 <meta name="theme-color" content="#0d0d14">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <!-- Firebase -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -933,6 +934,60 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   color: rgba(252,92,125,.65); margin-top: 18px; letter-spacing: .04em;
 }
 
+/* ── PANIC DOCS / GUIDED ── */
+.panic-docs-card {
+  background: rgba(252,92,125,.06); border: 1.5px solid rgba(252,92,125,.2);
+  border-radius: 18px; padding: 22px 20px; margin-bottom: 16px;
+}
+.panic-docs-title {
+  font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 700;
+  color: var(--text); margin-bottom: 8px;
+}
+.panic-docs-sub { font-size: 14px; color: var(--muted); line-height: 1.45; }
+.panic-instructions-input {
+  width: 100%; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05); color: var(--text); font-size: 14px;
+  padding: 12px; font-family: inherit; margin-top: 10px; resize: vertical;
+  box-sizing: border-box;
+}
+.panic-file-label {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
+  padding: 9px 16px; border-radius: 12px; border: 1.5px dashed rgba(252,92,125,.4);
+  color: #fc5c7d; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background .15s;
+}
+.panic-file-label:hover { background: rgba(252,92,125,.08); }
+.panic-file-name {
+  margin-top: 8px; font-size: 13px; color: var(--muted);
+  background: rgba(255,255,255,.06); border-radius: 8px; padding: 6px 12px;
+}
+.panic-progress-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+.panic-progress-label {
+  font-size: 12px; font-weight: 700; color: #fc5c7d; white-space: nowrap;
+}
+.panic-progress-pct {
+  font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap;
+}
+.panic-micro-card {
+  background: rgba(252,92,125,.07); border: 1.5px solid rgba(252,92,125,.25);
+  border-radius: 18px; padding: 20px; margin-bottom: 20px;
+}
+.panic-micro-step {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+  color: rgba(252,92,125,.6); margin-bottom: 8px;
+}
+.panic-micro-text {
+  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700;
+  line-height: 1.3; color: var(--text);
+}
+.panic-spinner {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 4px solid rgba(252,92,125,.2); border-top-color: #fc5c7d;
+  animation: spin .9s linear infinite; margin: 0 auto;
+}
+
 /* ── RESET COGNITIF ── */
 .reset-step {
   display: flex; align-items: flex-start; gap: 14px;
@@ -1480,6 +1535,34 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     </div>
     <button class="btn panic-launch-btn" id="btn-activate-panic" disabled>🔥 Activer le mode survie</button>
   </div>
+  <!-- Étape 2 : documents ? -->
+  <div id="panic-docs-step" style="display:none">
+    <div class="panic-docs-card">
+      <div class="panic-docs-title">📄 As-tu des documents ?</div>
+      <div class="panic-docs-sub">Consignes, sujet, brief… Je vais découper le travail pour toi.</div>
+      <div style="display:flex;gap:12px;margin-top:18px">
+        <button class="btn" id="btn-panic-yes-docs" style="flex:1;background:linear-gradient(135deg,#fc5c7d,#fc875c)">Oui, j'ai des docs</button>
+        <button class="btn-outline" id="btn-panic-no-docs" style="flex:1">Non, on y va</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Étape 2b : upload + instructions -->
+  <div id="panic-file-area" style="display:none">
+    <div class="panic-docs-card">
+      <div class="panic-docs-title">📋 Colle les consignes</div>
+      <textarea id="panic-instructions" class="panic-instructions-input" placeholder="Colle ici les instructions ou le sujet (texte, mail, énoncé…)" rows="4"></textarea>
+      <div class="panic-docs-sub" style="margin-top:14px">+ Fichier PDF ou texte (optionnel)</div>
+      <label class="panic-file-label" id="panic-file-label">
+        📎 Ajouter un fichier
+        <input type="file" id="panic-file-input" accept=".pdf,.txt,.md,.doc,.docx" style="display:none">
+      </label>
+      <div id="panic-file-name" class="panic-file-name" style="display:none"></div>
+      <button class="btn panic-launch-btn" id="btn-panic-analyze" style="margin-top:18px" disabled>✨ Analyser et créer mes micro-tâches</button>
+    </div>
+  </div>
+
+  <!-- Étape 3a : mode simple (sans docs) -->
   <div id="panic-active" style="display:none">
     <div class="panic-deadline-badge" id="panic-deadline-badge"></div>
     <div class="panic-focus-card">
@@ -1495,6 +1578,36 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div class="panic-mantra">🔥 Une chose. Maintenant. C'est tout.</div>
     <button class="btn-outline" id="btn-panic-done" style="margin-top:16px">✓ C'est fait — je souffle</button>
     <button class="btn-ghost" id="btn-panic-new-round" style="width:100%;justify-content:center">↺ Nouveau round</button>
+  </div>
+
+  <!-- Étape 3b : mode guidé micro-tâches -->
+  <div id="panic-guided" style="display:none">
+    <div class="panic-deadline-badge" id="panic-deadline-badge-guided"></div>
+    <div class="panic-progress-row">
+      <span class="panic-progress-label" id="panic-progress-label">Tâche 1/5</span>
+      <div class="timer-track" style="flex:1;margin:0"><div class="timer-bar" id="panic-progress-bar" style="width:0%;background:linear-gradient(90deg,#fc5c7d,#fc875c)"></div></div>
+      <span class="panic-progress-pct" id="panic-progress-pct">0%</span>
+    </div>
+    <div class="panic-micro-card">
+      <div class="panic-micro-step" id="panic-micro-step"></div>
+      <div class="panic-micro-text" id="panic-micro-text"></div>
+    </div>
+    <div class="panic-timer-num" id="panic-micro-timer-num">05:00</div>
+    <div class="timer-track" style="margin-bottom:18px"><div class="timer-bar" id="panic-micro-timer-bar" style="width:100%;background:linear-gradient(90deg,#fc5c7d,#fc875c)"></div></div>
+    <div class="timer-btns">
+      <button class="t-start" id="panic-micro-toggle" style="background:linear-gradient(135deg,#fc5c7d,#fc875c)">▶ Commencer</button>
+      <button class="t-reset" id="panic-micro-reset">↺</button>
+    </div>
+    <div class="panic-mantra" id="panic-micro-mantra">🔥 Une étape. Maintenant. C'est tout.</div>
+    <button class="btn" id="btn-panic-micro-done" style="margin-top:16px;background:linear-gradient(135deg,#fc5c7d,#fc875c)">✓ C'est fait !</button>
+    <button class="btn-ghost" id="btn-panic-micro-skip" style="width:100%;justify-content:center;margin-top:8px">→ Passer cette étape</button>
+  </div>
+
+  <!-- Chargement analyse -->
+  <div id="panic-loading" style="display:none;text-align:center;padding:40px 0">
+    <div class="panic-spinner"></div>
+    <div style="margin-top:18px;font-family:'Syne',sans-serif;font-weight:700;font-size:16px">J'analyse et je découpe…</div>
+    <div class="sub" style="margin-top:6px">Je prépare tes micro-tâches 🧩</div>
   </div>
 </section>
 
@@ -2466,7 +2579,25 @@ function generateSteps(name, goal, fileHints) {
 function readFileContent(file) {
   return new Promise(function(resolve) {
     var textExt = /\.(txt|md|csv|js|ts|html|css|json|xml|py|java|c|cpp|h|php|rb|rs|go|swift|kt|sql|sh|bat|yml|yaml|ini|log)$/i;
-    if (file.type.startsWith('text/') || textExt.test(file.name)) {
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      var reader = new FileReader();
+      reader.onerror = function() { resolve(null); };
+      reader.onload = async function(e) {
+        try {
+          if (typeof pdfjsLib === 'undefined') { resolve(null); return; }
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          var pdf = await pdfjsLib.getDocument({ data: e.target.result }).promise;
+          var text = '';
+          for (var i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+            var page = await pdf.getPage(i);
+            var content = await page.getTextContent();
+            text += content.items.map(function(item) { return item.str; }).join(' ') + '\n';
+          }
+          resolve(text.trim() || null);
+        } catch(err) { resolve(null); }
+      };
+      reader.readAsArrayBuffer(file);
+    } else if (file.type.startsWith('text/') || textExt.test(file.name)) {
       var reader = new FileReader();
       reader.onload = function(e) { resolve(e.target.result); };
       reader.onerror = function() { resolve(null); };
@@ -5079,20 +5210,58 @@ let panicTimerInterval = null;
 let panicTimerRunning = false;
 const PANIC_DURATION = 25 * 60;
 
+// Micro-task guided mode state
+let panicMicroTasks = [];
+let panicMicroIdx = 0;
+let panicMicroTimerSec = 0;
+let panicMicroTimerInterval = null;
+let panicMicroRunning = false;
+let panicUploadedFile = null;
+
+const PANIC_MICRO_MANTRAS = [
+  '🔥 Une étape. Maintenant. C\'est tout.',
+  '🧠 Ton cerveau peut gérer ça.',
+  '⚡ Juste ce bloc. Rien d\'autre.',
+  '✨ Tu avances. Même lentement, c\'est de l\'avancée.',
+  '🎯 Focus sur cette ligne. Rien d\'autre.',
+  '💪 Tu l\'as déjà fait avant. Tu peux encore.',
+];
+
 function showModePanique() {
+  // Reset all sub-sections
+  ['panic-setup','panic-docs-step','panic-file-area','panic-active','panic-guided','panic-loading'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
   document.getElementById('panic-setup').style.display = 'block';
-  document.getElementById('panic-active').style.display = 'none';
   document.getElementById('panic-deadline').value = '';
   document.getElementById('panic-task').value = '';
   document.getElementById('btn-activate-panic').disabled = true;
+  const instrEl = document.getElementById('panic-instructions');
+  if (instrEl) instrEl.value = '';
+  const fnEl = document.getElementById('panic-file-name');
+  if (fnEl) fnEl.style.display = 'none';
+  const analyzeBtn = document.getElementById('btn-panic-analyze');
+  if (analyzeBtn) analyzeBtn.disabled = true;
+  panicUploadedFile = null;
   clearPanicTimer();
+  clearPanicMicroTimer();
+  panicMicroTasks = [];
+  panicMicroIdx = 0;
   show('mode-panique');
 }
 
 function activatePanicMode() {
+  // After filling task/deadline → ask about documents
+  document.getElementById('panic-setup').style.display = 'none';
+  document.getElementById('panic-docs-step').style.display = 'block';
+}
+
+function startPanicSimple() {
+  // No docs — classic 25-min timer
   const deadline = document.getElementById('panic-deadline').value.trim();
   const task = document.getElementById('panic-task').value.trim();
-  document.getElementById('panic-setup').style.display = 'none';
+  document.getElementById('panic-docs-step').style.display = 'none';
   document.getElementById('panic-active').style.display = 'block';
   document.getElementById('panic-deadline-badge').textContent = deadline ? '⏰ ' + deadline : '';
   document.getElementById('panic-deadline-badge').style.display = deadline ? 'inline-block' : 'none';
@@ -5100,6 +5269,142 @@ function activatePanicMode() {
   panicTimerSec = PANIC_DURATION;
   panicTimerRunning = false;
   renderPanicTimer();
+}
+
+function showPanicFileArea() {
+  document.getElementById('panic-docs-step').style.display = 'none';
+  document.getElementById('panic-file-area').style.display = 'block';
+}
+
+async function analyzePanicContent() {
+  const task = document.getElementById('panic-task').value.trim();
+  const instructions = document.getElementById('panic-instructions').value.trim();
+
+  document.getElementById('panic-file-area').style.display = 'none';
+  document.getElementById('panic-loading').style.display = 'block';
+
+  let fileText = '';
+  let filename = '';
+  if (panicUploadedFile) {
+    fileText = await readFileContent(panicUploadedFile) || '';
+    filename = panicUploadedFile.name;
+  }
+
+  const combinedHints = [task, instructions, filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '), fileText.substring(0, 500)].join(' ');
+  const steps = generateSteps(task, instructions || task, combinedHints);
+
+  panicMicroTasks = steps.flatMap(st => {
+    const micros = (st.micros && st.micros.length) ? st.micros : [st.name];
+    const durPerMicro = Math.max(3, Math.ceil((st.duration || 10) / micros.length));
+    return micros.map(m => ({ step: st.name, micro: m, dur: durPerMicro }));
+  });
+
+  panicMicroIdx = 0;
+  document.getElementById('panic-loading').style.display = 'none';
+  startPanicGuidedMode();
+}
+
+function startPanicGuidedMode() {
+  const deadline = document.getElementById('panic-deadline').value.trim();
+  const badge = document.getElementById('panic-deadline-badge-guided');
+  badge.textContent = deadline ? '⏰ ' + deadline : '';
+  badge.style.display = deadline ? 'inline-block' : 'none';
+  document.getElementById('panic-guided').style.display = 'block';
+  showPanicMicro();
+}
+
+function showPanicMicro() {
+  if (panicMicroIdx >= panicMicroTasks.length) {
+    showPanicComplete();
+    return;
+  }
+  const task = panicMicroTasks[panicMicroIdx];
+  const total = panicMicroTasks.length;
+  const pct = Math.round((panicMicroIdx / total) * 100);
+
+  document.getElementById('panic-progress-label').textContent = 'Étape ' + (panicMicroIdx + 1) + '/' + total;
+  document.getElementById('panic-progress-bar').style.width = pct + '%';
+  document.getElementById('panic-progress-pct').textContent = pct + '%';
+  document.getElementById('panic-micro-step').textContent = task.step;
+  document.getElementById('panic-micro-text').textContent = task.micro;
+
+  const mantra = PANIC_MICRO_MANTRAS[panicMicroIdx % PANIC_MICRO_MANTRAS.length];
+  document.getElementById('panic-micro-mantra').textContent = mantra;
+
+  panicMicroTimerSec = (task.dur || 5) * 60;
+  panicMicroRunning = false;
+  clearPanicMicroTimer();
+  renderPanicMicroTimer();
+}
+
+function renderPanicMicroTimer() {
+  const el = document.getElementById('panic-micro-timer-num');
+  const bar = document.getElementById('panic-micro-timer-bar');
+  const toggle = document.getElementById('panic-micro-toggle');
+  if (!el) return;
+  el.textContent = fmt(panicMicroTimerSec);
+  const task = panicMicroTasks[panicMicroIdx];
+  const total = task ? (task.dur || 5) * 60 : panicMicroTimerSec;
+  const pct = total > 0 ? (panicMicroTimerSec / total) * 100 : 100;
+  if (bar) bar.style.width = pct + '%';
+  if (toggle) toggle.textContent = panicMicroRunning ? '⏸ Pause' : '▶ Commencer';
+}
+
+function togglePanicMicroTimer() {
+  if (panicMicroRunning) {
+    clearPanicMicroTimer();
+  } else {
+    panicMicroRunning = true;
+    panicMicroTimerInterval = setInterval(() => {
+      panicMicroTimerSec--;
+      renderPanicMicroTimer();
+      if (panicMicroTimerSec <= 0) {
+        clearPanicMicroTimer();
+        if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+        document.getElementById('panic-micro-toggle').textContent = '✓ Temps écoulé';
+      }
+    }, 1000);
+  }
+  renderPanicMicroTimer();
+}
+
+function clearPanicMicroTimer() {
+  clearInterval(panicMicroTimerInterval);
+  panicMicroRunning = false;
+}
+
+function advancePanicMicro() {
+  clearPanicMicroTimer();
+  panicMicroIdx++;
+  showPanicMicro();
+}
+
+function showPanicComplete() {
+  document.getElementById('panic-guided').style.display = 'none';
+  const total = panicMicroTasks.length;
+  const screen = document.getElementById('mode-panique');
+  const celebDiv = document.createElement('div');
+  celebDiv.id = 'panic-complete';
+  celebDiv.style.cssText = 'text-align:center;padding:20px 0';
+  celebDiv.innerHTML = `
+    <div style="font-size:64px;margin-bottom:16px">🎉</div>
+    <h1 style="margin:0 0 12px;font-size:26px">Tu vois ?</h1>
+    <p style="font-size:17px;line-height:1.5;color:var(--muted);margin-bottom:24px">
+      C'était pas aussi gros que ça en paraissait.<br>
+      <strong style="color:var(--text)">${total} étape${total > 1 ? 's' : ''} complétée${total > 1 ? 's' : ''} 💪</strong>
+    </p>
+    <button class="btn" id="btn-panic-complete-done" style="background:linear-gradient(135deg,#fc5c7d,#fc875c)">
+      ✓ Je souffle — mission accomplie
+    </button>
+  `;
+  // Remove existing complete div if any
+  const existing = document.getElementById('panic-complete');
+  if (existing) existing.remove();
+  screen.appendChild(celebDiv);
+  document.getElementById('btn-panic-complete-done').onclick = () => {
+    celebDiv.remove();
+    showCheckIn('home', 'panic', 'Mission complète en micro-tâches 🎉');
+  };
 }
 
 function renderPanicTimer() {
@@ -5709,11 +6014,35 @@ document.getElementById('btn-brain-dump-clear').onclick = () => {
 
 // Panic mode inputs
 document.getElementById('panic-deadline').oninput = document.getElementById('panic-task').oninput = () => {
-  const dl = document.getElementById('panic-deadline').value.trim();
   const tk = document.getElementById('panic-task').value.trim();
   document.getElementById('btn-activate-panic').disabled = !tk;
 };
 document.getElementById('btn-activate-panic').onclick = () => activatePanicMode();
+
+// Docs step
+document.getElementById('btn-panic-no-docs').onclick  = () => startPanicSimple();
+document.getElementById('btn-panic-yes-docs').onclick = () => showPanicFileArea();
+
+// File area
+document.getElementById('panic-file-input').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  panicUploadedFile = file;
+  const fnEl = document.getElementById('panic-file-name');
+  fnEl.textContent = '📎 ' + file.name;
+  fnEl.style.display = 'block';
+};
+(function() {
+  function updateAnalyzeBtn() {
+    const instr = document.getElementById('panic-instructions').value.trim();
+    document.getElementById('btn-panic-analyze').disabled = !instr && !panicUploadedFile;
+  }
+  document.getElementById('panic-instructions').oninput = updateAnalyzeBtn;
+  document.getElementById('panic-file-input').addEventListener('change', updateAnalyzeBtn);
+})();
+document.getElementById('btn-panic-analyze').onclick = () => analyzePanicContent();
+
+// Simple mode (no docs) timer
 document.getElementById('panic-toggle').onclick       = () => togglePanicTimer();
 document.getElementById('panic-reset').onclick        = () => resetPanicTimer();
 document.getElementById('btn-panic-done').onclick     = () => {
@@ -5721,6 +6050,17 @@ document.getElementById('btn-panic-done').onclick     = () => {
   showCheckIn('home', 'panic', 'Mission déclarée terminée 🔥');
 };
 document.getElementById('btn-panic-new-round').onclick = () => resetPanicTimer(true);
+
+// Guided micro-task mode
+document.getElementById('panic-micro-toggle').onclick = () => togglePanicMicroTimer();
+document.getElementById('panic-micro-reset').onclick  = () => {
+  clearPanicMicroTimer();
+  const task = panicMicroTasks[panicMicroIdx];
+  if (task) panicMicroTimerSec = (task.dur || 5) * 60;
+  renderPanicMicroTimer();
+};
+document.getElementById('btn-panic-micro-done').onclick = () => advancePanicMicro();
+document.getElementById('btn-panic-micro-skip').onclick = () => advancePanicMicro();
 
 // Reset cognitif steps
 document.getElementById('btn-rs-breath').onclick = () => startResetStep('breath');
