@@ -1556,65 +1556,38 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   </div>
 </section>
 
-<!-- LANDING -->
+<!-- ACCUEIL -->
 <section class="screen" id="landing">
-  <div class="landing-logo-row" style="justify-content:space-between;align-items:center">
+  <div class="landing-logo-row" style="justify-content:space-between;align-items:center;margin-bottom:6px">
     <span class="logo" style="font-size:26px">✦ focusTDAH</span>
-    <div id="landing-user" style="display:none"></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 12px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer">🔍 Comment tu vas ?</button>
+      <div id="landing-user" style="display:none"></div>
+    </div>
   </div>
-  <p class="landing-tagline">Ton espace de travail TDAH</p>
-
-  <button class="work-btn" id="btn-work">
-    Je veux travailler →
-    <span class="work-btn-sub">Mes projets, mon plan, mes timers</span>
-  </button>
 
   <div id="rebound-banner-slot"></div>
 
-  <div class="quicktodo">
-    <div class="qt-header">
-      <span class="qt-title">📋 Ma liste rapide</span>
-      <button class="qt-add-btn" id="qt-add">+ Ajouter</button>
-    </div>
-    <div id="qt-input-wrap" class="qt-input-wrap" style="display:none">
-      <input id="qt-input" class="qt-input" placeholder="Nouvelle tâche… (Entrée pour valider)">
-    </div>
-    <div id="qt-list" class="qt-list"></div>
-  </div>
-</section>
+  <div id="home-plan-preview" style="display:none;margin-top:10px;margin-bottom:4px"></div>
+  <button class="btn-outline" id="btn-daily-plan" style="margin-bottom:16px;width:100%">📋 Plan du jour</button>
 
-<!-- HOME -->
-<section class="screen" id="home">
-  <button class="back" id="back-home">← Ma liste</button>
-  <div style="margin-bottom:20px">
-    <span class="logo">✦ focusTDAH</span>
-    <h1>Tu veux faire quoi <em>maintenant</em> ?</h1>
-    <p class="sub">Je m'occupe du reste.</p>
-  </div>
-  <button class="btn-outline" id="btn-daily-plan" style="margin-bottom:14px;width:100%">📋 Plan du jour</button>
-  <div id="home-plan-preview" style="display:none;margin-bottom:14px"></div>
-
-  <!-- ZONE 1 : SOUTIEN -->
-  <div class="home-zone-label">🧠 J'ai besoin d'aide</div>
-  <button class="block-btn block-aide" id="btn-aide-menu">
-    <span class="b-title">Je suis bloqué · Panique · Reset</span>
-    <span class="b-sub">Frictions · Mode survie · Respiration · Vider le cerveau</span>
-  </button>
-
-  <!-- ZONE 2 : DÉMARRER -->
-  <div class="home-zone-label" style="margin-top:6px">🚀 Démarrer</div>
-  <button class="block-btn block-main" id="btn-new">
-    <span class="b-title">Nouveau projet ✦</span>
-    <span class="b-sub">Transforme une idée floue en plan prêt à démarrer</span>
-  </button>
-  <button class="block-btn block-secondary" id="btn-continue">
-    <span class="b-title">Reprendre →</span>
-    <span class="b-sub" id="continue-meta">Aucun projet en cours</span>
+  <button class="block-btn block-main" id="btn-continue">
+    <span class="b-title" id="continue-title">Je veux travailler →</span>
+    <span class="b-sub" id="continue-meta">Reprendre ou créer un projet</span>
   </button>
   <button class="block-btn block-timer" id="btn-timers">
     <span class="b-title">Timer libre ⏱</span>
     <span class="b-sub">Travaille par intervalles, sans créer de projet</span>
   </button>
+  <button class="block-btn block-aide" id="btn-aide-menu">
+    <span class="b-title">J'ai besoin d'aide 🧠</span>
+    <span class="b-sub">Bloqué · Panique · RSD · Reset · Vider le cerveau</span>
+  </button>
+  <button class="block-btn block-secondary" id="btn-new">
+    <span class="b-title">+ Nouveau projet</span>
+    <span class="b-sub">Transforme une idée floue en plan prêt à démarrer</span>
+  </button>
+  <button class="btn-outline" id="btn-end-of-day" style="margin-top:2px;width:100%">🌙 Fin de journée</button>
 
   <div id="notif-banner" class="notif-banner" style="display:none">
     <span class="notif-icon">🔔</span>
@@ -1627,9 +1600,21 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
       </div>
     </div>
   </div>
-  <div id="home-proj-wrap" style="margin-top:24px;display:none">
+
+  <div id="home-proj-wrap" style="margin-top:22px;display:none">
     <div class="section-label">Mes projets</div>
     <div id="home-proj-list" class="proj-list"></div>
+  </div>
+
+  <div class="quicktodo" style="margin-top:18px">
+    <div class="qt-header">
+      <span class="qt-title">📋 Ma liste rapide</span>
+      <button class="qt-add-btn" id="qt-add">+ Ajouter</button>
+    </div>
+    <div id="qt-input-wrap" class="qt-input-wrap" style="display:none">
+      <input id="qt-input" class="qt-input" placeholder="Nouvelle tâche… (Entrée pour valider)">
+    </div>
+    <div id="qt-list" class="qt-list"></div>
   </div>
 </section>
 
@@ -1890,7 +1875,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <button class="settings-tab active" data-tab="micros">Micros</button>
     <button class="settings-tab" data-tab="drinks">Boissons</button>
     <button class="settings-tab" data-tab="suppl">Compléments</button>
-    <button class="settings-tab" data-tab="ritalin">Ritaline</button>
     <button class="settings-tab" data-tab="focus">📵 Mode Focus & Blocage</button>
   </div>
   <div id="st-content"></div>
@@ -1910,29 +1894,25 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <h1>De quoi tu as <em>besoin</em> ?</h1>
     <p class="sub">Choisis ce qui correspond le mieux à ton état maintenant.</p>
   </div>
-  <button class="block-btn block-blocked" id="aide-btn-blocked">
-    <span class="b-title">🆘 Je suis bloqué</span>
-    <span class="b-sub">Brouillard · Panique · Vide · Évitement · Saturation · et plus</span>
+  <button class="block-btn" id="aide-btn-rsd" style="border-color:rgba(252,92,125,.5);background:rgba(252,92,125,.06)">
+    <span class="b-title">💔 Je suis submergé(e) émotionnellement</span>
+    <span class="b-sub">Critique reçue · Rejet · Honte · Colère intense · RSD</span>
   </button>
   <button class="block-btn block-panic" id="aide-btn-panique">
     <span class="b-title">🔥 Mode panique</span>
     <span class="b-sub">Deadline proche · Une seule action · Timer survie</span>
   </button>
-  <button class="block-btn block-reset" id="aide-btn-reset">
-    <span class="b-title">🧘 Reset cognitif</span>
-    <span class="b-sub">Respiration · Étirement · Eau · Mini victoire</span>
+  <button class="block-btn block-blocked" id="aide-btn-blocked">
+    <span class="b-title">🆘 Je suis bloqué ou j'arrive pas à démarrer</span>
+    <span class="b-sub">Brouillard · Vide · Évitement · Démarrage difficile · et plus</span>
   </button>
   <button class="block-btn block-secondary" id="aide-btn-dump">
     <span class="b-title">🧠 Vider mon cerveau</span>
     <span class="b-sub">Écrire tout ce qui tourne en boucle pour libérer l'espace mental</span>
   </button>
-  <button class="block-btn block-aide" id="aide-btn-demarrage" style="border-color:#7c5cfc;background:rgba(124,92,252,.06)">
-    <span class="b-title">🚀 Je veux travailler mais j'arrive pas à m'y mettre</span>
-    <span class="b-sub">J'ai l'intention · Mais quelque chose bloque le démarrage</span>
-  </button>
-  <button class="block-btn" id="aide-btn-rsd" style="border-color:rgba(252,92,125,.5);background:rgba(252,92,125,.06)">
-    <span class="b-title">💔 Je suis submergé(e) émotionnellement</span>
-    <span class="b-sub">Critique reçue · Rejet · Honte · Colère intense · RSD</span>
+  <button class="block-btn block-reset" id="aide-btn-reset">
+    <span class="b-title">🧘 Reset cognitif</span>
+    <span class="b-sub">Respiration · Étirement · Eau · Mini victoire</span>
   </button>
 </section>
 
@@ -2171,7 +2151,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <section class="screen" id="timer-free">
   <button class="back" id="back-timer-free">← Changer la durée</button>
   <div class="session-badge" id="ft-badge">Session 1</div>
-  <div class="ft-task" id="ft-task-display"></div>
+  <div class="ft-task" id="ft-task-display" style="font-size:16px;font-weight:600;color:var(--text);text-align:center;margin-bottom:10px;min-height:22px"></div>
   <div class="ft-num" id="ft-num">25:00</div>
   <div class="ft-track"><div class="ft-bar" id="ft-bar" style="width:0%"></div></div>
   <div class="ft-btns">
@@ -2341,12 +2321,44 @@ function renderUserPill(user) {
   };
 }
 
+function maybeShowOnboarding() {
+  if (localStorage.getItem('ft_onboarded')) return;
+  const slides = [
+    { emoji: '⏱', title: 'Timer libre', desc: 'Lance un timer adapté à ton niveau de focus. Même 5 minutes comptent.' },
+    { emoji: '✦', title: 'Projets structurés', desc: 'Décris ton projet, l\'app génère un plan en micro-étapes. Tu n\'as plus qu\'à démarrer.' },
+    { emoji: '🧠', title: 'J\'ai besoin d\'aide', desc: 'Bloqué, en panique, submergé ? L\'app t\'accompagne selon ton état, pas selon un planning.' },
+  ];
+  let idx = 0;
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  bd.id = 'onboarding-bd';
+  document.body.appendChild(bd);
+
+  function render() {
+    const s = slides[idx];
+    bd.innerHTML = `
+      <div class="cat-modal-sheet" style="text-align:center">
+        <div style="font-size:56px;margin-bottom:12px">${s.emoji}</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">${idx+1} / ${slides.length}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:12px">${s.title}</div>
+        <div style="font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:24px">${s.desc}</div>
+        <button class="btn" id="ob-next">${idx < slides.length-1 ? 'Suivant →' : 'C\'est parti ✓'}</button>
+      </div>`;
+    bd.querySelector('#ob-next').onclick = () => {
+      if (idx < slides.length - 1) { idx++; render(); }
+      else { localStorage.setItem('ft_onboarded', '1'); bd.remove(); }
+    };
+  }
+  render();
+}
+
 function goToApp(user) {
   renderUserPill(user);
   show('landing');
   initLanding();
   renderHome();
-  if (hasTakenRitalin() && localStorage.getItem('focustdah_ritalin_time')) {
+  maybeShowOnboarding();
+  if (hasTakenRitalin() && getRitalinTime()) {
     startReboundWatch();
   }
 }
@@ -2413,8 +2425,7 @@ function showRitalinModal() {
   modal.querySelector('#rm-confirm').onclick = () => {
     const t = modal.querySelector('#rm-time').value;
     if (t) {
-      localStorage.setItem('focustdah_ritalin_time', t);
-      localStorage.setItem('focustdah_ritalin_type', selType);
+      const d = getRitalinStore(); d.time = t; d.type = selType; setRitalinStore(d);
     }
     modal.remove();
     startReboundWatch();
@@ -2472,6 +2483,28 @@ function initAuth() {
     firstCall = false;
   });
 }
+
+// ─── RITALINE DATA MIGRATION ───
+(function migrateRitalin() {
+  if (localStorage.getItem('ft_ritalin')) return; // already migrated
+  const obj = {};
+  const time = localStorage.getItem('focustdah_ritalin_time');
+  const type = localStorage.getItem('focustdah_ritalin_type');
+  const date = localStorage.getItem('focustdah_ritalin_date');
+  const ans  = localStorage.getItem('focustdah_ritalin_answer');
+  if (time) obj.time = time;
+  if (type) obj.type = type;
+  if (date) obj.date = date;
+  if (ans)  obj.answer = ans;
+  if (Object.keys(obj).length) {
+    localStorage.setItem('ft_ritalin', JSON.stringify(obj));
+    ['focustdah_ritalin_time','focustdah_ritalin_type','focustdah_ritalin_date','focustdah_ritalin_answer'].forEach(k => localStorage.removeItem(k));
+  }
+})();
+function getRitalinStore() {
+  try { return JSON.parse(localStorage.getItem('ft_ritalin') || '{}'); } catch(e) { return {}; }
+}
+function setRitalinStore(obj) { localStorage.setItem('ft_ritalin', JSON.stringify(obj)); }
 
 // ─── SETTINGS ───
 const SETTINGS_KEY = 'focustdah_settings';
@@ -2532,13 +2565,15 @@ function getSeanceMicroOptions() { return getSettings().microPresets; }
 // Ritaline daily answer helpers
 function getRitalinAnswer() {
   const today = new Date().toDateString();
-  if (localStorage.getItem('focustdah_ritalin_date') !== today) return null;
-  return localStorage.getItem('focustdah_ritalin_answer') || null; // 'oui' | 'non'
+  const d = getRitalinStore();
+  if (d.date !== today) return null;
+  return d.answer || null; // 'oui' | 'non'
 }
 function setRitalinAnswer(answer) {
-  const today = new Date().toDateString();
-  localStorage.setItem('focustdah_ritalin_date', today);
-  localStorage.setItem('focustdah_ritalin_answer', answer);
+  const d = getRitalinStore();
+  d.answer = answer;
+  d.date = new Date().toDateString();
+  setRitalinStore(d);
 }
 function hasTakenRitalin() { return getRitalinAnswer() === 'oui'; }
 
@@ -2547,8 +2582,10 @@ const RITALIN_PROFILES = {
   IR: { onset: 20, peakEnd: 150, reboundStart: 195, end: 270 },  // ~4.5h
   LP: { onset: 30, peakEnd: 480, reboundStart: 570, end: 660 },  // ~11h
 };
+function getRitalinTime() { return getRitalinStore().time || null; }
+function getRitalinType() { return getRitalinStore().type || 'IR'; }
 function _takenDate() {
-  const timeStr = localStorage.getItem('focustdah_ritalin_time');
+  const timeStr = getRitalinTime();
   if (!timeStr) return null;
   const [h, m] = timeStr.split(':').map(Number);
   const d = new Date(); d.setHours(h, m, 0, 0);
@@ -2559,7 +2596,7 @@ function getRitalinPhase() {
   if (!hasTakenRitalin()) return null;
   const taken = _takenDate();
   if (!taken) return 'unknown';
-  const type = localStorage.getItem('focustdah_ritalin_type') || 'IR';
+  const type = getRitalinType();
   const p = RITALIN_PROFILES[type];
   const min = (Date.now() - taken) / 60000;
   if (min < 0) return 'avant';
@@ -2572,7 +2609,7 @@ function getRitalinPhase() {
 function getMinutesToRebound() {
   const taken = _takenDate();
   if (!taken) return null;
-  const type = localStorage.getItem('focustdah_ritalin_type') || 'IR';
+  const type = getRitalinType();
   const p = RITALIN_PROFILES[type];
   return Math.round(p.reboundStart - (Date.now() - taken) / 60000);
 }
@@ -2587,7 +2624,7 @@ function startReboundWatch() {
 function checkReboundAlert() {
   const slot = document.getElementById('rebound-banner-slot');
   if (!slot) return;
-  if (!hasTakenRitalin() || !localStorage.getItem('focustdah_ritalin_time')) {
+  if (!hasTakenRitalin() || !getRitalinTime()) {
     slot.innerHTML = ''; return;
   }
   const phase = getRitalinPhase();
@@ -2841,8 +2878,12 @@ function qtDelete(id) { // garde-fou pour compatibilité
 
 // Landing screen handlers (set up after DOM ready — wired below)
 function initLanding() {
-  const btnWork = document.getElementById('btn-work');
-  if (btnWork) btnWork.onclick = () => { renderHome(); show('home'); };
+  const haltBtn = document.getElementById('landing-halt-btn');
+  if (haltBtn) {
+    const today = new Date().toDateString();
+    haltBtn.style.display = localStorage.getItem('ft_halt_date') === today ? 'none' : 'inline-block';
+    haltBtn.onclick = () => checkHALT(() => { haltBtn.style.display = 'none'; showDopamineToast('Check HALT fait ✓', 2000); });
+  }
 
   const qtAddBtn = document.getElementById('qt-add');
   const qtInputWrap = document.getElementById('qt-input-wrap');
@@ -2928,11 +2969,14 @@ function renderHome() {
   const last = active || projects[0];
   const metaEl = document.getElementById('continue-meta');
   const contBtn = document.getElementById('btn-continue');
+  const titleEl = document.getElementById('continue-title');
 
   if (last) {
+    if (titleEl) titleEl.textContent = 'Reprendre · ' + last.name + ' →';
     metaEl.textContent = last.name + ' — ' + globalPct(last) + '% accompli';
     contBtn.onclick = () => openProject(last);
   } else {
+    if (titleEl) titleEl.textContent = 'Nouveau projet →';
     metaEl.textContent = 'Aucun projet en cours';
     contBtn.onclick = () => show('create');
   }
@@ -2967,22 +3011,21 @@ function renderHome() {
 }
 
 document.getElementById('btn-new').onclick = () => show('create');
-document.getElementById('back-home').onclick = () => show('landing');
 document.getElementById('btn-aide-menu').onclick = () => { show('aide-menu'); refreshAideBadge(); };
-document.getElementById('back-aide-menu').onclick = () => { renderHome(); show('home'); };
+document.getElementById('back-aide-menu').onclick = () => { renderHome(); show('landing'); };
 document.getElementById('aide-btn-blocked').onclick = () => showFocusModal('aide-menu');
 document.getElementById('aide-btn-panique').onclick = () => showModePanique();
 document.getElementById('aide-btn-reset').onclick = () => showResetCognitif();
 document.getElementById('aide-btn-dump').onclick = () => show('brain-dump');
-document.getElementById('aide-btn-demarrage').onclick = () => showDemarrageModal();
-document.getElementById('aide-btn-rsd').onclick = () => showRSDMode();
+document.getElementById('aide-btn-rsd').onclick   = () => showRSDMode();
 document.getElementById('btn-daily-plan').onclick = () => showDailyPlanning();
+document.getElementById('btn-end-of-day').onclick = () => showEndOfDay();
 document.getElementById('btn-reentry-session').onclick = () => showReentryModal();
 document.getElementById('btn-reentry-free').onclick = () => showReentryModal();
-document.getElementById('back-create').onclick = () => { renderHome(); show('home'); };
+document.getElementById('back-create').onclick = () => { renderHome(); show('landing'); };
 document.getElementById('back-mode').onclick = () => {
   if (currentProject) { renderPlanPreview(currentProject); show('plan-preview'); }
-  else { renderHome(); show('home'); }
+  else { renderHome(); show('landing'); }
 };
 
 // ─── CREATE ───
@@ -3578,7 +3621,7 @@ document.getElementById('back-plan-preview').onclick = () => {
     // Encore dans le flow de création → retour aux fichiers
     show('create-files');
   } else {
-    renderHome(); show('home');
+    renderHome(); show('landing');
   }
 };
 
@@ -3629,7 +3672,7 @@ document.getElementById('btn-delete-project').onclick = () => {
   if (getActiveId() === currentProject.id) setActiveId(null);
   currentProject = null;
   renderHome();
-  show('home');
+  show('landing');
 };
 
 document.getElementById('btn-start-project').onclick = () => {
@@ -3649,8 +3692,7 @@ document.getElementById('btn-start-project').onclick = () => {
   } else {
     currentCategoryId = null;
   }
-  renderModeSelect();
-  show('mode-select');
+  launchAutoSession();
 };
 
 // ─── FILE HELPERS ───
@@ -4691,7 +4733,7 @@ function renderCategoryCard(cat, proj, container) {
         const list = getProjects(); list.unshift(pendingProject); saveProjects(list);
         setActiveId(pendingProject.id); currentProject = pendingProject; pendingProject = null;
       }
-      renderModeSelect(); show('mode-select');
+      launchAutoSession();
     };
   })(cat.id);
 
@@ -4963,8 +5005,27 @@ document.querySelectorAll('.mode-card').forEach(card => {
   card.onclick = () => { currentMode = card.dataset.mode; startSession(); };
 });
 
+function launchAutoSession() {
+  const phase = getRitalinPhase();
+  const score = calcFocusScore();
+  const byPhase = { montee: 'micro', pic: 'reverse', descente: '2min', rebound: '2min' };
+  if (byPhase[phase]) {
+    currentMode = byPhase[phase];
+  } else {
+    currentMode = score < 30 ? '2min' : score < 55 ? 'micro' : 'reverse';
+  }
+  const msgs = {
+    montee: '🌅 Ritaline en montée → Micro-étapes recommandées',
+    pic:    '✦ Pic Ritaline → Reverse Pomodoro',
+    descente:'⏳ Ritaline en descente → session courte',
+    rebound:'⚠️ Rebound probable → mode 2 minutes',
+  };
+  if (msgs[phase]) showDopamineToast(msgs[phase], 3000);
+  startSession();
+}
+
 // ─── SETTINGS (pleine page) ───
-let settingsReturnScreen = 'home';
+let settingsReturnScreen = 'landing';
 
 function openSettings(initialTab) {
   const active = document.querySelector('.screen.active');
@@ -4982,7 +5043,6 @@ function switchSettingsTab(tab) {
   if (tab === 'micros')       renderSettingsMicros(c, s);
   else if (tab === 'drinks')  renderSettingsList(c, s, 'drinks', 'Boissons énergisantes', '☕');
   else if (tab === 'suppl')   renderSettingsList(c, s, 'supplements', 'Compléments alimentaires', '💊');
-  else if (tab === 'ritalin') renderRitalinSettingsCard(c);
   else if (tab === 'focus')   renderSettingsFocus(c);
 }
 
@@ -5011,7 +5071,7 @@ function renderRitalinSettingsCard(container) {
     const ns = getSettings(); ns.ritalinEnabled = e.target.checked; saveSettings(ns);
   };
   container.querySelector('#rs-open-panel').onclick = () => {
-    show(settingsReturnScreen || 'home');
+    show(settingsReturnScreen || 'landing');
     openFocusPanel();
   };
 }
@@ -5160,7 +5220,7 @@ function renderSettingsFocus(container) {
 }
 
 document.getElementById('settings-fab').onclick = openSettings;
-document.getElementById('back-settings').onclick = () => show(settingsReturnScreen || 'home');
+document.getElementById('back-settings').onclick = () => show(settingsReturnScreen || 'landing');
 
 // ════════════════════════════════════════════════
 // ─── "J'EN AI MARRE" — PAUSE 2 MINUTES ───
@@ -5410,20 +5470,18 @@ document.getElementById('t-toggle').onclick = function() {
     document.getElementById('t-toggle').textContent = '▶ Continuer';
   } else {
     if (tRemain <= 0) return;
-    checkHALT(function() {
-      maybeAskFocus();
-      tRunning = true;
-      tEndTimestamp = Date.now() + tRemain * 1000;
-      startContinuousFocus();
-      requestWakeLock();
-      document.getElementById('t-toggle').textContent = '⏸ Pause';
-      tInterval = setInterval(function() {
-        tRemain = Math.max(0, Math.ceil((tEndTimestamp - Date.now()) / 1000));
-        renderTimerDisplay();
-        if (tRemain <= 0) onSessionTimerEnd();
-      }, 1000);
-      triggerTimerShortcut(tRemain);
-    });
+    maybeAskFocus();
+    tRunning = true;
+    tEndTimestamp = Date.now() + tRemain * 1000;
+    startContinuousFocus();
+    requestWakeLock();
+    document.getElementById('t-toggle').textContent = '⏸ Pause';
+    tInterval = setInterval(function() {
+      tRemain = Math.max(0, Math.ceil((tEndTimestamp - Date.now()) / 1000));
+      renderTimerDisplay();
+      if (tRemain <= 0) onSessionTimerEnd();
+    }, 1000);
+    triggerTimerShortcut(tRemain);
   }
 };
 document.getElementById('t-reset').onclick = resetTimer;
@@ -5469,12 +5527,12 @@ function finishProject() {
 
 // ─── CELEBRATION & FINISHED ───
 document.getElementById('c-next').onclick = () => { renderSession(); show('session'); };
-document.getElementById('c-home').onclick = () => { renderHome(); show('home'); };
-document.getElementById('f-home').onclick = () => { renderHome(); show('home'); };
+document.getElementById('c-home').onclick = () => { renderHome(); show('landing'); };
+document.getElementById('f-home').onclick = () => { renderHome(); show('landing'); };
 document.getElementById('back-session').onclick = () => {
   clearInterval(tInterval); tRunning = false;
   if (currentProject) { renderPlanPreview(currentProject); show('plan-preview'); }
-  else { renderHome(); show('home'); }
+  else { renderHome(); show('landing'); }
 };
 
 // ─── NOTIFICATIONS ───
@@ -5514,7 +5572,7 @@ document.getElementById('btn-timers').onclick = () => {
   resetFtSetup();
   show('timer-setup');
 };
-document.getElementById('back-timer-setup').onclick = () => { renderHome(); show('home'); };
+document.getElementById('back-timer-setup').onclick = () => { renderHome(); show('landing'); };
 document.getElementById('back-timer-free').onclick = () => { clearInterval(ftInterval); ftRunning = false; releaseWakeLock(); resetFtSetup(); show('timer-setup'); };
 
 function resetFtSetup() {
@@ -5595,21 +5653,18 @@ document.getElementById('ft-toggle').onclick = function() {
     this.textContent = '▶ Continuer';
   } else {
     if (ftRemain <= 0) return;
-    const toggleEl = this;
-    checkHALT(function() {
-      maybeAskFocus();
-      ftRunning = true;
-      ftEndTimestamp = Date.now() + ftRemain * 1000;
-      startContinuousFocus();
-      requestWakeLock();
-      toggleEl.textContent = '⏸ Pause';
-      ftInterval = setInterval(() => {
-        ftRemain = Math.max(0, Math.ceil((ftEndTimestamp - Date.now()) / 1000));
-        renderFtTimer();
-        if (ftRemain <= 0) onFtTimerEnd();
-      }, 1000);
-      triggerTimerShortcut(ftRemain);
-    });
+    maybeAskFocus();
+    ftRunning = true;
+    ftEndTimestamp = Date.now() + ftRemain * 1000;
+    startContinuousFocus();
+    requestWakeLock();
+    this.textContent = '⏸ Pause';
+    ftInterval = setInterval(() => {
+      ftRemain = Math.max(0, Math.ceil((ftEndTimestamp - Date.now()) / 1000));
+      renderFtTimer();
+      if (ftRemain <= 0) onFtTimerEnd();
+    }, 1000);
+    triggerTimerShortcut(ftRemain);
   }
 };
 
@@ -5618,7 +5673,7 @@ document.getElementById('ft-stop').onclick = () => {
   ftRunning = false;
   releaseWakeLock();
   renderHome();
-  show('home');
+  show('landing');
 };
 
 function showFtEndPanel() {
@@ -5656,7 +5711,7 @@ document.getElementById('ft-opt-home').onclick = () => {
   clearInterval(ftInterval);
   ftRunning = false;
   renderHome();
-  show('home');
+  show('landing');
 };
 
 // ════════════════════════════════════════════════
@@ -5775,7 +5830,7 @@ function showGentleSupport() {
   document.getElementById('gs-pause').onclick  = () => startStrategy('pause');
   document.getElementById('gs-reset').onclick  = () => { show('reset-cognitif'); showResetCognitif(); };
   document.getElementById('gs-dump').onclick   = () => show('brain-dump');
-  document.getElementById('gs-home').onclick   = () => { renderHome(); show('home'); };
+  document.getElementById('gs-home').onclick   = () => { renderHome(); show('landing'); };
   show('blocked-action');
 }
 
@@ -5831,7 +5886,7 @@ function onSessionTimerEnd() {
   addBehaviorEvent('complete');
   releaseWakeLock();
   playTimerEndSound();
-  setTimeout(showFocusCheckIn, 900);
+  setTimeout(() => showFocusCheckIn('session'), 900);
 }
 function onFtTimerEnd() {
   clearInterval(ftInterval);
@@ -5844,7 +5899,7 @@ function onFtTimerEnd() {
   releaseWakeLock();
   playTimerEndSound();
   showFtEndPanel();
-  setTimeout(showFocusCheckIn, 900);
+  setTimeout(() => showFocusCheckIn('free'), 900);
 }
 
 // ─── RESYNC AU RETOUR EN PREMIER PLAN ───
@@ -5969,11 +6024,23 @@ const FOCUS_CHECKIN_QUESTIONS = [
   },
 ];
 
-function showFocusCheckIn() {
+function showFocusCheckIn(source) {
   if (document.getElementById('checkin-bd')) return;
 
+  const contextQ = {
+    session: { text: 'Tu as terminé une session projet. Tu te sens comment ?', opts: [
+      { emoji: '🎯', label: 'Concentré(e)', value: 3 },
+      { emoji: '😮‍💨', label: 'Soulagé(e)', value: 2 },
+      { emoji: '😵', label: 'Épuisé(e)', value: 1 },
+    ]},
+    free: { text: 'Comment était ce timer libre ?', opts: [
+      { emoji: '🔥', label: 'Dans le flow', value: 3 },
+      { emoji: '😐', label: 'Correct', value: 2 },
+      { emoji: '🥱', label: 'Difficile', value: 1 },
+    ]},
+  };
   const pool = [...FOCUS_CHECKIN_QUESTIONS].sort(() => Math.random() - .5);
-  const questions = pool.slice(0, 2);
+  const questions = contextQ[source] ? [contextQ[source], pool[0]] : pool.slice(0, 2);
   let qi = 0;
 
   const bd = document.createElement('div');
@@ -6098,8 +6165,8 @@ function calcSubScores() {
 
   // Ritaline
   if (getRitalinAnswer() === 'oui') {
-    const timeStr = localStorage.getItem('focustdah_ritalin_time');
-    const type    = localStorage.getItem('focustdah_ritalin_type') || 'IR';
+    const timeStr = getRitalinTime();
+    const type    = getRitalinType();
     if (timeStr) {
       const [h, m] = timeStr.split(':').map(Number);
       const at = new Date(); at.setHours(h, m, 0, 0);
@@ -6229,8 +6296,8 @@ function refreshFocusPanelScore() {
 function renderFocusPanelRitalin(container) {
   if (!container) return;
   const answer = getRitalinAnswer();
-  const time   = localStorage.getItem('focustdah_ritalin_time') || '';
-  const type   = localStorage.getItem('focustdah_ritalin_type') || 'IR';
+  const time   = getRitalinTime() || '';
+  const type   = getRitalinType();
 
   function activeStyle(on) {
     return on
@@ -6287,8 +6354,7 @@ function renderFocusPanelRitalin(container) {
     container.querySelector('#fp-save').onclick = () => {
       const t = container.querySelector('#fp-time').value;
       if (t) {
-        localStorage.setItem('focustdah_ritalin_time', t);
-        localStorage.setItem('focustdah_ritalin_type', curType);
+        const d = getRitalinStore(); d.time = t; d.type = curType; setRitalinStore(d);
         if (typeof startReboundWatch === 'function') startReboundWatch();
       }
       refreshFocusPanelScore();
@@ -6414,6 +6480,13 @@ function openFocusPanel() {
   document.body.appendChild(bd);
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.getElementById('fp-close').onclick = () => bd.remove();
+  const sheet = bd.querySelector('.cat-modal-sheet');
+  let touchStartY = 0;
+  sheet.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+  sheet.addEventListener('touchend', e => {
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (dy > 80) bd.remove();
+  }, { passive: true });
   document.getElementById('fp-score-card').onclick = () => {
     const f = document.getElementById('fp-formula');
     const isOpen = f.style.display !== 'none';
@@ -6851,23 +6924,7 @@ let transitionActivitySec = 0;
 let transitionReturnFrom = 'aide-menu';
 
 function showBlockedBefore(from) {
-  transitionReturnFrom = from || 'aide-menu';
-  const grid = document.getElementById('before-grid');
-  grid.innerHTML = '';
-  BEFORE_OPTIONS.forEach(opt => {
-    const card = document.createElement('button');
-    card.className = 'before-card' + (opt.cls ? ' ' + opt.cls : '');
-    card.innerHTML = `<span class="before-emoji">${opt.emoji}</span><div class="before-info"><div class="before-label">${opt.label}</div>${opt.desc ? `<div class="before-desc">${opt.desc}</div>` : ''}</div>`;
-    card.onclick = () => {
-      if (opt.skip) {
-        showBlockedV2(transitionReturnFrom);
-      } else {
-        showBlockedTransition(opt);
-      }
-    };
-    grid.appendChild(card);
-  });
-  show('blocked-before');
+  showBlockedV2(from || 'aide-menu');
 }
 
 function showBlockedTransition(activity) {
@@ -7835,14 +7892,14 @@ document.getElementById('back-blocked-action').onclick  = () => {
   clearInterval(stretchInterval); clearInterval(twoMinInterval);
   show(blockedStrategiesScreen);
 };
-document.getElementById('back-blocked-type').onclick    = () => show('blocked-before');
+document.getElementById('back-blocked-type').onclick    = () => show('aide-menu');
 document.getElementById('back-friction-strategies').onclick = () => show('blocked-type');
 document.getElementById('back-shortcuts-setup').onclick = () => {
   if (shortcutGuideStep > 0) { shortcutGuideStep--; renderShortcutStep(); }
   else { showShortcutsSetupReturn(); }
 };
 document.getElementById('back-blocked-before').onclick  = () => show(transitionReturnFrom);
-document.getElementById('back-blocked-transition').onclick = () => { clearTransitionTimers(); show('blocked-before'); };
+document.getElementById('back-blocked-transition').onclick = () => { clearTransitionTimers(); showBlockedV2(transitionReturnFrom); };
 document.getElementById('btn-transition-skip').onclick  = () => { clearTransitionTimers(); addBehaviorEvent('transition_good'); showBlockedV2(transitionReturnFrom); };
 document.getElementById('back-mode-panique').onclick    = () => { clearPanicTimer(); show('aide-menu'); };
 document.getElementById('back-reset-cognitif').onclick  = () => show('aide-menu');
@@ -8185,6 +8242,29 @@ function showRSDMode() {
 }
 
 // ─── DAILY PLANNING ───
+function showEndOfDay() {
+  const plan = getDailyPlan();
+  const done = plan.items.filter(i => i.done).length;
+  const total = plan.items.length;
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet" style="text-align:center">
+      <div class="cat-modal-handle"></div>
+      <div style="font-size:44px;margin-bottom:10px">🌙</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px">Bonne journée !</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">
+        ${total > 0 ? `Plan du jour : <strong style="color:var(--text)">${done} / ${total}</strong> tâche${total>1?'s':''} faite${done>1?'s':''}.` : 'Aucun plan du jour défini.'}
+        <br>Ton cerveau a travaillé. C'est bien.
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.55">Demain, tu repars de zéro — sans la pression d'aujourd'hui.</div>
+      <button class="btn" id="eod-close">Fermer ✓</button>
+    </div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  bd.querySelector('#eod-close').onclick = () => bd.remove();
+}
+
 function getDailyPlan() {
   const today = new Date().toDateString();
   try {
@@ -8284,6 +8364,16 @@ function showReentryModal() {
   document.getElementById('re-close').onclick = () => bd.remove();
 }
 
+// ─── SPACEBAR SHORTCUT ───
+document.addEventListener('keydown', function(e) {
+  if (e.code !== 'Space' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  const active = document.querySelector('.screen.active');
+  if (!active) return;
+  e.preventDefault();
+  if (active.id === 'session') document.getElementById('t-toggle').click();
+  else if (active.id === 'timer-free') document.getElementById('ft-toggle').click();
+});
+
 // ─── INIT ───
 // Afficher la modal Ritaline immédiatement (sur le splash), sans attendre Firebase
 checkRitalinReminder();
@@ -8307,6 +8397,18 @@ let currentDumpZone = 0;
   document.getElementById('brain-dump-text').addEventListener('input', function() {
     localStorage.setItem('ft_dump_' + currentDumpZone, this.value);
     localStorage.setItem('focustdah_brain_dump', this.value);
+    // Show save indicator
+    let ind = document.getElementById('dump-save-ind');
+    if (!ind) {
+      ind = document.createElement('div');
+      ind.id = 'dump-save-ind';
+      ind.style.cssText = 'font-size:12px;color:var(--muted);text-align:right;margin-top:4px;transition:opacity .3s';
+      document.getElementById('brain-dump-text').insertAdjacentElement('afterend', ind);
+    }
+    ind.style.opacity = '1';
+    ind.textContent = 'Sauvegardé ✓';
+    clearTimeout(ind._t);
+    ind._t = setTimeout(() => { ind.style.opacity = '0'; }, 1800);
   });
 })();
 </script>
