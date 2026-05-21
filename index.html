@@ -5783,6 +5783,7 @@ function onSessionTimerEnd() {
   addBehaviorEvent('complete');
   releaseWakeLock();
   playTimerEndSound();
+  setTimeout(showFocusCheckIn, 900);
 }
 function onFtTimerEnd() {
   clearInterval(ftInterval);
@@ -5795,6 +5796,7 @@ function onFtTimerEnd() {
   releaseWakeLock();
   playTimerEndSound();
   showFtEndPanel();
+  setTimeout(showFocusCheckIn, 900);
 }
 
 // ─── RESYNC AU RETOUR EN PREMIER PLAN ───
