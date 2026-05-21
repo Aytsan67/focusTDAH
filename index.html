@@ -5063,14 +5063,24 @@ function renderSettingsList(container, s, key, title, defaultEmoji) {
 }
 
 function renderSettingsFocus(container) {
-  const ready = localStorage.getItem(LS_SHORTCUTS_READY) === 'true';
+  const ready      = localStorage.getItem(LS_SHORTCUTS_READY) === 'true';
+  const timerReady = localStorage.getItem(LS_TIMER_SHORTCUT_READY) === 'true';
   container.innerHTML = `
     <div style="padding:0 0 8px">
       <div style="font-size:13px;color:var(--muted);margin-bottom:16px">
         Le Mode Focus combine deux outils : un raccourci Apple qui active ton mode Ne pas déranger, et l'app Dumb qui remplace les icônes colorées par des boutons texte. Ensemble, ils éliminent les distractions visuelles et les notifications.
       </div>
 
-      <div class="settings-section-title" style="margin-bottom:8px">Raccourci iPhone</div>
+      <div class="settings-section-title" style="margin-bottom:8px">⏱ Minuteur iPhone (sonne même Chrome fermé)</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border-radius:12px;margin-bottom:16px">
+        <div>
+          <div style="font-size:15px;font-weight:600;color:var(--text)">${timerReady ? '✅ Minuteur configuré' : '⚠️ Pas encore configuré'}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${timerReady ? 'Sonne même si Chrome est fermé' : 'Lance le minuteur natif iPhone à chaque timer'}</div>
+        </div>
+        <button class="btn-outline" id="sf-timer-shortcut-btn" style="font-size:13px;padding:8px 14px;white-space:nowrap;margin-left:10px">${timerReady ? 'Reconfigurer' : 'Configurer'}</button>
+      </div>
+
+      <div class="settings-section-title" style="margin-bottom:8px">Raccourci Mode Focus</div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border-radius:12px;margin-bottom:10px">
         <div>
           <div style="font-size:15px;font-weight:600;color:var(--text)">${ready ? '✅ Raccourci configuré' : '⚠️ Pas encore configuré'}</div>
@@ -5097,6 +5107,7 @@ function renderSettingsFocus(container) {
       </div>
     </div>
   `;
+  document.getElementById('sf-timer-shortcut-btn').onclick = () => showTimerShortcutSetupModal();
   document.getElementById('sf-shortcut-btn').onclick = () => {
     localStorage.setItem('ft_shortcuts_return_from', 'settings');
     show('shortcuts-setup');
@@ -5367,6 +5378,7 @@ document.getElementById('t-toggle').onclick = function() {
       renderTimerDisplay();
       if (tRemain <= 0) onSessionTimerEnd();
     }, 1000);
+    triggerTimerShortcut(tRemain);
   }
 };
 document.getElementById('t-reset').onclick = resetTimer;
@@ -5549,6 +5561,7 @@ document.getElementById('ft-toggle').onclick = function() {
       renderFtTimer();
       if (ftRemain <= 0) onFtTimerEnd();
     }, 1000);
+    triggerTimerShortcut(ftRemain);
   }
 };
 
@@ -6374,6 +6387,8 @@ let focusModeActive = false;
 // ════════════════════════════════════════════════
 const SHORTCUTS_NAME = 'FocusTDAH';
 const LS_SHORTCUTS_READY = 'ft_shortcuts_ready';
+const TIMER_SHORTCUT_NAME = 'FocusTDAH Minuteur';
+const LS_TIMER_SHORTCUT_READY = 'ft_timer_shortcut_ready';
 
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -6381,6 +6396,50 @@ function isIOS() {
 
 function triggerShortcut() {
   window.location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent(SHORTCUTS_NAME);
+}
+
+function triggerTimerShortcut(durationSec) {
+  if (!isIOS()) return;
+  if (localStorage.getItem(LS_TIMER_SHORTCUT_READY) !== 'true') {
+    showTimerShortcutSetupModal(); return;
+  }
+  const mins = Math.ceil(durationSec / 60);
+  window.location.href = `shortcuts://run-shortcut?name=${encodeURIComponent(TIMER_SHORTCUT_NAME)}&input=${mins}`;
+}
+
+function showTimerShortcutSetupModal() {
+  if (document.getElementById('tsc-bd')) return;
+  const bd = document.createElement('div');
+  bd.id = 'tsc-bd';
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:6px">⏱ Minuteur iPhone</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px">
+        Crée ce raccourci en 30 secondes — ton iPhone sonnera même si Chrome est complètement fermé.
+      </p>
+      <div style="background:var(--soft);border-radius:14px;padding:14px 16px;margin-bottom:18px;font-size:14px;line-height:2.1;color:var(--text)">
+        <span style="color:var(--accent);font-weight:700">1.</span> Ouvre <strong>Raccourcis</strong> sur ton iPhone<br>
+        <span style="color:var(--accent);font-weight:700">2.</span> Appuie sur <strong>+</strong> (haut à droite)<br>
+        <span style="color:var(--accent);font-weight:700">3.</span> Cherche <strong>« Démarrer le minuteur »</strong><br>
+        <span style="color:var(--accent);font-weight:700">4.</span> Durée → appuie → choisis <strong>« Entrée du raccourci »</strong><br>
+        <span style="color:var(--accent);font-weight:700">5.</span> En haut : renomme en <strong style="color:var(--accent)">« FocusTDAH Minuteur »</strong><br>
+        <span style="color:var(--accent);font-weight:700">6.</span> Appuie sur <strong>Terminé</strong>
+      </div>
+      <button class="btn-outline" id="tsc-open" style="margin-bottom:10px">📱 Ouvrir l'app Raccourcis</button>
+      <button class="btn" id="tsc-done" style="margin-bottom:10px">✅ C'est fait — activer</button>
+      <button class="btn-outline" id="tsc-skip" style="color:var(--muted)">Plus tard</button>
+    </div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.getElementById('tsc-open').onclick = () => { window.location.href = 'shortcuts://'; };
+  document.getElementById('tsc-done').onclick = () => {
+    localStorage.setItem(LS_TIMER_SHORTCUT_READY, 'true');
+    bd.remove();
+    showDopamineToast('Minuteur iPhone activé ✅ Il sonnera même Chrome fermé !', 3500);
+  };
+  document.getElementById('tsc-skip').onclick = () => bd.remove();
 }
 
 function showFocusModal(from) {
