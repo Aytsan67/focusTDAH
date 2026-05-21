@@ -5134,6 +5134,7 @@ function showFedUpModal(pauseFn, resumeFn) {
   if (document.getElementById('fed-up-bd')) return;
 
   if (pauseFn) pauseFn();
+  stopContinuousFocus();
   fedUpPauseFn = pauseFn;
   fedUpResumeFn = resumeFn;
   addBehaviorEvent('fedup');
@@ -5213,6 +5214,7 @@ function pauseSessionTimer()  { if (tRunning) { tRunning = false; clearInterval(
 function resumeSessionTimer() {
   if (!tRunning && tRemain > 0) {
     tRunning = true;
+    startContinuousFocus();
     tInterval = setInterval(() => {
       tRemain--;
       const pct = (tRemain / tTotal) * 100;
@@ -5227,6 +5229,7 @@ function pauseFreeTimer()  { if (ftRunning) { ftRunning = false; clearInterval(f
 function resumeFreeTimer() {
   if (!ftRunning && ftRemain > 0) {
     ftRunning = true;
+    startContinuousFocus();
     ftInterval = setInterval(() => {
       ftRemain--;
       const pct = (ftRemain / ftTotal) * 100;
@@ -5338,11 +5341,13 @@ document.getElementById('t-toggle').onclick = function() {
   if (tRunning) {
     clearInterval(tInterval);
     tRunning = false;
+    stopContinuousFocus();
     document.getElementById('t-toggle').textContent = '▶ Continuer';
   } else {
     if (tRemain <= 0) return;
     maybeAskFocus();
     tRunning = true;
+    startContinuousFocus();
     document.getElementById('t-toggle').textContent = '⏸ Pause';
     tInterval = setInterval(function() {
       tRemain--;
@@ -5523,11 +5528,13 @@ document.getElementById('ft-toggle').onclick = function() {
   if (ftRunning) {
     clearInterval(ftInterval);
     ftRunning = false;
+    stopContinuousFocus();
     this.textContent = '▶ Continuer';
   } else {
     if (ftRemain <= 0) return;
     maybeAskFocus();
     ftRunning = true;
+    startContinuousFocus();
     this.textContent = '⏸ Pause';
     ftInterval = setInterval(() => {
       ftRemain--;
@@ -5837,47 +5844,154 @@ function setFocusSupplTaken(arr) {
   localStorage.setItem('ft_suppl_taken', JSON.stringify(arr));
 }
 
-function focusScoreColor(s) {
-  return s < 30 ? '#ef5350' : s < 55 ? '#ffa726' : s < 78 ? '#66bb6a' : '#7c5cfc';
+// ── Tracking temps continu ──
+let continuousFocusStartTs  = null;
+let continuousFocusMilestone = 0; // next 10-min milestone index (0=10min, 1=20min…)
+
+function startContinuousFocus() {
+  continuousFocusStartTs   = Date.now();
+  continuousFocusMilestone = 0;
+}
+function stopContinuousFocus() {
+  continuousFocusStartTs   = null;
+  continuousFocusMilestone = 0;
 }
 
-function calcFocusScore() {
-  let score = 50; // base — tout le monde commence à 50
+// ── Effets des compléments ──
+const SUPPL_KNOWN_EFFECTS = {
+  'Oméga-3':    { focusBrut: 3, energie: 2 },
+  'Oméga 3':    { focusBrut: 3, energie: 2 },
+  'Magnésium':  { surcharge: -4, friction: -2, energie: 2 },
+  'Rhodiola':   { energie: 5, surcharge: -3 },
+  'Vitamine B': { energie: 3, dopamine: 2 },
+  'Choline':    { focusBrut: 5, momentum: 2 },
+  'L-Théanine': { focusBrut: 4, surcharge: -3 },
+};
+const SUPPL_DEFAULT_EFFECT  = { focusBrut: 2, energie: 1 };
 
-  // Composante chimique (Ritaline, max +25)
-  const answer = getRitalinAnswer();
-  if (answer === 'oui') {
+// ── Effets des boissons (phases temps) ──
+const DRINK_PHASE_EFFECTS = {
+  'Café': [
+    { max: 90,  fx: { focusBrut: 6, energie: 4 } },
+    { min: 90,  max: 180, fx: { focusBrut: 3 } },
+    { min: 180, fx: { energie: -3 } },
+  ],
+  'Matcha': [
+    { max: 120, fx: { focusBrut: 7, dopamine: 2 } },
+    { min: 120, max: 240, fx: { focusBrut: 4, energie: 2 } },
+  ],
+  'Red Bull': [
+    { max: 60,  fx: { energie: 10, focusBrut: 5, dopamine: 4 } },
+    { min: 60,  max: 120, fx: { energie: 4, focusBrut: 2 } },
+    { min: 120, fx: { energie: -8, focusBrut: -6, dopamine: -3 } },
+  ],
+  'Holy Energy': [
+    { max: 60,  fx: { energie: 8, focusBrut: 4, dopamine: 3 } },
+    { min: 60,  max: 120, fx: { energie: 3 } },
+    { min: 120, fx: { energie: -6, focusBrut: -4 } },
+  ],
+  'Eau froide': [
+    { max: 30,  fx: { energie: 3, surcharge: -2 } },
+    { min: 30,  max: 60, fx: { energie: 1 } },
+  ],
+};
+
+// ── Calcul des 6 sous-scores ──
+function calcSubScores() {
+  const s = { focusBrut: 50, energie: 50, dopamine: 40, momentum: 0, surcharge: 20, friction: 15 };
+
+  // Ritaline
+  if (getRitalinAnswer() === 'oui') {
     const timeStr = localStorage.getItem('focustdah_ritalin_time');
     const type    = localStorage.getItem('focustdah_ritalin_type') || 'IR';
     if (timeStr) {
       const [h, m] = timeStr.split(':').map(Number);
-      const takenAt = new Date(); takenAt.setHours(h, m, 0, 0);
-      if (takenAt > new Date()) takenAt.setDate(takenAt.getDate() - 1);
-      const min = (new Date() - takenAt) / 60000;
+      const at = new Date(); at.setHours(h, m, 0, 0);
+      if (at > new Date()) at.setDate(at.getDate() - 1);
+      const min = (Date.now() - at) / 60000;
       if (type === 'IR') {
-        score += min < 30 ? 8 : min < 120 ? 22 : min < 210 ? 14 : min < 300 ? 5 : 0;
+        if      (min < 30)  { s.focusBrut += 8;  s.energie += 5;  s.friction -= 3; }
+        else if (min < 120) { s.focusBrut += 18; s.energie += 10; s.dopamine += 6; s.friction -= 8; s.surcharge -= 4; }
+        else if (min < 210) { s.focusBrut += 12; s.energie += 7;  s.dopamine += 3; s.friction -= 5; }
+        else if (min < 300) { s.focusBrut += 5;  s.energie += 3; }
       } else {
-        score += min < 60 ? 12 : min < 540 ? 20 : min < 720 ? 10 : 2;
+        if      (min < 60)  { s.focusBrut += 10; s.energie += 7;  s.friction -= 4; }
+        else if (min < 540) { s.focusBrut += 16; s.energie += 9;  s.dopamine += 5; s.friction -= 7; s.surcharge -= 5; }
+        else if (min < 720) { s.focusBrut += 8;  s.energie += 5;  s.dopamine += 2; }
+        else                { s.focusBrut += 2;  s.energie += 2; }
       }
-    } else { score += 12; }
+    } else { s.focusBrut += 10; s.energie += 5; }
   }
 
-  // Composante compléments (max +20, +5 chacun)
-  const taken = getFocusSupplTaken();
-  score += Math.min(taken.length * 5, 20);
-
-  // Composante comportementale (±15 selon les séances récentes)
-  const { events } = getBehaviorData();
-  const recent = events.slice(-10);
-  let behav = 0;
-  recent.forEach(ev => {
-    if (ev.type === 'complete') behav += 2;
-    else if (ev.type === 'fedup') behav -= 2;
-    else if (ev.type === 'selfassess') behav += ev.value === 3 ? 3 : ev.value === 2 ? 0 : -3;
+  // Compléments
+  getFocusSupplTaken().forEach(name => {
+    const fx = SUPPL_KNOWN_EFFECTS[name] || SUPPL_DEFAULT_EFFECT;
+    Object.entries(fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
   });
-  score += Math.max(-15, Math.min(15, behav));
 
-  return Math.max(0, Math.min(100, Math.round(score)));
+  // Boisson
+  try {
+    const d = JSON.parse(localStorage.getItem('ft_drink_taken') || 'null');
+    if (d) {
+      const min = (Date.now() - d.ts) / 60000;
+      (DRINK_PHASE_EFFECTS[d.name] || []).forEach(phase => {
+        if ((phase.min === undefined || min >= phase.min) && (phase.max === undefined || min <= phase.max)) {
+          Object.entries(phase.fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
+        }
+      });
+    }
+  } catch(e) {}
+
+  // Comportement récent (decay sur les vieux événements)
+  const { events = [] } = getBehaviorData();
+  events.slice(-15).forEach(ev => {
+    const ageMin = (Date.now() - ev.ts) / 60000;
+    const decay  = ageMin < 20 ? 1 : ageMin < 60 ? 0.6 : 0.3;
+    switch(ev.type) {
+      case 'complete':
+        s.momentum  += 2 * decay; s.dopamine  += 1 * decay; s.friction  -= 2 * decay; break;
+      case 'fedup':
+        s.momentum  -= 3 * decay; s.friction  += 2 * decay; s.dopamine  -= 1 * decay; break;
+      case 'selfassess': {
+        const m = ev.value === 3 ? 1 : ev.value === 2 ? 0 : -1;
+        s.dopamine  += 2 * m * decay; s.surcharge -= 1 * m * decay; break;
+      }
+      case '10min':
+        s.momentum  += 4 * decay; s.focusBrut += 3 * decay; break;
+      case 'transition_good':
+        s.surcharge -= 4 * decay; s.momentum  += 3 * decay; break;
+      case 'brain_dump':
+        s.surcharge -= 5 * decay; s.friction  -= 3 * decay; break;
+      case 'reset_cognitif':
+        s.surcharge -= 4 * decay; s.energie   += 2 * decay; break;
+      case 'hyperfocus':
+        s.surcharge += 10; s.energie -= 5; break;
+    }
+  });
+
+  // Clamp
+  ['focusBrut','energie','dopamine','momentum'].forEach(k => { s[k] = Math.max(0, Math.min(100, s[k])); });
+  ['surcharge','friction'].forEach(k => { s[k] = Math.max(0, Math.min(100, s[k])); });
+  return s;
+}
+
+function focusScoreColor(score) {
+  return score < 30 ? '#ef5350' : score < 50 ? '#ffa726' : score < 68 ? '#66bb6a' : '#7c5cfc';
+}
+
+function calcFocusScore() {
+  const s = calcSubScores();
+  const raw = (s.focusBrut * 0.35 + s.energie * 0.20 + s.dopamine * 0.15 + s.momentum * 0.30)
+            - (s.surcharge * 0.15 + s.friction * 0.10);
+  return Math.max(0, Math.min(100, Math.round(raw)));
+}
+
+// ── Sous-score → label lisible ──
+function subScoreLabel(val, isNegative) {
+  if (isNegative) {
+    return val < 15 ? 'Faible ✓' : val < 35 ? 'Modérée' : val < 60 ? 'Élevée ⚠' : 'Très haute ⛔';
+  }
+  return val < 20 ? 'Faible' : val < 45 ? 'Modéré' : val < 70 ? 'Bon' : 'Élevé ⚡';
 }
 
 function updateFocusRing() {
@@ -5895,11 +6009,10 @@ function updateFocusRing() {
 function refreshFocusPanelScore() {
   const score = calcFocusScore();
   const color = focusScoreColor(score);
-  const labels = ['Faible', 'Modéré', 'Bon', 'Excellent'];
-  const label  = score < 30 ? labels[0] : score < 55 ? labels[1] : score < 78 ? labels[2] : labels[3];
-  const tip    = score < 30 ? 'Pense à prendre tes compléments ou ta Ritaline.'
-               : score < 55 ? 'Tu peux booster ça avec tes compléments.'
-               : 'Bonne fenêtre de travail !';
+  const label = score < 30 ? 'Faible' : score < 50 ? 'Modéré' : score < 68 ? 'Bon' : 'Excellent';
+  const tip   = score < 30 ? 'Ritaline ou compléments peuvent aider.'
+              : score < 50 ? 'Lance un timer pour construire le Momentum.'
+              : 'Bonne fenêtre — profite-en !';
   const num = document.getElementById('fp-score-num');
   const bar = document.getElementById('fp-score-bar');
   const lbl = document.getElementById('fp-score-label');
@@ -5908,6 +6021,12 @@ function refreshFocusPanelScore() {
   if (bar) { bar.style.strokeDashoffset = 100 - score; bar.style.stroke = color; }
   if (lbl) { lbl.textContent = label; lbl.style.color = color; }
   if (tipEl) tipEl.textContent = tip;
+  // Update sub-scores if panel is open
+  const ss = calcSubScores();
+  ['momentum','energie','dopamine','focusBrut','surcharge','friction'].forEach(k => {
+    const el = document.getElementById('fp-ss-' + k);
+    if (el) el.textContent = subScoreLabel(Math.round(ss[k]), k === 'surcharge' || k === 'friction');
+  });
   updateFocusRing();
 }
 
@@ -6021,11 +6140,23 @@ function openFocusPanel() {
     document.getElementById('focus-panel-bd').remove(); return;
   }
   const score = calcFocusScore();
+  const ss    = calcSubScores();
   const color = focusScoreColor(score);
-  const label = score < 30 ? 'Faible' : score < 55 ? 'Modéré' : score < 78 ? 'Bon' : 'Excellent';
-  const tip   = score < 30 ? 'Pense à prendre tes compléments ou ta Ritaline.'
-              : score < 55 ? 'Tu peux booster ça avec tes compléments.'
-              : 'Bonne fenêtre de travail !';
+  const label = score < 30 ? 'Faible' : score < 50 ? 'Modéré' : score < 68 ? 'Bon' : 'Excellent';
+  const tip   = score < 30 ? 'Ritaline ou compléments peuvent aider.'
+              : score < 50 ? 'Lance un timer pour construire le Momentum.'
+              : 'Bonne fenêtre — profite-en !';
+
+  function ssRow(id, icon, label, val, isNeg) {
+    const lbl = subScoreLabel(Math.round(val), isNeg);
+    const c   = isNeg
+      ? (val < 15 ? '#66bb6a' : val < 35 ? '#ffa726' : '#ef5350')
+      : (val < 20 ? '#ef5350' : val < 45 ? '#ffa726' : val < 70 ? '#66bb6a' : '#7c5cfc');
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;color:var(--muted)">${icon} ${label}</span>
+      <span id="fp-ss-${id}" style="font-size:12px;font-weight:700;color:${c}">${lbl}</span>
+    </div>`;
+  }
 
   const bd = document.createElement('div');
   bd.id = 'focus-panel-bd';
@@ -6034,7 +6165,7 @@ function openFocusPanel() {
     <div class="cat-modal-sheet" style="max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <div class="cat-modal-handle"></div>
 
-      <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--soft);border-radius:16px;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--soft);border-radius:16px;margin-bottom:16px">
         <div style="position:relative;width:68px;height:68px;flex-shrink:0">
           <svg style="position:absolute;inset:0;transform:rotate(-90deg)" viewBox="0 0 36 36">
             <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="3.5"/>
@@ -6048,6 +6179,15 @@ function openFocusPanel() {
           <div id="fp-score-label" style="font-size:18px;font-weight:700;color:${color}">${label}</div>
           <div id="fp-score-tip" style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45">${tip}</div>
         </div>
+      </div>
+
+      <div style="background:var(--soft);border-radius:14px;padding:10px 14px;margin-bottom:20px">
+        ${ssRow('momentum',  '🚀', 'Momentum',        ss.momentum,  false)}
+        ${ssRow('focusBrut', '🎯', 'Focus brut',      ss.focusBrut, false)}
+        ${ssRow('energie',   '⚡', 'Énergie mentale', ss.energie,   false)}
+        ${ssRow('dopamine',  '🧠', 'Dopamine',        ss.dopamine,  false)}
+        ${ssRow('surcharge', '🌊', 'Surcharge',       ss.surcharge, true)}
+        ${ssRow('friction',  '🧱', 'Friction',        ss.friction,  true)}
       </div>
 
       <div class="settings-section-title" style="margin-bottom:10px">Ritaline</div>
@@ -6066,7 +6206,30 @@ function openFocusPanel() {
 
 document.getElementById('focus-level-ring').onclick = openFocusPanel;
 updateFocusRing();
-setInterval(updateFocusRing, 60000); // recalcule chaque minute (Ritaline qui diminue)
+setInterval(() => {
+  updateFocusRing();
+  if (!continuousFocusStartTs) return;
+  const elapsedMin = (Date.now() - continuousFocusStartTs) / 60000;
+  // 10-min milestones
+  const nextMilestone = (continuousFocusMilestone + 1) * 10;
+  if (elapsedMin >= nextMilestone) {
+    continuousFocusMilestone++;
+    addBehaviorEvent('10min');
+  }
+  // Hyperfocus warning at 90 min
+  if (elapsedMin >= 90 && elapsedMin < 91) {
+    showDopamineToast('⚠️ 90 min sans pause — ton cerveau a besoin de souffler. Lance un reset cognitif ?', 8000);
+  }
+  // Décrochage risk: momentum low + several fedup events today
+  const score = calcFocusScore();
+  const subs  = calcSubScores();
+  if (subs.momentum < 15) {
+    const fedCount = (getBehaviorData().events || []).filter(e => e.type === 'fedup').length;
+    if (fedCount >= 2) {
+      showDopamineToast('🧠 Risque de décrochage détecté. Essaie un reset cognitif ou un brain dump.', 7000);
+    }
+  }
+}, 60000); // recalcule chaque minute
 
 // ════════════════════════════════════════════════
 // ─── FOCUS MODE (iOS Raccourcis) ───
@@ -6962,7 +7125,7 @@ function showResetComplete(victoryText) {
       <button class="btn-outline" id="btn-after-reset-home" style="margin-top:10px">← Accueil</button>
     </div>`;
   showDopamineToast('✨ Reset réussi — nouveau départ !');
-  document.getElementById('btn-after-reset').onclick = () => showCheckIn('home', 'reset', 'Après ton reset cognitif 🧘');
+  document.getElementById('btn-after-reset').onclick = () => { addBehaviorEvent('reset_cognitif'); showCheckIn('home', 'reset', 'Après ton reset cognitif 🧘'); };
   document.getElementById('btn-after-reset-home').onclick = () => show('aide-menu');
 }
 
@@ -7073,6 +7236,8 @@ const SUPPL_DRINK_DURATION = 5 * 60;
 
 function startSupplDrinkTimer(drink) {
   clearSupplDrinkTimer();
+  localStorage.setItem('ft_drink_taken', JSON.stringify({ name: drink.label, ts: Date.now() }));
+  updateFocusRing();
   document.getElementById('suppl-drink-chosen').textContent = drink.emoji + ' ' + drink.label + ' — prépare-toi !';
   document.getElementById('suppl-drink-choice').style.display = 'none';
   document.getElementById('suppl-drink-timer').style.display = 'block';
@@ -7372,7 +7537,7 @@ document.getElementById('back-shortcuts-setup').onclick = () => {
 };
 document.getElementById('back-blocked-before').onclick  = () => show(transitionReturnFrom);
 document.getElementById('back-blocked-transition').onclick = () => { clearTransitionTimers(); show('blocked-before'); };
-document.getElementById('btn-transition-skip').onclick  = () => { clearTransitionTimers(); showBlockedV2(transitionReturnFrom); };
+document.getElementById('btn-transition-skip').onclick  = () => { clearTransitionTimers(); addBehaviorEvent('transition_good'); showBlockedV2(transitionReturnFrom); };
 document.getElementById('back-mode-panique').onclick    = () => { clearPanicTimer(); show('aide-menu'); };
 document.getElementById('back-reset-cognitif').onclick  = () => show('aide-menu');
 // ── BRAIN DUMP GUIDE ──
@@ -7535,6 +7700,7 @@ document.getElementById('btn-dump-guide').onclick = () => showDumpGuide();
 document.getElementById('back-brain-dump').onclick      = () => { hideDumpGuide(); show('aide-menu'); };
 document.getElementById('btn-brain-dump-done').onclick  = () => {
   localStorage.setItem('focustdah_brain_dump', document.getElementById('brain-dump-text').value);
+  addBehaviorEvent('brain_dump');
   showCheckIn('home', 'dump', 'Après avoir vidé ton cerveau 🧠');
 };
 document.getElementById('btn-brain-dump-clear').onclick = () => {
