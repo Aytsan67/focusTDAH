@@ -896,14 +896,14 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
 .work-btn {
   display: block; width: 100%; border: none; border-radius: 24px;
-  padding: 28px 26px;
+  padding: 26px 24px;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   color: #fff;
-  font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800;
+  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800;
   text-align: left; line-height: 1.15;
   box-shadow: 0 8px 32px rgba(124,92,252,.38);
   transition: transform .15s, box-shadow .15s;
-  margin-bottom: 32px;
+  margin-bottom: 0;
   cursor: pointer;
 }
 .work-btn:active { transform: scale(.97); box-shadow: 0 4px 16px rgba(124,92,252,.28); }
@@ -985,6 +985,36 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   font-size: 11px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase;
   color: var(--muted); margin-bottom: 10px; margin-top: 2px; padding-left: 4px;
 }
+
+/* ── LANDING GRID BUTTONS ── */
+.landing-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;
+}
+.landing-half-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 7px; padding: 20px 10px;
+  border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--soft); color: var(--text);
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: transform .13s, background .13s; text-align: center;
+}
+.landing-half-btn:active { transform: scale(.97); background: var(--card); }
+.landing-half-btn .half-emoji { font-size: 26px; line-height: 1; }
+.landing-half-aide {
+  border-color: rgba(124,92,252,.3);
+  background: rgba(124,92,252,.07);
+}
+.landing-half-aide:active { background: rgba(124,92,252,.13); }
+.landing-mini-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;
+}
+.landing-mini-btn {
+  padding: 12px 8px; border-radius: 14px;
+  border: 1.5px solid var(--border); background: none;
+  color: var(--muted); font: 600 13px 'DM Sans', sans-serif;
+  cursor: pointer; transition: all .13s; text-align: center;
+}
+.landing-mini-btn:active { background: var(--soft); color: var(--text); }
 .block-panic {
   background: rgba(252,92,125,.09); border: 1.5px solid rgba(252,92,125,.32) !important;
   color: var(--text);
@@ -1558,38 +1588,48 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
 <!-- ACCUEIL -->
 <section class="screen" id="landing">
-  <div class="landing-logo-row" style="justify-content:space-between;align-items:center;margin-bottom:6px">
-    <span class="logo" style="font-size:26px">✦ focusTDAH</span>
+
+  <!-- Barre du haut -->
+  <div class="landing-logo-row" style="justify-content:space-between;align-items:center;margin-bottom:14px">
+    <span class="logo" style="font-size:24px">✦ focusTDAH</span>
     <div style="display:flex;align-items:center;gap:8px">
-      <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 12px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer">🔍 Comment tu vas ?</button>
+      <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 10px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer">🔍</button>
       <div id="landing-user" style="display:none"></div>
     </div>
   </div>
 
+  <!-- Bannière rebound Ritaline (si active) -->
   <div id="rebound-banner-slot"></div>
 
-  <div id="home-plan-preview" style="display:none;margin-top:10px;margin-bottom:4px"></div>
-  <button class="btn-outline" id="btn-daily-plan" style="margin-bottom:16px;width:100%">📋 Plan du jour</button>
+  <!-- Plan du jour compact (visible si défini) -->
+  <div id="home-plan-preview" style="display:none;margin-bottom:12px"></div>
 
-  <button class="block-btn block-main" id="btn-continue">
-    <span class="b-title" id="continue-title">Je veux travailler →</span>
-    <span class="b-sub" id="continue-meta">Reprendre ou créer un projet</span>
+  <!-- CTA principale — grande, contextuelle -->
+  <button class="work-btn" id="btn-continue">
+    <span id="continue-title">Je veux travailler →</span>
+    <span class="work-btn-sub" id="continue-meta">Reprendre ou créer un projet</span>
   </button>
-  <button class="block-btn block-timer" id="btn-timers">
-    <span class="b-title">Timer libre ⏱</span>
-    <span class="b-sub">Travaille par intervalles, sans créer de projet</span>
-  </button>
-  <button class="block-btn block-aide" id="btn-aide-menu">
-    <span class="b-title">J'ai besoin d'aide 🧠</span>
-    <span class="b-sub">Bloqué · Panique · RSD · Reset · Vider le cerveau</span>
-  </button>
-  <button class="block-btn block-secondary" id="btn-new">
-    <span class="b-title">+ Nouveau projet</span>
-    <span class="b-sub">Transforme une idée floue en plan prêt à démarrer</span>
-  </button>
-  <button class="btn-outline" id="btn-end-of-day" style="margin-top:2px;width:100%">🌙 Fin de journée</button>
 
-  <div id="notif-banner" class="notif-banner" style="display:none">
+  <!-- Actions secondaires — grille 2 colonnes -->
+  <div class="landing-grid">
+    <button class="landing-half-btn" id="btn-timers">
+      <span class="half-emoji">⏱</span>
+      <span>Timer libre</span>
+    </button>
+    <button class="landing-half-btn landing-half-aide" id="btn-aide-menu">
+      <span class="half-emoji">🧠</span>
+      <span>J'ai besoin d'aide</span>
+    </button>
+  </div>
+
+  <!-- Actions tertiaires — grille 2 colonnes -->
+  <div class="landing-mini-row">
+    <button class="landing-mini-btn" id="btn-new">+ Nouveau projet</button>
+    <button class="landing-mini-btn" id="btn-daily-plan">📋 Plan du jour</button>
+  </div>
+
+  <!-- Bannière notifications -->
+  <div id="notif-banner" class="notif-banner" style="display:none;margin-top:14px">
     <span class="notif-icon">🔔</span>
     <div class="notif-body">
       <strong>Activer les notifications ?</strong>
@@ -1601,11 +1641,13 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     </div>
   </div>
 
-  <div id="home-proj-wrap" style="margin-top:22px;display:none">
+  <!-- Mes projets -->
+  <div id="home-proj-wrap" style="margin-top:24px;display:none">
     <div class="section-label">Mes projets</div>
     <div id="home-proj-list" class="proj-list"></div>
   </div>
 
+  <!-- Liste rapide -->
   <div class="quicktodo" style="margin-top:18px">
     <div class="qt-header">
       <span class="qt-title">📋 Ma liste rapide</span>
@@ -1616,6 +1658,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     </div>
     <div id="qt-list" class="qt-list"></div>
   </div>
+
+  <!-- Fin de journée — discret, en bas -->
+  <button id="btn-end-of-day" style="display:block;width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:18px 0 4px;cursor:pointer;text-align:center">🌙 Fin de journée</button>
+
 </section>
 
 <!-- CREATE -->
