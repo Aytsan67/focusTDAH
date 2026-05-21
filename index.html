@@ -6314,7 +6314,7 @@ function openFocusPanel() {
         <button id="fp-close" style="background:none;border:none;font-size:24px;color:var(--muted);cursor:pointer;padding:0 4px;line-height:1">×</button>
       </div>
 
-      <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--soft);border-radius:16px;margin-bottom:16px">
+      <div id="fp-score-card" style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--soft);border-radius:16px;margin-bottom:8px;cursor:pointer">
         <div style="position:relative;width:68px;height:68px;flex-shrink:0">
           <svg style="position:absolute;inset:0;transform:rotate(-90deg)" viewBox="0 0 36 36">
             <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="3.5"/>
@@ -6324,10 +6324,22 @@ function openFocusPanel() {
           </svg>
           <span id="fp-score-num" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${color}">${score}</span>
         </div>
-        <div>
+        <div style="flex:1">
           <div id="fp-score-label" style="font-size:18px;font-weight:700;color:${color}">${label}</div>
           <div id="fp-score-tip" style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45">${tip}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;opacity:.6">Appuie pour comprendre le calcul →</div>
         </div>
+      </div>
+
+      <div id="fp-formula" style="display:none;background:var(--soft);border-radius:14px;padding:14px;margin-bottom:8px;font-size:12px;line-height:1.7;color:var(--muted)">
+        <div style="font-weight:700;color:var(--text);margin-bottom:6px;font-size:13px">Comment c'est calculé</div>
+        <div style="font-family:monospace;font-size:11px;background:var(--card);border-radius:8px;padding:8px 10px;margin-bottom:10px;color:var(--text);line-height:1.8">
+          (Focus Brut × 35%<br>+ Énergie × 20%<br>+ Dopamine × 15%<br>+ Momentum × 30%)<br>− Surcharge × 15%<br>− Friction × 10%
+        </div>
+        <div style="color:var(--text);font-weight:600;margin-bottom:3px">Ce qui monte 📈</div>
+        <div style="margin-bottom:8px">Ritaline prise · Compléments (Oméga-3, Magnésium…) · Café/Matcha · Timer terminé · 10 min de focus continu · Brain dump · Reset cognitif</div>
+        <div style="color:var(--text);font-weight:600;margin-bottom:3px">Ce qui baisse 📉</div>
+        <div>« J'en ai marre » répété · Momentum retombe sans timer · Plusieurs sessions abandonnées</div>
       </div>
 
       <div style="background:var(--soft);border-radius:14px;padding:10px 14px;margin-bottom:20px">
@@ -6350,6 +6362,13 @@ function openFocusPanel() {
   document.body.appendChild(bd);
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.getElementById('fp-close').onclick = () => bd.remove();
+  document.getElementById('fp-score-card').onclick = () => {
+    const f = document.getElementById('fp-formula');
+    const isOpen = f.style.display !== 'none';
+    f.style.display = isOpen ? 'none' : 'block';
+    bd.querySelector('#fp-score-card div:last-child').textContent =
+      isOpen ? 'Appuie pour comprendre le calcul →' : 'Appuie pour fermer ↑';
+  };
   renderFocusPanelRitalin(document.getElementById('fp-ritalin'));
   renderFocusPanelSuppl(document.getElementById('fp-suppl'));
 }
