@@ -5052,22 +5052,78 @@ document.querySelectorAll('.mode-card').forEach(card => {
 });
 
 function launchAutoSession() {
-  const phase = getRitalinPhase();
   const score = calcFocusScore();
-  const byPhase = { montee: 'micro', pic: 'reverse', descente: '2min', rebound: '2min' };
-  if (byPhase[phase]) {
-    currentMode = byPhase[phase];
-  } else {
-    currentMode = score < 30 ? '2min' : score < 55 ? 'micro' : 'reverse';
-  }
-  const msgs = {
-    montee: '🌅 Ritaline en montée → Micro-étapes recommandées',
-    pic:    '✦ Pic Ritaline → Reverse Pomodoro',
-    descente:'⏳ Ritaline en descente → session courte',
-    rebound:'⚠️ Rebound probable → mode 2 minutes',
+  const phase = getRitalinPhase();
+  const scoreColor = score < 30 ? '#ef5350' : score < 55 ? '#ffa726' : score < 78 ? '#66bb6a' : '#7c5cfc';
+
+  // Durée basée sur le score (même logique que btn-auto-program)
+  let mins = score < 25 ? 10 : score < 45 ? 15 : score < 65 ? 25 : score < 80 ? 40 : 50;
+  // Plafond par phase Ritaline
+  if (phase === 'rebound') mins = Math.min(mins, 10);
+  if (phase === 'montee')  mins = Math.min(mins, 15);
+
+  const phaseNote = {
+    montee:   '🌅 Ritaline en montée',
+    pic:      '✦ Pic Ritaline actif',
+    descente: '⏳ Ritaline en descente',
+    rebound:  '⚠️ Rebound probable',
   };
-  if (msgs[phase]) showDopamineToast(msgs[phase], 3000);
-  startSession();
+  const scoreNote = score < 25 ? 'Focus faible — commence doucement'
+    : score < 45 ? 'Focus modéré — session courte'
+    : score < 65 ? 'Bon focus — session standard'
+    : score < 80 ? 'Très bon focus — session longue'
+    : 'Focus excellent — profites-en !';
+  const note = phaseNote[phase] || scoreNote;
+
+  // Nom de la tâche en cours
+  const step = currentProject ? getCurrentStep(currentProject) : null;
+  const taskLabel = step ? step.name : (currentProject ? currentProject.name : '');
+
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Programme adapté</div>
+      ${taskLabel ? `<div style="font-size:13px;color:var(--muted);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📌 ${taskLabel}</div>` : ''}
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+        <span style="font-family:'Syne',sans-serif;font-size:52px;font-weight:900;color:${scoreColor};line-height:1">${mins}</span>
+        <span style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--muted)">min</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5">
+        ${note} · Focus <strong style="color:${scoreColor}">${score}/100</strong>
+      </div>
+      <button class="btn" id="prog-go">▶ Commencer ${mins} min</button>
+      <button style="background:none;border:none;color:var(--muted);font:600 13px 'DM Sans',sans-serif;width:100%;padding:10px;cursor:pointer;margin-top:4px" id="prog-other">Choisir une autre durée →</button>
+    </div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+
+  document.getElementById('prog-go').onclick = () => {
+    bd.remove();
+    // Utilise le mode 'micro' comme base mais surcharge la durée
+    currentMode = 'micro';
+    startSession();
+    tTotal = mins * 60;
+    tRemain = mins * 60;
+    document.getElementById('s-mode-label').textContent = mins + ' min · Focus ' + score;
+    renderTimerDisplay();
+  };
+
+  document.getElementById('prog-other').onclick = () => {
+    bd.remove();
+    // Pré-remplit le timer libre avec la tâche et la durée suggérée
+    if (taskLabel) document.getElementById('ft-task-input').value = taskLabel;
+    const presets = [2, 5, 10, 15, 25, 45];
+    const closest = presets.reduce((a, b) => Math.abs(b - mins) < Math.abs(a - mins) ? b : a);
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.classList.toggle('selected', parseInt(b.dataset.min) === closest);
+    });
+    document.getElementById('ft-custom').value = '';
+    ftDuration = closest * 60;
+    document.getElementById('btn-start-ft').disabled = false;
+    show('timer-setup');
+  };
 }
 
 // ─── SETTINGS (pleine page) ───
