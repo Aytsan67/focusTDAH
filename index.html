@@ -1692,8 +1692,6 @@ function goToApp(user) {
   show('landing');
   initLanding();
   renderHome();
-  checkRitalinReminder();
-  // Si déjà répondu "oui" avec une heure enregistrée, lancer le watch
   if (hasTakenRitalin() && localStorage.getItem('focustdah_ritalin_time')) {
     startReboundWatch();
   }
@@ -5603,6 +5601,8 @@ document.getElementById('btn-panic-new-round').onclick = () => resetPanicTimer(t
 document.getElementById('btn-rs-breath').onclick = () => startResetStep('breath');
 
 // ─── INIT ───
+// Afficher la modal Ritaline immédiatement (sur le splash), sans attendre Firebase
+checkRitalinReminder();
 initAuth();
 
 // Load brain dump from localStorage
