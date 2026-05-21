@@ -591,9 +591,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 
 /* ── SETTINGS MODAL ── */
-.settings-tabs { display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
-.settings-tab { flex: 1; min-width: 68px; white-space: nowrap; border: 1.5px solid var(--border); border-radius: 12px; background: var(--soft); color: var(--muted); font: 600 11px 'DM Sans', sans-serif; padding: 9px 6px; cursor: pointer; transition: all .15s; text-align: center; }
+.settings-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 20px; }
+.settings-tab { flex: none; white-space: nowrap; border: 1.5px solid var(--border); border-radius: 12px; background: var(--soft); color: var(--muted); font: 600 12px 'DM Sans', sans-serif; padding: 10px 8px; cursor: pointer; transition: all .15s; text-align: center; }
 .settings-tab.active { border-color: var(--accent); background: rgba(124,92,252,.12); color: var(--accent); }
+.settings-tab[data-tab="focus"] { grid-column: 1 / -1; border-color: rgba(124,92,252,.25); }
 .settings-section-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin-bottom: 16px; }
 .settings-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--soft); border: 1px solid var(--border); margin-bottom: 8px; }
 .settings-item-emoji { font-size: 20px; flex: 0 0 auto; }
@@ -4846,11 +4847,11 @@ function openSettings(initialTab) {
     <h2 style="margin-bottom:16px">Paramètres ⚙️</h2>
     <div id="st-ritalin-section"></div>
     <div class="settings-tabs" id="st-tabs">
-      <button class="settings-tab active" data-tab="micros">🔬 Micros</button>
-      <button class="settings-tab" data-tab="modes">⏱ Modes</button>
-      <button class="settings-tab" data-tab="drinks">☕ Boissons</button>
-      <button class="settings-tab" data-tab="suppl">💊 Compléments</button>
-      <button class="settings-tab" data-tab="focus">📵 Focus</button>
+      <button class="settings-tab active" data-tab="micros">Micros</button>
+      <button class="settings-tab" data-tab="modes">Modes</button>
+      <button class="settings-tab" data-tab="drinks">Boissons</button>
+      <button class="settings-tab" data-tab="suppl">Compléments</button>
+      <button class="settings-tab" data-tab="focus">📵 Mode Focus & Blocage</button>
     </div>
     <div id="st-content"></div>`;
   bd.appendChild(sheet);
