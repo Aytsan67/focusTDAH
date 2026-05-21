@@ -5136,6 +5136,7 @@ function showFedUpModal(pauseFn, resumeFn) {
   if (pauseFn) pauseFn();
   fedUpPauseFn = pauseFn;
   fedUpResumeFn = resumeFn;
+  addBehaviorEvent('fedup');
 
   const msg      = FED_UP_MESSAGES[Math.floor(Math.random() * FED_UP_MESSAGES.length)];
   const activity = FED_UP_ACTIVITIES[Math.floor(Math.random() * FED_UP_ACTIVITIES.length)];
@@ -5194,16 +5195,17 @@ function showFedUpModal(pauseFn, resumeFn) {
     }
   }, 1000);
 
-  function dismiss(shouldResume) {
+  function dismiss(shouldResume, timerDone) {
     clearInterval(fedUpInterval);
     bd.remove();
     if (shouldResume && fedUpResumeFn) fedUpResumeFn();
     fedUpPauseFn = null;
     fedUpResumeFn = null;
+    if (timerDone) setTimeout(showFocusCheckIn, 400);
   }
 
-  bd.querySelector('#fu-resume').onclick = () => dismiss(true);
-  bd.querySelector('#fu-skip').onclick   = () => dismiss(true);
+  bd.querySelector('#fu-resume').onclick = () => dismiss(true, true);
+  bd.querySelector('#fu-skip').onclick   = () => dismiss(true, false);
 }
 
 // Pause/resume helpers for each timer type
@@ -5351,6 +5353,8 @@ document.getElementById('t-toggle').onclick = function() {
         document.getElementById('t-toggle').textContent = '▶ Rejouer';
         document.getElementById('s-timer').textContent = '✓';
         sendNotif('Timer terminé ⏸', 'Fais une pause ou continue ta session.');
+        addBehaviorEvent('complete');
+        setTimeout(showFocusCheckIn, 900);
       }
     }, 1000);
   }
@@ -5387,7 +5391,7 @@ function advanceMicro() {
   }
 }
 
-document.getElementById('btn-done').onclick = () => { showDopamineToast(); advanceMicro(); };
+document.getElementById('btn-done').onclick = () => { showDopamineToast(); addBehaviorEvent('complete'); advanceMicro(); };
 document.getElementById('btn-skip').onclick = advanceMicro;
 
 function finishProject() {
@@ -5534,7 +5538,9 @@ document.getElementById('ft-toggle').onclick = function() {
         document.getElementById('ft-num').textContent = '✓';
         document.getElementById('ft-toggle').style.display = 'none';
         document.getElementById('ft-stop').style.display = 'none';
+        addBehaviorEvent('complete');
         showFtEndPanel();
+        setTimeout(showFocusCheckIn, 900);
       }
     }, 1000);
   }
@@ -5706,6 +5712,119 @@ function showGentleSupport() {
 }
 
 // ════════════════════════════════════════════════
+// ─── BEHAVIORAL FOCUS TRACKING ───
+
+function getBehaviorData() {
+  const today = new Date().toDateString();
+  try {
+    const raw = JSON.parse(localStorage.getItem('ft_focus_behavior') || '{}');
+    if (raw.date !== today) return { date: today, events: [] };
+    return raw;
+  } catch(e) { return { date: today, events: [] }; }
+}
+
+function addBehaviorEvent(type, value) {
+  const data = getBehaviorData();
+  data.events.push({ type, value: value || 0, ts: Date.now() });
+  if (data.events.length > 20) data.events = data.events.slice(-20);
+  localStorage.setItem('ft_focus_behavior', JSON.stringify(data));
+  updateFocusRing();
+}
+
+const FOCUS_CHECKIN_QUESTIONS = [
+  {
+    text: 'Ton esprit a-t-il beaucoup divagué ?',
+    opts: [
+      { emoji: '😌', label: 'Pas vraiment',  value: 3 },
+      { emoji: '😐', label: 'Un peu',        value: 2 },
+      { emoji: '😵', label: 'Beaucoup',      value: 1 },
+    ]
+  },
+  {
+    text: "Tu as eu envie de faire autre chose ?",
+    opts: [
+      { emoji: '😌', label: 'Rarement',        value: 3 },
+      { emoji: '😐', label: 'Quelques fois',   value: 2 },
+      { emoji: '😵', label: 'Souvent',         value: 1 },
+    ]
+  },
+  {
+    text: 'Tu te sentais dans le flow ?',
+    opts: [
+      { emoji: '⚡', label: 'Oui, bien',   value: 3 },
+      { emoji: '😐', label: 'Moyen',       value: 2 },
+      { emoji: '🌀', label: 'Pas du tout', value: 1 },
+    ]
+  },
+  {
+    text: 'Ta concentration était comment ?',
+    opts: [
+      { emoji: '🎯', label: 'Bonne',    value: 3 },
+      { emoji: '😐', label: 'Correcte', value: 2 },
+      { emoji: '💨', label: 'Difficile', value: 1 },
+    ]
+  },
+];
+
+function showFocusCheckIn() {
+  if (document.getElementById('checkin-bd')) return;
+
+  const pool = [...FOCUS_CHECKIN_QUESTIONS].sort(() => Math.random() - .5);
+  const questions = pool.slice(0, 2);
+  let qi = 0;
+
+  const bd = document.createElement('div');
+  bd.id = 'checkin-bd';
+  bd.className = 'cat-modal-backdrop';
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+
+  function renderQ() {
+    const q = questions[qi];
+    bd.innerHTML = `
+      <div class="cat-modal-sheet">
+        <div class="cat-modal-handle"></div>
+        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">Question ${qi + 1} / ${questions.length}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;line-height:1.35;margin-bottom:20px">${q.text}</div>
+        <div style="display:grid;gap:8px;margin-bottom:14px">
+          ${q.opts.map((o, i) => `<button class="ci-opt" data-i="${i}"
+            style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--border);background:var(--soft);cursor:pointer;text-align:left;transition:all .13s">
+            <span style="font-size:26px;line-height:1">${o.emoji}</span>
+            <span style="font:600 15px 'DM Sans',sans-serif;color:var(--text)">${o.label}</span>
+          </button>`).join('')}
+        </div>
+        <button id="ci-skip" style="background:none;border:none;color:var(--muted);font:600 13px 'DM Sans',sans-serif;width:100%;padding:8px;cursor:pointer">Passer →</button>
+      </div>`;
+    bd.querySelectorAll('.ci-opt').forEach(btn => {
+      btn.onclick = () => {
+        const val = q.opts[+btn.dataset.i].value;
+        addBehaviorEvent('selfassess', val);
+        qi++;
+        qi < questions.length ? renderQ() : renderEnd();
+      };
+    });
+    bd.querySelector('#ci-skip').onclick = () => bd.remove();
+  }
+
+  function renderEnd() {
+    const score = calcFocusScore();
+    const color = focusScoreColor(score);
+    bd.innerHTML = `
+      <div class="cat-modal-sheet" style="text-align:center">
+        <div class="cat-modal-handle"></div>
+        <div style="font-size:40px;margin-bottom:8px">📊</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px">Anneau mis à jour</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5">Ta séance a été prise en compte<br>dans ton niveau de focus.</div>
+        <div style="font-size:54px;font-family:'Syne',sans-serif;font-weight:900;color:${color};letter-spacing:-2px">${score}</div>
+        <button class="btn" id="ci-done" style="margin-top:22px">OK</button>
+      </div>`;
+    bd.querySelector('#ci-done').onclick = () => bd.remove();
+  }
+
+  renderQ();
+}
+
+// ════════════════════════════════════════════════
 // ─── FOCUS LEVEL SYSTEM ───
 
 function getFocusSupplTaken() {
@@ -5723,7 +5842,9 @@ function focusScoreColor(s) {
 }
 
 function calcFocusScore() {
-  let score = 0;
+  let score = 50; // base — tout le monde commence à 50
+
+  // Composante chimique (Ritaline, max +25)
   const answer = getRitalinAnswer();
   if (answer === 'oui') {
     const timeStr = localStorage.getItem('focustdah_ritalin_time');
@@ -5734,15 +5855,29 @@ function calcFocusScore() {
       if (takenAt > new Date()) takenAt.setDate(takenAt.getDate() - 1);
       const min = (new Date() - takenAt) / 60000;
       if (type === 'IR') {
-        score += min < 30 ? 25 : min < 120 ? 60 : min < 210 ? 45 : min < 300 ? 25 : 5;
+        score += min < 30 ? 8 : min < 120 ? 22 : min < 210 ? 14 : min < 300 ? 5 : 0;
       } else {
-        score += min < 60 ? 30 : min < 540 ? 55 : min < 720 ? 40 : 10;
+        score += min < 60 ? 12 : min < 540 ? 20 : min < 720 ? 10 : 2;
       }
-    } else { score += 35; }
+    } else { score += 12; }
   }
+
+  // Composante compléments (max +20, +5 chacun)
   const taken = getFocusSupplTaken();
-  score += Math.min(taken.length * 10, 40);
-  return Math.min(Math.round(score), 100);
+  score += Math.min(taken.length * 5, 20);
+
+  // Composante comportementale (±15 selon les séances récentes)
+  const { events } = getBehaviorData();
+  const recent = events.slice(-10);
+  let behav = 0;
+  recent.forEach(ev => {
+    if (ev.type === 'complete') behav += 2;
+    else if (ev.type === 'fedup') behav -= 2;
+    else if (ev.type === 'selfassess') behav += ev.value === 3 ? 3 : ev.value === 2 ? 0 : -3;
+  });
+  score += Math.max(-15, Math.min(15, behav));
+
+  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 function updateFocusRing() {
