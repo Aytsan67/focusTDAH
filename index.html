@@ -881,6 +881,62 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .block-aide .b-title { color: var(--text); font-size: 17px; }
 .block-aide .b-sub { color: var(--muted); }
 
+/* ── BLOCKED BEFORE ── */
+.before-grid { display: grid; gap: 10px; }
+.before-card {
+  width: 100%; display: flex; align-items: center; gap: 14px;
+  border: 1.5px solid var(--border); border-radius: 18px;
+  background: var(--card); color: var(--text); padding: 14px 18px;
+  text-align: left; transition: border-color .15s, background .15s; cursor: pointer;
+}
+.before-card:active { border-color: var(--accent); background: rgba(124,92,252,.08); }
+.before-card.before-work { border-color: rgba(92,252,160,.28); background: rgba(92,252,160,.05); }
+.before-card.before-work:active { background: rgba(92,252,160,.12); }
+.before-card.before-switch { border-color: rgba(252,186,92,.28); background: rgba(252,186,92,.05); }
+.before-card.before-switch:active { background: rgba(252,186,92,.12); }
+.before-emoji { font-size: 26px; flex: 0 0 auto; }
+.before-info { flex: 1; }
+.before-label { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+.before-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* ── TRANSITION 10 MIN ── */
+.transition-context-msg {
+  background: rgba(124,92,252,.07); border: 1.5px solid rgba(124,92,252,.2);
+  border-radius: 18px; padding: 16px 18px; margin-bottom: 20px;
+}
+.transition-context-title {
+  font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px;
+}
+.transition-context-sub { font-size: 13px; color: var(--muted); line-height: 1.55; }
+.transition-timer-wrap { text-align: center; margin-bottom: 18px; }
+.transition-timer-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.transition-timer-num {
+  font-family: 'Syne', sans-serif; font-size: 56px; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  line-height: 1; margin-bottom: 12px;
+}
+.transition-activity-card {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 20px 18px;
+}
+.transition-act-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.transition-act-emoji { font-size: 32px; }
+.transition-act-title {
+  font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: var(--text);
+}
+.transition-act-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.transition-act-progress {
+  margin-top: 12px; font-size: 11px; color: var(--muted); font-weight: 600;
+  letter-spacing: .04em;
+}
+
 /* ── FRICTION GRID (bloqué V2) ── */
 .friction-grid { display: grid; gap: 10px; }
 .friction-card {
@@ -1583,6 +1639,27 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <span class="b-title">🧠 Vider mon cerveau</span>
     <span class="b-sub">Écrire tout ce qui tourne en boucle pour libérer l'espace mental</span>
   </button>
+</section>
+
+<!-- BLOQUÉ : AVANT (qu'est-ce que tu faisais ?) -->
+<section class="screen" id="blocked-before">
+  <button class="back" id="back-blocked-before">← Retour</button>
+  <h1>Juste avant, tu <em>faisais quoi</em> ?</h1>
+  <p class="sub">Sois honnête — sans jugement. Ça aide à trouver la bonne stratégie.</p>
+  <div class="before-grid" id="before-grid"></div>
+</section>
+
+<!-- BLOQUÉ : TRANSITION 10 MIN -->
+<section class="screen" id="blocked-transition">
+  <button class="back" id="back-blocked-transition">← Retour</button>
+  <div id="transition-context-msg" class="transition-context-msg"></div>
+  <div class="transition-timer-wrap">
+    <div class="transition-timer-label">Temps restant</div>
+    <div class="transition-timer-num" id="transition-timer-num">10:00</div>
+    <div class="timer-track" style="margin-bottom:20px"><div class="timer-bar" id="transition-timer-bar" style="width:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div>
+  </div>
+  <div class="transition-activity-card" id="transition-activity-card"></div>
+  <button class="btn-outline" id="btn-transition-skip" style="margin-top:18px;width:100%">→ Je me sens prêt(e), on y va</button>
 </section>
 
 <!-- BLOQUÉ V2 : TYPE DE FRICTION -->
@@ -2568,7 +2645,7 @@ document.getElementById('btn-new').onclick = () => show('create');
 document.getElementById('back-home').onclick = () => show('landing');
 document.getElementById('btn-aide-menu').onclick = () => { show('aide-menu'); refreshAideBadge(); };
 document.getElementById('back-aide-menu').onclick = () => { renderHome(); show('home'); };
-document.getElementById('aide-btn-blocked').onclick = () => showBlockedV2('aide-menu');
+document.getElementById('aide-btn-blocked').onclick = () => showBlockedBefore('aide-menu');
 document.getElementById('aide-btn-panique').onclick = () => showModePanique();
 document.getElementById('aide-btn-reset').onclick = () => showResetCognitif();
 document.getElementById('aide-btn-dump').onclick = () => show('brain-dump');
@@ -5225,6 +5302,128 @@ function showGentleSupport() {
   show('blocked-action');
 }
 
+// ════════════════════════════════════════════════
+// ─── BLOCKED : BEFORE + TRANSITION ───
+// ════════════════════════════════════════════════
+const BEFORE_OPTIONS = [
+  { id:'work',   emoji:'✅', label:'Je travaillais sur cette tâche', desc:'Je veux juste débloquer un point précis', cls:'before-work', skip:true },
+  { id:'scroll', emoji:'📱', label:'Je scrollais les réseaux',        desc:'TikTok, Instagram, Twitter…' },
+  { id:'chat',   emoji:'💬', label:'Je discutais / messagerie',        desc:'Messages, conversations…' },
+  { id:'video',  emoji:'📺', label:'Je regardais quelque chose',       desc:'YouTube, séries, vidéos…' },
+  { id:'game',   emoji:'🎮', label:'Je jouais',                        desc:'Jeux vidéo, applis de jeu…' },
+  { id:'pause',  emoji:'☕', label:'Je faisais une pause',             desc:'Café, repos, détente…' },
+  { id:'switch', emoji:'🔀', label:'Je change de matière / projet',    desc:'Je bascule vers un nouveau contexte', cls:'before-switch' },
+  { id:'other',  emoji:'❓', label:'Autre chose',                      desc:'' },
+];
+
+const TRANSITION_ACTIVITIES = [
+  { emoji:'🌬️', title:'Respiration 4-4-4',    desc:'Inspire 4 secondes · retiens 4 · expire 4. Répète 4 fois. Ça active ton cortex préfrontal.', dur:120 },
+  { emoji:'🧘', title:'Étirements du cou',      desc:'Penche doucement la tête à droite 15s, puis à gauche 15s. Puis roulez les épaules.', dur:90 },
+  { emoji:'💧', title:'Bois un verre d\'eau',   desc:'Ton cerveau est composé à 80% d\'eau. La déshydratation amplifie la fatigue cognitive.', dur:60 },
+  { emoji:'✍️', title:'Ancre ta mémoire',       desc:'Écris sur papier ou ici la SEULE chose que tu dois faire maintenant. Ça libère ta mémoire de travail.', dur:90 },
+  { emoji:'🔇', title:'Prépare ton espace',      desc:'Ferme les onglets inutiles. Range ce qui traîne. Pose ton téléphone face verso. Un espace clair = un cerveau moins distrait.', dur:60 },
+  { emoji:'👀', title:'Regarde au loin',         desc:'Fixe un point à plus de 5 mètres pendant 20 secondes. Ça relaxe les muscles oculaires et diminue le stress visuel.', dur:30 },
+];
+
+let transitionTimerInterval = null;
+let transitionTimerSec = 0;
+let transitionActivityIdx = 0;
+let transitionActivityTimerInterval = null;
+let transitionActivitySec = 0;
+let transitionReturnFrom = 'aide-menu';
+
+function showBlockedBefore(from) {
+  transitionReturnFrom = from || 'aide-menu';
+  const grid = document.getElementById('before-grid');
+  grid.innerHTML = '';
+  BEFORE_OPTIONS.forEach(opt => {
+    const card = document.createElement('button');
+    card.className = 'before-card' + (opt.cls ? ' ' + opt.cls : '');
+    card.innerHTML = `<span class="before-emoji">${opt.emoji}</span><div class="before-info"><div class="before-label">${opt.label}</div>${opt.desc ? `<div class="before-desc">${opt.desc}</div>` : ''}</div>`;
+    card.onclick = () => {
+      if (opt.skip) {
+        showBlockedV2(transitionReturnFrom);
+      } else {
+        showBlockedTransition(opt);
+      }
+    };
+    grid.appendChild(card);
+  });
+  show('blocked-before');
+}
+
+function showBlockedTransition(activity) {
+  // Context message
+  const isSwitch = activity.id === 'switch';
+  const msgEl = document.getElementById('transition-context-msg');
+  if (isSwitch) {
+    msgEl.innerHTML = `
+      <div class="transition-context-title">🔀 Changement de contexte détecté</div>
+      <div class="transition-context-sub">Changer de matière ou de projet, c'est une <strong>charge cognitive invisible</strong>. Ton cerveau TDAH met plus de temps que les autres pour changer de mode. Ces 10 minutes ne sont pas du temps perdu — elles <strong>évitent 30 minutes d'inefficacité</strong>.</div>`;
+  } else {
+    msgEl.innerHTML = `
+      <div class="transition-context-title">🧠 Ton cerveau a besoin de se recalibrer</div>
+      <div class="transition-context-sub">Après une activité stimulante, le cerveau TDAH a du mal à passer en mode focus. <strong>Ce n'est pas un manque de volonté</strong> — c'est biologique. Ces 10 minutes l'aident à sortir du mode "dopamine rapide".</div>`;
+  }
+
+  // Timer
+  transitionTimerSec = 10 * 60;
+  transitionActivityIdx = 0;
+  clearInterval(transitionTimerInterval);
+  clearInterval(transitionActivityTimerInterval);
+
+  renderTransitionTimer();
+  renderTransitionActivity();
+
+  transitionTimerInterval = setInterval(() => {
+    transitionTimerSec--;
+    renderTransitionTimer();
+    if (transitionTimerSec <= 0) {
+      clearInterval(transitionTimerInterval);
+      clearInterval(transitionActivityTimerInterval);
+      document.getElementById('transition-timer-num').textContent = '✓ Prêt !';
+      document.getElementById('transition-timer-bar').style.width = '0%';
+      document.getElementById('btn-transition-skip').textContent = '🚀 Lancer la tâche !';
+    }
+  }, 1000);
+
+  // Rotate activities every ~2 min
+  let actSwitchAt = 120;
+  transitionActivityTimerInterval = setInterval(() => {
+    actSwitchAt--;
+    if (actSwitchAt <= 0) {
+      transitionActivityIdx = (transitionActivityIdx + 1) % TRANSITION_ACTIVITIES.length;
+      actSwitchAt = TRANSITION_ACTIVITIES[transitionActivityIdx].dur || 120;
+      renderTransitionActivity();
+    }
+  }, 1000);
+
+  show('blocked-transition');
+}
+
+function renderTransitionTimer() {
+  document.getElementById('transition-timer-num').textContent = fmt(transitionTimerSec);
+  const pct = (transitionTimerSec / (10 * 60)) * 100;
+  document.getElementById('transition-timer-bar').style.width = pct + '%';
+}
+
+function renderTransitionActivity() {
+  const act = TRANSITION_ACTIVITIES[transitionActivityIdx];
+  const total = TRANSITION_ACTIVITIES.length;
+  document.getElementById('transition-activity-card').innerHTML = `
+    <div class="transition-act-header">
+      <span class="transition-act-emoji">${act.emoji}</span>
+      <div class="transition-act-title">${act.title}</div>
+    </div>
+    <div class="transition-act-desc">${act.desc}</div>
+    <div class="transition-act-progress">Activité ${transitionActivityIdx + 1}/${total} · change dans ${fmt(act.dur || 120)}</div>`;
+}
+
+function clearTransitionTimers() {
+  clearInterval(transitionTimerInterval);
+  clearInterval(transitionActivityTimerInterval);
+}
+
 function showBlockedV2(from) {
   blockedCalledFrom = from || 'session';
   renderFrictionGrid();
@@ -6102,7 +6301,7 @@ function showDone(type) {
 function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
 
 // ── Event handlers ──
-document.getElementById('btn-blocked').onclick          = () => showBlockedV2('session');
+document.getElementById('btn-blocked').onclick          = () => showBlockedBefore('session');
 document.getElementById('btn-energy-next').onclick      = () => showBlockedStrategies();
 document.getElementById('back-blocked-energy').onclick  = () => show('blocked-type');
 document.getElementById('back-blocked-strategies').onclick = () => {
@@ -6114,8 +6313,11 @@ document.getElementById('back-blocked-action').onclick  = () => {
   clearInterval(stretchInterval); clearInterval(twoMinInterval);
   show(blockedStrategiesScreen);
 };
-document.getElementById('back-blocked-type').onclick    = () => show(blockedCalledFrom);
+document.getElementById('back-blocked-type').onclick    = () => show('blocked-before');
 document.getElementById('back-friction-strategies').onclick = () => show('blocked-type');
+document.getElementById('back-blocked-before').onclick  = () => show(transitionReturnFrom);
+document.getElementById('back-blocked-transition').onclick = () => { clearTransitionTimers(); show('blocked-before'); };
+document.getElementById('btn-transition-skip').onclick  = () => { clearTransitionTimers(); showBlockedV2(transitionReturnFrom); };
 document.getElementById('back-mode-panique').onclick    = () => { clearPanicTimer(); show('aide-menu'); };
 document.getElementById('back-reset-cognitif').onclick  = () => show('aide-menu');
 // ── BRAIN DUMP GUIDE ──
