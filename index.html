@@ -594,7 +594,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .settings-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 20px; }
 .settings-tab { flex: none; white-space: nowrap; border: 1.5px solid var(--border); border-radius: 12px; background: var(--soft); color: var(--muted); font: 600 12px 'DM Sans', sans-serif; padding: 10px 8px; cursor: pointer; transition: all .15s; text-align: center; }
 .settings-tab.active { border-color: var(--accent); background: rgba(124,92,252,.12); color: var(--accent); }
-.settings-tab[data-tab="focus"] { grid-column: 1 / -1; border-color: rgba(124,92,252,.25); }
+.settings-tab[data-tab="focus"] { grid-column: 2; }
+.settings-tab[data-tab="ritalin"] { grid-column: 1; }
 .settings-section-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin-bottom: 16px; }
 .settings-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--soft); border: 1px solid var(--border); margin-bottom: 8px; }
 .settings-item-emoji { font-size: 20px; flex: 0 0 auto; }
@@ -1800,6 +1801,21 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <section class="screen" id="dumb-guide">
   <button class="back" id="back-dumb-guide">← Retour</button>
   <div id="dumb-guide-content"></div>
+</section>
+
+<!-- PARAMÈTRES (pleine page) -->
+<section class="screen" id="settings">
+  <button class="back" id="back-settings">← Retour</button>
+  <h1 style="margin-bottom:20px">Paramètres</h1>
+  <div class="settings-tabs" id="st-tabs">
+    <button class="settings-tab active" data-tab="micros">Micros</button>
+    <button class="settings-tab" data-tab="modes">Modes</button>
+    <button class="settings-tab" data-tab="drinks">Boissons</button>
+    <button class="settings-tab" data-tab="suppl">Compléments</button>
+    <button class="settings-tab" data-tab="ritalin">Ritaline</button>
+    <button class="settings-tab" data-tab="focus">📵 Mode Focus & Blocage</button>
+  </div>
+  <div id="st-content"></div>
 </section>
 
 <!-- BLOCKED: ACTION -->
@@ -4833,46 +4849,33 @@ document.querySelectorAll('.mode-card').forEach(card => {
   card.onclick = () => { currentMode = card.dataset.mode; startSession(); };
 });
 
-// ─── SETTINGS MODAL ───
+// ─── SETTINGS (pleine page) ───
+let settingsReturnScreen = 'home';
+
 function openSettings(initialTab) {
-  const existing = document.getElementById('settings-modal-bd');
-  if (existing) { existing.remove(); return; }
-  const bd = document.createElement('div');
-  bd.id = 'settings-modal-bd';
-  bd.className = 'cat-modal-backdrop';
-  const sheet = document.createElement('div');
-  sheet.className = 'cat-modal-sheet';
-  sheet.innerHTML = `
-    <div class="cat-modal-handle"></div>
-    <h2 style="margin-bottom:16px">Paramètres ⚙️</h2>
-    <div id="st-ritalin-section"></div>
-    <div class="settings-tabs" id="st-tabs">
-      <button class="settings-tab active" data-tab="micros">Micros</button>
-      <button class="settings-tab" data-tab="modes">Modes</button>
-      <button class="settings-tab" data-tab="drinks">Boissons</button>
-      <button class="settings-tab" data-tab="suppl">Compléments</button>
-      <button class="settings-tab" data-tab="focus">📵 Mode Focus & Blocage</button>
-    </div>
-    <div id="st-content"></div>`;
-  bd.appendChild(sheet);
-  document.body.appendChild(bd);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
-
-  renderRitalinSettingsCard(document.getElementById('st-ritalin-section'));
-
-  function switchTab(tab) {
-    bd.querySelectorAll('.settings-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-    const c = document.getElementById('st-content');
-    const s = getSettings();
-    if (tab === 'micros')  renderSettingsMicros(c, s);
-    else if (tab === 'modes')  renderSettingsModes(c, s);
-    else if (tab === 'drinks') renderSettingsList(c, s, 'drinks', 'Boissons énergisantes', '☕');
-    else if (tab === 'suppl')  renderSettingsList(c, s, 'supplements', 'Compléments alimentaires', '💊');
-    else if (tab === 'focus')  renderSettingsFocus(c);
-  }
-  bd.querySelectorAll('.settings-tab').forEach(t => { t.onclick = () => switchTab(t.dataset.tab); });
-  switchTab(initialTab || 'micros');
+  const active = document.querySelector('.screen.active');
+  if (active && active.id !== 'settings') settingsReturnScreen = active.id;
+  show('settings');
+  switchSettingsTab(initialTab || 'micros');
 }
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll('#st-tabs .settings-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.tab === tab)
+  );
+  const c = document.getElementById('st-content');
+  const s = getSettings();
+  if (tab === 'micros')       renderSettingsMicros(c, s);
+  else if (tab === 'modes')   renderSettingsModes(c, s);
+  else if (tab === 'drinks')  renderSettingsList(c, s, 'drinks', 'Boissons énergisantes', '☕');
+  else if (tab === 'suppl')   renderSettingsList(c, s, 'supplements', 'Compléments alimentaires', '💊');
+  else if (tab === 'ritalin') renderRitalinSettingsCard(c);
+  else if (tab === 'focus')   renderSettingsFocus(c);
+}
+
+document.querySelectorAll('#st-tabs .settings-tab').forEach(t => {
+  t.onclick = () => switchSettingsTab(t.dataset.tab);
+});
 
 function renderRitalinSettingsCard(container) {
   const s = getSettings();
@@ -4948,7 +4951,7 @@ function renderRitalinSettingsCard(container) {
   container.querySelector('#rs-non').onclick = () => updateAnswer('non');
 
   const askNow = container.querySelector('#rs-ask-now');
-  if (askNow) askNow.onclick = () => { document.getElementById('settings-modal-bd').remove(); showRitalinModal(); };
+  if (askNow) askNow.onclick = () => { show(settingsReturnScreen || 'home'); showRitalinModal(); };
 }
 
 function renderSettingsMicros(container, s) {
@@ -5084,6 +5087,7 @@ function renderSettingsFocus(container) {
 }
 
 document.getElementById('settings-fab').onclick = openSettings;
+document.getElementById('back-settings').onclick = () => show(settingsReturnScreen || 'home');
 
 // ─── TIMER STATE ───
 const MODES = {
@@ -5548,6 +5552,7 @@ function showGentleSupport() {
 
 // ════════════════════════════════════════════════
 // ─── FOCUS MODE (iOS Raccourcis) ───
+let focusModeActive = false;
 // ════════════════════════════════════════════════
 const SHORTCUTS_NAME = 'FocusTDAH';
 const LS_SHORTCUTS_READY = 'ft_shortcuts_ready';
@@ -5561,8 +5566,7 @@ function triggerShortcut() {
 }
 
 function showFocusModal(from) {
-  // Sur Android/desktop on passe directement au flux bloqué
-  if (!isIOS()) { showBlockedBefore(from); return; }
+  if (!isIOS() || focusModeActive) { showBlockedBefore(from); return; }
 
   const existing = document.getElementById('focus-modal');
   if (existing) existing.remove();
@@ -5584,6 +5588,7 @@ function showFocusModal(from) {
 
   document.getElementById('fm-yes').onclick = () => {
     modal.remove();
+    focusModeActive = true;
     triggerShortcut();
     showBlockedBefore(from);
   };
@@ -5608,7 +5613,7 @@ function showDumbGuide(returnScreen) {
   if (!c) return;
   const back = returnScreen || 'shortcuts-setup';
   document.getElementById('back-dumb-guide').onclick = () => {
-    if (back === 'settings') { openSettings('focus'); }
+    if (back === 'settings') { show('settings'); switchSettingsTab('focus'); }
     else { show(back); }
   };
 
@@ -5679,7 +5684,7 @@ function showDumbGuide(returnScreen) {
 function showShortcutsSetupReturn() {
   const from = localStorage.getItem('ft_shortcuts_return_from') || 'aide-menu';
   localStorage.removeItem('ft_shortcuts_return_from');
-  if (from === 'settings') { openSettings('focus'); }
+  if (from === 'settings') { show('settings'); switchSettingsTab('focus'); }
   else { showBlockedBefore(from); }
 }
 
@@ -5792,6 +5797,7 @@ function renderShortcutStep() {
         startShortcutGuide(); show('shortcuts-setup');
       } else {
         fab.classList.add('focus-on');
+        focusModeActive = true;
         triggerShortcut();
         setTimeout(() => fab.classList.remove('focus-on'), 2000);
       }
@@ -5804,7 +5810,7 @@ function renderShortcutStep() {
 // ── Toast Focus quand un timer démarre ──
 let focusToastTimer = null;
 function maybeAskFocus() {
-  if (!isIOS()) return;
+  if (!isIOS() || focusModeActive) return;
   const existing = document.getElementById('focus-toast');
   if (existing) return; // déjà affiché
 
@@ -5822,7 +5828,7 @@ function maybeAskFocus() {
     clearTimeout(focusToastTimer);
     toast.remove();
   };
-  document.getElementById('ft-yes').onclick = () => { triggerShortcut(); dismiss(); };
+  document.getElementById('ft-yes').onclick = () => { focusModeActive = true; triggerShortcut(); dismiss(); };
   document.getElementById('ft-no').onclick  = dismiss;
   focusToastTimer = setTimeout(dismiss, 8000);
 }
