@@ -6261,6 +6261,44 @@ const DRINK_PHASE_EFFECTS = {
   ],
 };
 
+// ── Boissons (liste) ──
+function getDrinks() {
+  try {
+    const arr = JSON.parse(localStorage.getItem('ft_drinks') || '[]');
+    // Migration depuis l'ancien format ft_drink_taken
+    if (!arr.length) {
+      const old = JSON.parse(localStorage.getItem('ft_drink_taken') || 'null');
+      if (old) { arr.push(old); localStorage.setItem('ft_drinks', JSON.stringify(arr)); }
+    }
+    return arr;
+  } catch(e) { return []; }
+}
+function addDrink(name) {
+  const arr = getDrinks(); arr.push({ name, ts: Date.now() });
+  localStorage.setItem('ft_drinks', JSON.stringify(arr));
+}
+function removeDrink(name) {
+  const arr = getDrinks();
+  const idx = arr.map(x => x.name).lastIndexOf(name);
+  if (idx !== -1) { arr.splice(idx, 1); localStorage.setItem('ft_drinks', JSON.stringify(arr)); }
+}
+
+// ── Sommeil ──
+function getSleep() {
+  try { return JSON.parse(localStorage.getItem('ft_sleep') || '{}'); } catch(e) { return {}; }
+}
+function setSleep(data) {
+  localStorage.setItem('ft_sleep', JSON.stringify({ ...getSleep(), ...data }));
+}
+function computeSleepHours(wakeTime, sleepTime) {
+  if (!wakeTime || !sleepTime) return null;
+  const [wh, wm] = wakeTime.split(':').map(Number);
+  const [sh, sm] = sleepTime.split(':').map(Number);
+  let diff = (wh * 60 + wm) - (sh * 60 + sm);
+  if (diff <= 0) diff += 24 * 60;
+  return Math.round(diff / 60 * 10) / 10;
+}
+
 // ── Calcul des 6 sous-scores ──
 function calcSubScores() {
   const s = { focusBrut: 50, energie: 50, dopamine: 40, momentum: 0, surcharge: 20, friction: 15 };
@@ -6294,18 +6332,48 @@ function calcSubScores() {
     Object.entries(fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
   });
 
-  // Boisson
-  try {
-    const d = JSON.parse(localStorage.getItem('ft_drink_taken') || 'null');
-    if (d) {
-      const min = (Date.now() - d.ts) / 60000;
-      (DRINK_PHASE_EFFECTS[d.name] || []).forEach(phase => {
-        if ((phase.min === undefined || min >= phase.min) && (phase.max === undefined || min <= phase.max)) {
-          Object.entries(phase.fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
-        }
-      });
-    }
-  } catch(e) {}
+  // Boissons (plusieurs)
+  getDrinks().forEach(d => {
+    const min = (Date.now() - d.ts) / 60000;
+    if (min > 480) return; // ignore après 8h
+    (DRINK_PHASE_EFFECTS[d.name] || []).forEach(phase => {
+      if ((phase.min === undefined || min >= phase.min) && (phase.max === undefined || min <= phase.max)) {
+        Object.entries(phase.fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
+      }
+    });
+  });
+
+  // Sommeil
+  const slp = getSleep();
+  const slpH = slp.hoursSlept !== undefined ? slp.hoursSlept
+    : computeSleepHours(slp.wakeTime, slp.sleepTime);
+  if (slpH !== null && slpH !== undefined) {
+    if      (slpH < 4) { s.energie -= 15; s.focusBrut -= 12; s.friction += 8; }
+    else if (slpH < 5) { s.energie -= 8;  s.focusBrut -= 6;  s.friction += 4; }
+    else if (slpH < 6) { s.energie -= 4;  s.focusBrut -= 3;  s.friction += 2; }
+    else if (slpH < 7) { s.energie -= 1; }
+    else if (slpH <= 9){ s.energie += 5;  s.focusBrut += 3; }
+    else               { s.energie -= 3; }
+  }
+  if (slp.wakeTime) {
+    const [wh, wm] = slp.wakeTime.split(':').map(Number);
+    const wakeAt = new Date(); wakeAt.setHours(wh, wm, 0, 0);
+    if (wakeAt > new Date()) wakeAt.setDate(wakeAt.getDate() - 1);
+    const minAwake = (Date.now() - wakeAt) / 60000;
+    if      (minAwake < 60)  { s.energie -= 5; s.friction += 4; }
+    else if (minAwake < 120) { s.energie -= 2; s.friction += 2; }
+  }
+
+  // Rythme circadien
+  const nowH = new Date().getHours() + new Date().getMinutes() / 60;
+  if      (nowH < 6)  { s.energie -= 12; s.focusBrut -= 10; s.friction += 6; }
+  else if (nowH < 8)  { s.energie -= 5;  s.focusBrut -= 3; }
+  else if (nowH < 12) { s.focusBrut += 5; s.energie += 3; }
+  else if (nowH < 14) { s.energie -= 6;  s.focusBrut -= 4; s.friction += 3; }
+  else if (nowH < 16) { s.energie -= 2; }
+  else if (nowH < 18) { s.focusBrut += 2; s.energie += 1; }
+  else if (nowH < 20) { s.energie -= 3;  s.focusBrut -= 2; }
+  else                { s.energie -= 8;  s.focusBrut -= 6; s.friction += 4; }
 
   // Comportement récent (decay sur les vieux événements)
   const { events = [] } = getBehaviorData();
@@ -6393,6 +6461,7 @@ function refreshFocusPanelScore() {
     if (el) el.textContent = subScoreLabel(Math.round(ss[k]), k === 'surcharge' || k === 'friction');
   });
   updateFocusRing();
+  renderFocusPanelDrinks(document.getElementById('fp-drinks'));
 }
 
 function renderFocusPanelRitalin(container) {
@@ -6465,6 +6534,81 @@ function renderFocusPanelRitalin(container) {
       setTimeout(() => { btn.textContent = 'Enregistrer →'; }, 1500);
     };
   }
+}
+
+function renderFocusPanelDrinks(container) {
+  if (!container) return;
+  const DRINK_LIST = ['Café', 'Matcha', 'Red Bull', 'Holy Energy', 'Eau froide'];
+  const DRINK_EMOJI = { 'Café': '☕', 'Matcha': '🍵', 'Red Bull': '🐂', 'Holy Energy': '⚡', 'Eau froide': '💧' };
+  const drinks = getDrinks();
+
+  container.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px">` +
+    DRINK_LIST.map(name => {
+      const count = drinks.filter(d => d.name === name).length;
+      return `<button class="fp-drink-btn" data-name="${name}"
+        style="display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:12px;border:1.5px solid ${count ? 'var(--accent)' : 'var(--border)'};background:${count ? 'rgba(124,92,252,.09)' : 'var(--soft)'};cursor:pointer;font:600 13px 'DM Sans',sans-serif;color:${count ? 'var(--accent)' : 'var(--muted)'};transition:all .15s;position:relative">
+        <span style="font-size:18px;line-height:1">${DRINK_EMOJI[name]}</span>
+        <span>${name}</span>
+        ${count ? `<span style="min-width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:2px">${count}</span>` : ''}
+      </button>`;
+    }).join('') + `</div>`;
+
+  container.querySelectorAll('.fp-drink-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      addDrink(btn.dataset.name);
+      renderFocusPanelDrinks(container);
+      refreshFocusPanelScore();
+    });
+    btn.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      removeDrink(btn.dataset.name);
+      renderFocusPanelDrinks(container);
+      refreshFocusPanelScore();
+    });
+  });
+}
+
+function renderFocusPanelSleep(container) {
+  if (!container) return;
+  const slp = getSleep();
+  const hours = computeSleepHours(slp.wakeTime, slp.sleepTime);
+  const hoursLabel = hours !== null ? `${hours}h de sommeil` : '';
+
+  container.innerHTML = `
+    <div style="background:var(--soft);border-radius:14px;padding:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">🌅 Lever</div>
+          <input type="time" id="fp-sleep-wake" value="${slp.wakeTime || ''}"
+            style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:16px;padding:10px;outline:none">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">🌙 Coucher</div>
+          <input type="time" id="fp-sleep-sleep" value="${slp.sleepTime || ''}"
+            style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:16px;padding:10px;outline:none">
+        </div>
+      </div>
+      ${hoursLabel ? `<div id="fp-sleep-hours" style="font-size:13px;color:var(--muted);margin-bottom:10px;text-align:center">${hoursLabel}</div>` : '<div id="fp-sleep-hours" style="display:none"></div>'}
+      <button id="fp-sleep-save" style="width:100%;border:none;border-radius:10px;background:var(--accent);color:#fff;font:700 14px 'Syne',sans-serif;padding:11px;cursor:pointer">Enregistrer</button>
+    </div>`;
+
+  function updateHoursPreview() {
+    const w = container.querySelector('#fp-sleep-wake').value;
+    const s = container.querySelector('#fp-sleep-sleep').value;
+    const h = computeSleepHours(w, s);
+    const el = container.querySelector('#fp-sleep-hours');
+    if (el) { el.style.display = h ? '' : 'none'; el.textContent = h ? `${h}h de sommeil` : ''; }
+  }
+
+  container.querySelector('#fp-sleep-wake').oninput = updateHoursPreview;
+  container.querySelector('#fp-sleep-sleep').oninput = updateHoursPreview;
+  container.querySelector('#fp-sleep-save').onclick = () => {
+    const wakeTime  = container.querySelector('#fp-sleep-wake').value;
+    const sleepTime = container.querySelector('#fp-sleep-sleep').value;
+    setSleep({ wakeTime, sleepTime });
+    renderFocusPanelSleep(container);
+    refreshFocusPanelScore();
+  };
 }
 
 function renderFocusPanelSuppl(container) {
@@ -6571,6 +6715,13 @@ function openFocusPanel() {
 
       <div id="fp-suggestion" style="margin-bottom:12px"></div>
 
+      <div class="settings-section-title" style="margin-bottom:10px">Boissons</div>
+      <div id="fp-drinks" style="margin-bottom:4px"></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;padding-left:2px">Appuie pour ajouter · Appui long pour retirer</div>
+
+      <div class="settings-section-title" style="margin-bottom:10px">Sommeil</div>
+      <div id="fp-sleep" style="margin-bottom:20px"></div>
+
       <div class="settings-section-title" style="margin-bottom:10px">Ritaline</div>
       <div id="fp-ritalin"></div>
 
@@ -6611,6 +6762,8 @@ function openFocusPanel() {
     </div>`;
   }
 
+  renderFocusPanelDrinks(document.getElementById('fp-drinks'));
+  renderFocusPanelSleep(document.getElementById('fp-sleep'));
   renderFocusPanelRitalin(document.getElementById('fp-ritalin'));
   renderFocusPanelSuppl(document.getElementById('fp-suppl'));
 }
