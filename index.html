@@ -1202,6 +1202,65 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .brain-dump-area:focus { border-color: var(--accent); }
 .brain-dump-area::placeholder { color: var(--muted); opacity: 1; }
 
+/* ── FOCUS MODAL ── */
+.focus-sheet {
+  background: var(--card); border-radius: 24px; padding: 26px 22px 22px;
+  width: 100%; max-width: 400px;
+  animation: pop .3s cubic-bezier(.34,1.56,.64,1);
+}
+.focus-sheet-title {
+  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800;
+  text-align: center; margin-bottom: 6px;
+}
+.focus-sheet-sub {
+  font-size: 13px; color: var(--muted); text-align: center;
+  line-height: 1.5; margin-bottom: 20px;
+}
+.focus-btn-yes {
+  width: 100%; border: none; border-radius: 16px; padding: 15px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; font: 700 15px 'Syne', sans-serif; cursor: pointer;
+  margin-bottom: 10px; transition: opacity .13s;
+}
+.focus-btn-yes:active { opacity: .85; }
+.focus-btn-no {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 16px;
+  padding: 13px; background: none; color: var(--muted);
+  font: 600 14px 'DM Sans', sans-serif; cursor: pointer; margin-bottom: 8px;
+  transition: border-color .13s;
+}
+.focus-btn-no:active { border-color: var(--accent); color: var(--text); }
+.focus-btn-setup {
+  width: 100%; border: none; background: none; color: var(--accent);
+  font: 600 13px 'DM Sans', sans-serif; cursor: pointer; padding: 6px 0;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* ── SHORTCUTS SETUP SCREEN ── */
+.setup-step {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 18px; padding: 16px; margin-bottom: 10px;
+}
+.setup-step-num {
+  width: 32px; height: 32px; border-radius: 50%; flex: 0 0 32px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; font: 700 14px 'Syne', sans-serif;
+  display: flex; align-items: center; justify-content: center;
+}
+.setup-step-body { flex: 1; }
+.setup-step-title {
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+  color: var(--text); margin-bottom: 4px;
+}
+.setup-step-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.setup-step-code {
+  display: inline-block; background: rgba(124,92,252,.12);
+  border: 1px solid rgba(124,92,252,.25); border-radius: 8px;
+  padding: 2px 8px; font: 700 12px 'DM Mono', monospace;
+  color: var(--accent); margin-top: 4px;
+}
+
 /* ── CHECK-IN MODAL ── */
 .checkin-sheet {
   background: var(--card); border-radius: 24px; padding: 28px 22px 24px;
@@ -1639,6 +1698,46 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <span class="b-title">🧠 Vider mon cerveau</span>
     <span class="b-sub">Écrire tout ce qui tourne en boucle pour libérer l'espace mental</span>
   </button>
+</section>
+
+<!-- RACCOURCIS SETUP -->
+<section class="screen" id="shortcuts-setup">
+  <button class="back" id="back-shortcuts-setup">← Retour</button>
+  <div style="text-align:center;margin-bottom:20px">
+    <span style="font-size:48px;display:block;margin-bottom:10px">📱</span>
+    <h1 style="margin:0 0 6px">Configure ton <em>raccourci</em></h1>
+    <p class="sub" style="margin:0">À faire une seule fois. Ensuite c'est automatique.</p>
+  </div>
+  <div class="setup-step">
+    <div class="setup-step-num">1</div>
+    <div class="setup-step-body">
+      <div class="setup-step-title">Ouvre l'app Raccourcis</div>
+      <div class="setup-step-desc">L'icône bleue avec des engrenages colorés. Elle est déjà installée sur ton iPhone.</div>
+    </div>
+  </div>
+  <div class="setup-step">
+    <div class="setup-step-num">2</div>
+    <div class="setup-step-body">
+      <div class="setup-step-title">Crée un nouveau raccourci</div>
+      <div class="setup-step-desc">Appuie sur <strong style="color:var(--text)">+</strong> en haut à droite de l'écran.</div>
+    </div>
+  </div>
+  <div class="setup-step">
+    <div class="setup-step-num">3</div>
+    <div class="setup-step-body">
+      <div class="setup-step-title">Ajoute l'action "Définir le mode de concentration"</div>
+      <div class="setup-step-desc">Cherche <strong style="color:var(--text)">concentration</strong> dans la barre de recherche. Sélectionne l'action. Configure sur <strong style="color:var(--text)">Activer</strong> · choisis <strong style="color:var(--text)">Ne pas déranger</strong> ou ton Focus préféré.</div>
+    </div>
+  </div>
+  <div class="setup-step">
+    <div class="setup-step-num">4</div>
+    <div class="setup-step-body">
+      <div class="setup-step-title">Nomme le raccourci exactement comme ça :</div>
+      <div class="setup-step-desc">Appuie sur le nom en haut et écris :<br><span class="setup-step-code">FocusTDAH</span><br>Puis appuie sur <strong style="color:var(--text)">Terminé</strong>.</div>
+    </div>
+  </div>
+  <button class="btn" id="btn-shortcuts-done" style="margin-top:8px">✓ C'est fait — tester le raccourci</button>
+  <button class="btn-ghost" id="btn-shortcuts-skip" style="width:100%;justify-content:center;margin-top:10px">Passer — je ferai ça plus tard</button>
 </section>
 
 <!-- BLOQUÉ : AVANT (qu'est-ce que tu faisais ?) -->
@@ -2645,7 +2744,7 @@ document.getElementById('btn-new').onclick = () => show('create');
 document.getElementById('back-home').onclick = () => show('landing');
 document.getElementById('btn-aide-menu').onclick = () => { show('aide-menu'); refreshAideBadge(); };
 document.getElementById('back-aide-menu').onclick = () => { renderHome(); show('home'); };
-document.getElementById('aide-btn-blocked').onclick = () => showBlockedBefore('aide-menu');
+document.getElementById('aide-btn-blocked').onclick = () => showFocusModal('aide-menu');
 document.getElementById('aide-btn-panique').onclick = () => showModePanique();
 document.getElementById('aide-btn-reset').onclick = () => showResetCognitif();
 document.getElementById('aide-btn-dump').onclick = () => show('brain-dump');
@@ -5303,6 +5402,68 @@ function showGentleSupport() {
 }
 
 // ════════════════════════════════════════════════
+// ─── FOCUS MODE (iOS Raccourcis) ───
+// ════════════════════════════════════════════════
+const SHORTCUTS_NAME = 'FocusTDAH';
+const LS_SHORTCUTS_READY = 'ft_shortcuts_ready';
+
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function triggerShortcut() {
+  window.location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent(SHORTCUTS_NAME);
+}
+
+function showFocusModal(from) {
+  // Sur Android/desktop on passe directement au flux bloqué
+  if (!isIOS()) { showBlockedBefore(from); return; }
+
+  const existing = document.getElementById('focus-modal');
+  if (existing) existing.remove();
+
+  const isSetup = localStorage.getItem(LS_SHORTCUTS_READY) === 'true';
+  const modal = document.createElement('div');
+  modal.id = 'focus-modal';
+  modal.className = 'ritalin-modal';
+  modal.innerHTML = `
+    <div class="focus-sheet">
+      <div style="font-size:44px;text-align:center;margin-bottom:10px">📵</div>
+      <div class="focus-sheet-title">Activer le mode Focus ?</div>
+      <div class="focus-sheet-sub">Bloquer les notifications et les distractions pendant que tu travailles.</div>
+      <button class="focus-btn-yes" id="fm-yes">✓ Oui, activer sur mon iPhone</button>
+      <button class="focus-btn-no"  id="fm-no">→ Pas maintenant</button>
+      ${!isSetup ? `<button class="focus-btn-setup" id="fm-setup">⚙️ Je n'ai pas encore configuré le raccourci</button>` : ''}
+    </div>`;
+  document.body.appendChild(modal);
+
+  document.getElementById('fm-yes').onclick = () => {
+    modal.remove();
+    triggerShortcut();
+    showBlockedBefore(from);
+  };
+  document.getElementById('fm-no').onclick = () => {
+    modal.remove();
+    showBlockedBefore(from);
+  };
+  const setupBtn = document.getElementById('fm-setup');
+  if (setupBtn) {
+    setupBtn.onclick = () => {
+      modal.remove();
+      // Store return context and go to setup guide
+      localStorage.setItem('ft_shortcuts_return_from', from);
+      show('shortcuts-setup');
+    };
+  }
+}
+
+function showShortcutsSetupReturn() {
+  const from = localStorage.getItem('ft_shortcuts_return_from') || 'aide-menu';
+  localStorage.removeItem('ft_shortcuts_return_from');
+  showBlockedBefore(from);
+}
+
+// ════════════════════════════════════════════════
 // ─── BLOCKED : BEFORE + TRANSITION ───
 // ════════════════════════════════════════════════
 const BEFORE_OPTIONS = [
@@ -6301,7 +6462,7 @@ function showDone(type) {
 function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
 
 // ── Event handlers ──
-document.getElementById('btn-blocked').onclick          = () => showBlockedBefore('session');
+document.getElementById('btn-blocked').onclick          = () => showFocusModal('session');
 document.getElementById('btn-energy-next').onclick      = () => showBlockedStrategies();
 document.getElementById('back-blocked-energy').onclick  = () => show('blocked-type');
 document.getElementById('back-blocked-strategies').onclick = () => {
@@ -6315,6 +6476,13 @@ document.getElementById('back-blocked-action').onclick  = () => {
 };
 document.getElementById('back-blocked-type').onclick    = () => show('blocked-before');
 document.getElementById('back-friction-strategies').onclick = () => show('blocked-type');
+document.getElementById('back-shortcuts-setup').onclick = () => showShortcutsSetupReturn();
+document.getElementById('btn-shortcuts-done').onclick   = () => {
+  localStorage.setItem(LS_SHORTCUTS_READY, 'true');
+  triggerShortcut();
+  showShortcutsSetupReturn();
+};
+document.getElementById('btn-shortcuts-skip').onclick  = () => showShortcutsSetupReturn();
 document.getElementById('back-blocked-before').onclick  = () => show(transitionReturnFrom);
 document.getElementById('back-blocked-transition').onclick = () => { clearTransitionTimers(); show('blocked-before'); };
 document.getElementById('btn-transition-skip').onclick  = () => { clearTransitionTimers(); showBlockedV2(transitionReturnFrom); };
