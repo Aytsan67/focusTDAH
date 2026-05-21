@@ -6403,8 +6403,14 @@ function triggerTimerShortcut(durationSec) {
   if (localStorage.getItem(LS_TIMER_SHORTCUT_READY) !== 'true') {
     showTimerShortcutSetupModal(); return;
   }
-  const mins = Math.ceil(durationSec / 60);
-  window.location.href = `shortcuts://run-shortcut?name=${encodeURIComponent(TIMER_SHORTCUT_NAME)}&input=${mins}`;
+  // On passe les secondes brutes — l'unité dans le raccourci doit être "secondes"
+  const url = `shortcuts://run-shortcut?name=${encodeURIComponent(TIMER_SHORTCUT_NAME)}&input=${Math.round(durationSec)}`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 500);
 }
 
 function showTimerShortcutSetupModal() {
@@ -6422,10 +6428,14 @@ function showTimerShortcutSetupModal() {
       <div style="background:var(--soft);border-radius:14px;padding:14px 16px;margin-bottom:18px;font-size:14px;line-height:2.1;color:var(--text)">
         <span style="color:var(--accent);font-weight:700">1.</span> Ouvre <strong>Raccourcis</strong> sur ton iPhone<br>
         <span style="color:var(--accent);font-weight:700">2.</span> Appuie sur <strong>+</strong> (haut à droite)<br>
-        <span style="color:var(--accent);font-weight:700">3.</span> Cherche <strong>« Démarrer le minuteur »</strong><br>
-        <span style="color:var(--accent);font-weight:700">4.</span> Durée → appuie → choisis <strong>« Entrée du raccourci »</strong><br>
-        <span style="color:var(--accent);font-weight:700">5.</span> En haut : renomme en <strong style="color:var(--accent)">« FocusTDAH Minuteur »</strong><br>
-        <span style="color:var(--accent);font-weight:700">6.</span> Appuie sur <strong>Terminé</strong>
+        <span style="color:var(--accent);font-weight:700">3.</span> Cherche <strong>« Lancer le minuteur »</strong><br>
+        <span style="color:var(--accent);font-weight:700">4.</span> Durée → appuie → <strong>« Entrée du raccourci »</strong><br>
+        <span style="color:var(--accent);font-weight:700">5.</span> L'unité à côté → change en <strong style="color:#ef5350">« secondes »</strong> ⚠️<br>
+        <span style="color:var(--accent);font-weight:700">6.</span> En haut : renomme en <strong style="color:var(--accent)">« FocusTDAH Minuteur »</strong><br>
+        <span style="color:var(--accent);font-weight:700">7.</span> Appuie sur <strong>Terminé</strong>
+      </div>
+      <div style="font-size:12px;color:var(--muted);background:rgba(239,83,80,.08);border-radius:10px;padding:10px 12px;margin-bottom:16px;line-height:1.5">
+        ⚠️ L'étape 5 est importante : l'app envoie la durée en secondes. Si l'unité reste « minutes », le minuteur sera 60× trop long.
       </div>
       <button class="btn-outline" id="tsc-open" style="margin-bottom:10px">📱 Ouvrir l'app Raccourcis</button>
       <button class="btn" id="tsc-done" style="margin-bottom:10px">✅ C'est fait — activer</button>
@@ -6433,7 +6443,14 @@ function showTimerShortcutSetupModal() {
     </div>`;
   document.body.appendChild(bd);
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
-  document.getElementById('tsc-open').onclick = () => { window.location.href = 'shortcuts://'; };
+  document.getElementById('tsc-open').onclick = () => {
+    const a = document.createElement('a');
+    a.href = 'shortcuts://';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 500);
+  };
   document.getElementById('tsc-done').onclick = () => {
     localStorage.setItem(LS_TIMER_SHORTCUT_READY, 'true');
     bd.remove();
