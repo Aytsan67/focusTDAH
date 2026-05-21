@@ -644,8 +644,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .settings-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 20px; }
 .settings-tab { flex: none; white-space: nowrap; border: 1.5px solid var(--border); border-radius: 12px; background: var(--soft); color: var(--muted); font: 600 12px 'DM Sans', sans-serif; padding: 10px 8px; cursor: pointer; transition: all .15s; text-align: center; }
 .settings-tab.active { border-color: var(--accent); background: rgba(124,92,252,.12); color: var(--accent); }
-.settings-tab[data-tab="focus"] { grid-column: 2; }
-.settings-tab[data-tab="ritalin"] { grid-column: 1; }
+.settings-tab[data-tab="focus"] { grid-column: 1 / -1; }
 .settings-section-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin-bottom: 16px; }
 .settings-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--soft); border: 1px solid var(--border); margin-bottom: 8px; }
 .settings-item-emoji { font-size: 20px; flex: 0 0 auto; }
@@ -1861,7 +1860,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <h1 style="margin-bottom:20px">Paramètres</h1>
   <div class="settings-tabs" id="st-tabs">
     <button class="settings-tab active" data-tab="micros">Micros</button>
-    <button class="settings-tab" data-tab="modes">Modes</button>
     <button class="settings-tab" data-tab="drinks">Boissons</button>
     <button class="settings-tab" data-tab="suppl">Compléments</button>
     <button class="settings-tab" data-tab="ritalin">Ritaline</button>
@@ -1899,6 +1897,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="block-btn block-secondary" id="aide-btn-dump">
     <span class="b-title">🧠 Vider mon cerveau</span>
     <span class="b-sub">Écrire tout ce qui tourne en boucle pour libérer l'espace mental</span>
+  </button>
+  <button class="block-btn block-aide" id="aide-btn-demarrage" style="border-color:#7c5cfc;background:rgba(124,92,252,.06)">
+    <span class="b-title">🚀 Je veux travailler mais j'arrive pas à m'y mettre</span>
+    <span class="b-sub">J'ai l'intention · Mais quelque chose bloque le démarrage</span>
   </button>
 </section>
 
@@ -2107,6 +2109,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="back" id="back-timer-setup">← Accueil</button>
   <h1>Timer <em>libre</em></h1>
   <p class="sub">Choisis ta durée et commence. Je m'occupe du reste.</p>
+  <button class="btn-outline" id="btn-auto-program" style="margin-bottom:16px;width:100%">🧠 Programme adapté à mon focus</button>
   <div class="section-label">Durée de la session</div>
   <div class="preset-grid">
     <button class="preset-btn" data-min="2"><span class="p-min">2</span><span class="p-label">min</span></button>
@@ -2932,6 +2935,7 @@ document.getElementById('aide-btn-blocked').onclick = () => showFocusModal('aide
 document.getElementById('aide-btn-panique').onclick = () => showModePanique();
 document.getElementById('aide-btn-reset').onclick = () => showResetCognitif();
 document.getElementById('aide-btn-dump').onclick = () => show('brain-dump');
+document.getElementById('aide-btn-demarrage').onclick = () => showDemarrageModal();
 document.getElementById('back-create').onclick = () => { renderHome(); show('home'); };
 document.getElementById('back-mode').onclick = () => {
   if (currentProject) { renderPlanPreview(currentProject); show('plan-preview'); }
@@ -4933,7 +4937,6 @@ function switchSettingsTab(tab) {
   const c = document.getElementById('st-content');
   const s = getSettings();
   if (tab === 'micros')       renderSettingsMicros(c, s);
-  else if (tab === 'modes')   renderSettingsModes(c, s);
   else if (tab === 'drinks')  renderSettingsList(c, s, 'drinks', 'Boissons énergisantes', '☕');
   else if (tab === 'suppl')   renderSettingsList(c, s, 'supplements', 'Compléments alimentaires', '💊');
   else if (tab === 'ritalin') renderRitalinSettingsCard(c);
@@ -5202,7 +5205,7 @@ function showFedUpModal(pauseFn, resumeFn) {
     if (shouldResume && fedUpResumeFn) fedUpResumeFn();
     fedUpPauseFn = null;
     fedUpResumeFn = null;
-    if (timerDone) setTimeout(showFocusCheckIn, 400);
+    // score ring updates silently — no check-in popup
   }
 
   bd.querySelector('#fu-resume').onclick = () => dismiss(true, true);
@@ -5210,11 +5213,12 @@ function showFedUpModal(pauseFn, resumeFn) {
 }
 
 // Pause/resume helpers for each timer type
-function pauseSessionTimer()  { if (tRunning) { tRunning = false; clearInterval(tInterval); } }
+function pauseSessionTimer()  { if (tRunning) { tRunning = false; clearInterval(tInterval); releaseWakeLock(); } }
 function resumeSessionTimer() {
   if (!tRunning && tRemain > 0) {
     tRunning = true;
     startContinuousFocus();
+    requestWakeLock();
     tInterval = setInterval(() => {
       tRemain--;
       const pct = (tRemain / tTotal) * 100;
@@ -5225,11 +5229,12 @@ function resumeSessionTimer() {
     document.getElementById('t-toggle').textContent = '⏸ Pause';
   }
 }
-function pauseFreeTimer()  { if (ftRunning) { ftRunning = false; clearInterval(ftInterval); } }
+function pauseFreeTimer()  { if (ftRunning) { ftRunning = false; clearInterval(ftInterval); releaseWakeLock(); } }
 function resumeFreeTimer() {
   if (!ftRunning && ftRemain > 0) {
     ftRunning = true;
     startContinuousFocus();
+    requestWakeLock();
     ftInterval = setInterval(() => {
       ftRemain--;
       const pct = (ftRemain / ftTotal) * 100;
@@ -5342,12 +5347,14 @@ document.getElementById('t-toggle').onclick = function() {
     clearInterval(tInterval);
     tRunning = false;
     stopContinuousFocus();
+    releaseWakeLock();
     document.getElementById('t-toggle').textContent = '▶ Continuer';
   } else {
     if (tRemain <= 0) return;
     maybeAskFocus();
     tRunning = true;
     startContinuousFocus();
+    requestWakeLock();
     document.getElementById('t-toggle').textContent = '⏸ Pause';
     tInterval = setInterval(function() {
       tRemain--;
@@ -5359,7 +5366,8 @@ document.getElementById('t-toggle').onclick = function() {
         document.getElementById('s-timer').textContent = '✓';
         sendNotif('Timer terminé ⏸', 'Fais une pause ou continue ta session.');
         addBehaviorEvent('complete');
-        setTimeout(showFocusCheckIn, 900);
+        releaseWakeLock();
+        playTimerEndSound();
       }
     }, 1000);
   }
@@ -5453,7 +5461,7 @@ document.getElementById('btn-timers').onclick = () => {
   show('timer-setup');
 };
 document.getElementById('back-timer-setup').onclick = () => { renderHome(); show('home'); };
-document.getElementById('back-timer-free').onclick = () => { clearInterval(ftInterval); ftRunning = false; resetFtSetup(); show('timer-setup'); };
+document.getElementById('back-timer-free').onclick = () => { clearInterval(ftInterval); ftRunning = false; releaseWakeLock(); resetFtSetup(); show('timer-setup'); };
 
 function resetFtSetup() {
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
@@ -5529,12 +5537,14 @@ document.getElementById('ft-toggle').onclick = function() {
     clearInterval(ftInterval);
     ftRunning = false;
     stopContinuousFocus();
+    releaseWakeLock();
     this.textContent = '▶ Continuer';
   } else {
     if (ftRemain <= 0) return;
     maybeAskFocus();
     ftRunning = true;
     startContinuousFocus();
+    requestWakeLock();
     this.textContent = '⏸ Pause';
     ftInterval = setInterval(() => {
       ftRemain--;
@@ -5546,8 +5556,9 @@ document.getElementById('ft-toggle').onclick = function() {
         document.getElementById('ft-toggle').style.display = 'none';
         document.getElementById('ft-stop').style.display = 'none';
         addBehaviorEvent('complete');
+        releaseWakeLock();
+        playTimerEndSound();
         showFtEndPanel();
-        setTimeout(showFocusCheckIn, 900);
       }
     }, 1000);
   }
@@ -5556,6 +5567,7 @@ document.getElementById('ft-toggle').onclick = function() {
 document.getElementById('ft-stop').onclick = () => {
   clearInterval(ftInterval);
   ftRunning = false;
+  releaseWakeLock();
   renderHome();
   show('home');
 };
@@ -5719,6 +5731,90 @@ function showGentleSupport() {
 }
 
 // ════════════════════════════════════════════════
+// ─── WAKE LOCK ───
+let wakeLock = null;
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+}
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && (tRunning || ftRunning)) requestWakeLock();
+});
+
+// ─── TIMER END SOUND ───
+function playTimerEndSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[880, 0, 0.4], [1109, 0.38, 0.4], [660, 0.76, 0.7]].forEach(([freq, start, dur]) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      g.gain.setValueAtTime(0.28, ctx.currentTime + start);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.05);
+    });
+  } catch(e) {}
+}
+
+// ─── PROGRAMME ADAPTÉ AU FOCUS ───
+document.getElementById('btn-auto-program').onclick = () => {
+  const score = calcFocusScore();
+  const mins  = score < 25 ? 10 : score < 45 ? 15 : score < 65 ? 25 : score < 80 ? 40 : 50;
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.min) === mins);
+  });
+  document.getElementById('ft-custom').value = '';
+  ftDuration = mins * 60;
+  document.getElementById('btn-start-ft').disabled = false;
+  showDopamineToast(`Focus ${score}/100 → session de ${mins} min recommandée`, 3500);
+};
+
+// ─── DÉMARRAGE DIFFICILE ───
+function showDemarrageModal() {
+  if (document.getElementById('demarrage-bd')) return;
+  const bd = document.createElement('div');
+  bd.id = 'demarrage-bd';
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:6px">C'est normal 💙</div>
+      <p style="font-size:14px;color:var(--muted);line-height:1.55;margin-bottom:20px">
+        Le TDAH rend le <em>démarrage</em> difficile, pas le travail lui-même.
+        On va contourner cette résistance ensemble.
+      </p>
+
+      <div class="section-label" style="margin-bottom:8px">Quelle est la toute première micro-action ?</div>
+      <div class="field" style="margin-bottom:16px">
+        <input id="dm-task" placeholder="Ex : ouvrir le doc, écrire le titre…" style="width:100%;box-sizing:border-box">
+      </div>
+
+      <button class="btn" id="dm-go" style="margin-bottom:10px">⏱ Timer 5 min — juste commencer</button>
+      <button class="btn-outline" id="dm-transition" style="margin-bottom:10px">🔀 Utiliser la transition douce</button>
+      <button class="btn-outline" id="dm-dump" style="margin-bottom:10px">🧠 Vider mon cerveau d'abord</button>
+      <button class="btn-outline" id="dm-cancel">Annuler</button>
+    </div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.getElementById('dm-cancel').onclick = () => bd.remove();
+  document.getElementById('dm-dump').onclick = () => { bd.remove(); show('brain-dump'); };
+  document.getElementById('dm-transition').onclick = () => { bd.remove(); showBlockedV2('aide-menu'); };
+  document.getElementById('dm-go').onclick = () => {
+    const task = document.getElementById('dm-task').value.trim();
+    bd.remove();
+    ftTaskName = task || 'Premier pas';
+    ftSession  = 1;
+    ftIsPause  = false;
+    startFtTimer(5 * 60);
+  };
+}
+
 // ─── BEHAVIORAL FOCUS TRACKING ───
 
 function getBehaviorData() {
@@ -6164,6 +6260,9 @@ function openFocusPanel() {
   bd.innerHTML = `
     <div class="cat-modal-sheet" style="max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <div class="cat-modal-handle"></div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:-8px">
+        <button id="fp-close" style="background:none;border:none;font-size:24px;color:var(--muted);cursor:pointer;padding:0 4px;line-height:1">×</button>
+      </div>
 
       <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--soft);border-radius:16px;margin-bottom:16px">
         <div style="position:relative;width:68px;height:68px;flex-shrink:0">
@@ -6200,6 +6299,7 @@ function openFocusPanel() {
 
   document.body.appendChild(bd);
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.getElementById('fp-close').onclick = () => bd.remove();
   renderFocusPanelRitalin(document.getElementById('fp-ritalin'));
   renderFocusPanelSuppl(document.getElementById('fp-suppl'));
 }
