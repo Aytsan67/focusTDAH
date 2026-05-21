@@ -1010,6 +1010,49 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .brain-dump-area:focus { border-color: var(--accent); }
 .brain-dump-area::placeholder { color: var(--muted); opacity: 1; }
 
+/* ── CHECK-IN MODAL ── */
+.checkin-sheet {
+  background: var(--card); border-radius: 24px; padding: 28px 22px 24px;
+  width: 100%; max-width: 400px;
+  animation: pop .3s cubic-bezier(.34,1.56,.64,1);
+}
+.checkin-title {
+  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800;
+  text-align: center; margin-bottom: 6px;
+}
+.checkin-sub {
+  color: var(--muted); font-size: 13px; text-align: center; margin-bottom: 22px; line-height: 1.5;
+}
+.checkin-options { display: grid; gap: 10px; }
+.checkin-btn {
+  width: 100%; border-radius: 16px; padding: 15px 18px; text-align: left;
+  font: 600 14px 'DM Sans', sans-serif; cursor: pointer; transition: all .15s;
+  border: 1.5px solid var(--border); background: var(--soft); color: var(--text);
+}
+.checkin-btn:active { transform: scale(.98); }
+.checkin-good  { border-color: rgba(92,252,160,.35); background: rgba(92,252,160,.07); color: var(--green); }
+.checkin-mid   { border-color: rgba(252,186,92,.35); background: rgba(252,186,92,.06); color: #fcba5c; }
+.checkin-bad   { border-color: rgba(252,92,125,.3); background: rgba(252,92,125,.06); color: #fc5c7d; }
+
+/* ── AIDE BADGE ── */
+.aide-today-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 999px;
+  background: rgba(124,92,252,.1); border: 1px solid rgba(124,92,252,.22);
+  color: var(--accent); font-size: 11px; font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* ── GENTLE SUPPORT ── */
+.gentle-card {
+  background: rgba(124,92,252,.06); border: 1.5px solid rgba(124,92,252,.2);
+  border-radius: 20px; padding: 20px 18px; margin-bottom: 10px;
+  text-align: center;
+}
+.gentle-emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+.gentle-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+.gentle-sub { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+
 /* ── DOPAMINE TOAST ── */
 .dopamine-toast {
   position: fixed; bottom: calc(env(safe-area-inset-bottom) + 80px); left: 50%;
@@ -1379,6 +1422,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <section class="screen" id="aide-menu">
   <button class="back" id="back-aide-menu">← Accueil</button>
   <div style="margin-bottom:24px">
+    <div id="aide-today-badge" class="aide-today-badge" style="display:none"></div>
     <h1>De quoi tu as <em>besoin</em> ?</h1>
     <p class="sub">Choisis ce qui correspond le mieux à ton état maintenant.</p>
   </div>
@@ -2313,7 +2357,7 @@ function renderHome() {
 
 document.getElementById('btn-new').onclick = () => show('create');
 document.getElementById('back-home').onclick = () => show('landing');
-document.getElementById('btn-aide-menu').onclick = () => show('aide-menu');
+document.getElementById('btn-aide-menu').onclick = () => { show('aide-menu'); refreshAideBadge(); };
 document.getElementById('back-aide-menu').onclick = () => { renderHome(); show('home'); };
 document.getElementById('aide-btn-blocked').onclick = () => showBlockedV2('aide-menu');
 document.getElementById('aide-btn-panique').onclick = () => showModePanique();
@@ -4866,6 +4910,93 @@ const DOPAMINE_MESSAGES = [
   '🎉 Bien joué. Action suivante.',
 ];
 
+// ════════════════════════════════════════════════
+// ─── SUIVI CERVEAU ───
+// ════════════════════════════════════════════════
+const AIDE_LOG_KEY = 'focustdah_aide_log';
+
+function getAideLog() {
+  const today = new Date().toDateString();
+  try {
+    const raw = JSON.parse(localStorage.getItem(AIDE_LOG_KEY) || '{}');
+    return raw.date === today ? raw : { date: today, entries: [] };
+  } catch { return { date: new Date().toDateString(), entries: [] }; }
+}
+
+function logAideEntry(source, feeling) {
+  const log = getAideLog();
+  log.entries.push({ source, feeling, t: Date.now() });
+  localStorage.setItem(AIDE_LOG_KEY, JSON.stringify(log));
+  refreshAideBadge();
+}
+
+function refreshAideBadge() {
+  const badge = document.getElementById('aide-today-badge');
+  if (!badge) return;
+  const log = getAideLog();
+  const n = log.entries.length;
+  if (n === 0) { badge.style.display = 'none'; return; }
+  const positive = log.entries.filter(e => e.feeling === 'good').length;
+  badge.style.display = 'inline-flex';
+  badge.textContent = `🧠 ${n} outil${n > 1 ? 's' : ''} utilisé${n > 1 ? 's' : ''} aujourd'hui · ${positive} 😊`;
+}
+
+function showCheckIn(returnTo, source, label) {
+  const existing = document.getElementById('checkin-modal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'checkin-modal';
+  modal.className = 'ritalin-modal';
+  modal.innerHTML = `
+    <div class="checkin-sheet">
+      <div style="font-size:44px;text-align:center;margin-bottom:12px">🧠</div>
+      <div class="checkin-title">Comment tu te sens ?</div>
+      <div class="checkin-sub">${label || 'Après cet outil — sois honnête.'}</div>
+      <div class="checkin-options">
+        <button class="checkin-btn checkin-good" id="ci-good">😊 Mieux, je peux reprendre</button>
+        <button class="checkin-btn checkin-mid" id="ci-mid">😐 Un peu mieux, mais encore dur</button>
+        <button class="checkin-btn checkin-bad" id="ci-bad">😔 Toujours bloqué(e) — j'ai besoin d'aide</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  document.getElementById('ci-good').onclick = () => {
+    logAideEntry(source, 'good');
+    modal.remove();
+    showDopamineToast('💪 Tu t\'en sors — continue comme ça.');
+    show(returnTo);
+  };
+  document.getElementById('ci-mid').onclick = () => {
+    logAideEntry(source, 'mid');
+    modal.remove();
+    show('aide-menu');
+  };
+  document.getElementById('ci-bad').onclick = () => {
+    logAideEntry(source, 'bad');
+    modal.remove();
+    showGentleSupport();
+  };
+}
+
+function showGentleSupport() {
+  const content = document.getElementById('blocked-action-content');
+  content.innerHTML = `
+    <div class="gentle-card">
+      <span class="gentle-emoji">🤍</span>
+      <div class="gentle-title">C'est OK de ne pas aller bien.</div>
+      <div class="gentle-sub">Ton cerveau fait de son mieux. Il n'est pas cassé — il est épuisé.<br>Qu'est-ce qui pourrait t'aider <em>maintenant</em> ?</div>
+      <button class="btn" id="gs-pause" style="margin-bottom:10px">☕ Pause complète — je décroche 5 min</button>
+      <button class="btn-outline" id="gs-reset" style="margin-bottom:10px">🧘 Reset cognitif (respiration + corps)</button>
+      <button class="btn-outline" id="gs-dump" style="margin-bottom:10px">🧠 Vider ce qui tourne dans ma tête</button>
+      <button class="btn-outline" id="gs-home">← Retour à l'accueil — j'arrête pour aujourd'hui</button>
+    </div>`;
+  document.getElementById('gs-pause').onclick  = () => startStrategy('pause');
+  document.getElementById('gs-reset').onclick  = () => { show('reset-cognitif'); showResetCognitif(); };
+  document.getElementById('gs-dump').onclick   = () => show('brain-dump');
+  document.getElementById('gs-home').onclick   = () => { renderHome(); show('home'); };
+  show('blocked-action');
+}
+
 function showBlockedV2(from) {
   blockedCalledFrom = from || 'session';
   renderFrictionGrid();
@@ -4988,8 +5119,8 @@ function togglePanicTimer() {
         panicTimerRunning = false;
         panicTimerSec = 0;
         renderPanicTimer();
-        showDopamineToast('🔥 Round terminé ! Tu as tenu.');
         if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+        showCheckIn('aide-menu', 'panic', 'Après ce round de 25 min');
       }
     }, 1000);
   }
@@ -5178,7 +5309,7 @@ function showResetComplete(victoryText) {
       <button class="btn-outline" id="btn-after-reset-home" style="margin-top:10px">← Accueil</button>
     </div>`;
   showDopamineToast('✨ Reset réussi — nouveau départ !');
-  document.getElementById('btn-after-reset').onclick = () => { renderHome(); show('home'); };
+  document.getElementById('btn-after-reset').onclick = () => showCheckIn('home', 'reset', 'Après ton reset cognitif 🧘');
   document.getElementById('btn-after-reset-home').onclick = () => show('aide-menu');
 }
 
@@ -5494,7 +5625,7 @@ function done2Min() {
       <button class="btn-outline" id="twomin-work">Je suis lancé(e) — retour au travail 💪</button>
     </div>`;
   document.getElementById('twomin-again').onclick = () => { twoMinRound++; run2Min(120); };
-  document.getElementById('twomin-work').onclick  = () => show(blockedCalledFrom);
+  document.getElementById('twomin-work').onclick  = () => showCheckIn(blockedCalledFrom, 'blocked', 'Après la règle des 2 minutes');
 }
 
 // ── CHANGER DE TÂCHE ──
@@ -5534,22 +5665,12 @@ function showSwitchTask() {
 
 // ── FIN D'UNE STRATÉGIE ──
 function showDone(type) {
-  const msgs = {
-    breathing: { emoji:'✨', title:'C\'est fait !',     sub:'Ton système nerveux est plus calme.<br>Tu es prêt(e) à reprendre ?' },
-    pause:     { emoji:'🔋', title:'Rechargé(e) !',    sub:'Tu as décroché — bien joué.<br>Maintenant on reprend doucement.' },
-    stretch:   { emoji:'💪', title:'Corps réactivé !', sub:'Tu t\'es étiré(e), le sang circule.<br>Prêt(e) à reprendre ?' }
+  const labels = {
+    breathing: 'Après la respiration 4-7-8',
+    pause:     'Après ta pause de 5 min',
+    stretch:   'Après les étirements',
   };
-  const m = msgs[type] || { emoji:'✅', title:'Terminé !', sub:'Prêt(e) à reprendre ?' };
-  document.getElementById('blocked-action-content').innerHTML = `
-    <div style="text-align:center;padding:36px 0 20px">
-      <div style="font-size:64px;margin-bottom:14px">${m.emoji}</div>
-      <h2 style="font-family:Syne,sans-serif;font-size:24px;font-weight:800;margin-bottom:10px">${m.title}</h2>
-      <p style="color:var(--muted);font-size:15px;line-height:1.65;margin-bottom:32px">${m.sub}</p>
-      <button class="btn" id="done-back-work" style="margin-bottom:12px">Reprendre le travail 💪</button>
-      <button class="btn-outline" id="done-other">Essayer une autre stratégie</button>
-    </div>`;
-  document.getElementById('done-back-work').onclick = () => show(blockedCalledFrom);
-  document.getElementById('done-other').onclick     = () => showBlockedStrategies();
+  showCheckIn(blockedCalledFrom, 'blocked', labels[type] || 'Après cette stratégie');
 }
 
 // ── Helpers ──
@@ -5572,7 +5693,7 @@ document.getElementById('back-reset-cognitif').onclick  = () => show('aide-menu'
 document.getElementById('back-brain-dump').onclick      = () => show('aide-menu');
 document.getElementById('btn-brain-dump-done').onclick  = () => {
   localStorage.setItem('focustdah_brain_dump', document.getElementById('brain-dump-text').value);
-  show('aide-menu');
+  showCheckIn('home', 'dump', 'Après avoir vidé ton cerveau 🧠');
 };
 document.getElementById('btn-brain-dump-clear').onclick = () => {
   if (confirm('Effacer tout le contenu ?')) {
@@ -5592,8 +5713,7 @@ document.getElementById('panic-toggle').onclick       = () => togglePanicTimer()
 document.getElementById('panic-reset').onclick        = () => resetPanicTimer();
 document.getElementById('btn-panic-done').onclick     = () => {
   clearPanicTimer();
-  showDopamineToast('🔥 Mission accomplie — tu l\'as fait !');
-  renderHome(); show('aide-menu');
+  showCheckIn('home', 'panic', 'Mission déclarée terminée 🔥');
 };
 document.getElementById('btn-panic-new-round').onclick = () => resetPanicTimer(true);
 
