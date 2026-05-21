@@ -1378,31 +1378,33 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <!-- Rebound Ritaline détecté -->
   <div id="rebound-blocked-card" class="rebound-blocked-card" style="display:none"></div>
 
-  <!-- Étape 1 : compléments -->
-  <div id="suppl-card" class="suppl-card">
+  <!-- Étape 1 : énergie (affichée en premier) -->
+  <div id="energy-section">
+    <h1>Comment tu <em>te sens</em> ?</h1>
+    <p class="sub">Ton niveau d'énergie en ce moment — sois honnête.</p>
+    <div class="energy-scale" id="energy-scale"></div>
+    <div class="energy-labels"><span>😴 Épuisé</span><span>⚡ En forme</span></div>
+  </div>
+
+  <!-- Étape 2 : compléments (affiché seulement si énergie < 5) -->
+  <div id="suppl-card" class="suppl-card" style="display:none;margin-top:20px">
     <div class="suppl-q">💊 As-tu pris tes compléments ?</div>
     <div class="suppl-yn">
       <button class="suppl-yes" id="suppl-yes">✓ Oui</button>
       <button class="suppl-no-btn" id="suppl-no">Non</button>
     </div>
     <div id="suppl-options" style="display:none">
-      <p style="color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:8px">Voici ce qui peut booster ton cerveau TDAH ✦</p>
+      <p style="color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:8px">Ce qui peut booster ton cerveau TDAH ✦</p>
       <div class="suppl-options-list" id="suppl-options-list"></div>
     </div>
   </div>
 
-  <!-- Étape 2 : énergie (affiché après réponse) -->
-  <div id="energy-section" style="display:none">
-    <h1>Comment tu <em>te sens</em> ?</h1>
-    <p class="sub">Ton niveau d'énergie en ce moment — sois honnête.</p>
-    <div class="energy-scale" id="energy-scale"></div>
-    <div class="energy-labels"><span>😴 Épuisé</span><span>⚡ En forme</span></div>
-    <div id="energy-boost-hint" class="energy-boost-hint" style="display:none">
-      <strong>💡 Ton énergie est basse — un boost peut vraiment aider.</strong>
-      <div class="energy-boost-chips" id="energy-boost-chips"></div>
-    </div>
-    <button class="btn" id="btn-energy-next" style="margin-top:22px" disabled>Voir mes stratégies →</button>
+  <div id="energy-boost-hint" class="energy-boost-hint" style="display:none;margin-top:12px">
+    <strong>💡 Boissons &amp; compléments disponibles :</strong>
+    <div class="energy-boost-chips" id="energy-boost-chips"></div>
   </div>
+
+  <button class="btn" id="btn-energy-next" style="margin-top:22px" disabled>Voir mes stratégies →</button>
 </section>
 
 <!-- BLOCKED: STRATÉGIES -->
@@ -4883,6 +4885,7 @@ document.getElementById('ft-opt-home').onclick = () => {
 // ════════════════════════════════════════════════
 let blockedEnergy = 0;
 let blockedCalledFrom = 'session';
+let blockedStrategiesScreen = 'blocked-strategies';
 let breathInterval = null, pauseInterval = null, stretchInterval = null, twoMinInterval = null;
 let selectedFrictionType = null;
 
@@ -5024,6 +5027,7 @@ function renderFrictionGrid() {
 }
 
 function showFrictionStrategies(ft) {
+  blockedStrategiesScreen = 'blocked-friction-strategies';
   const header = document.getElementById('friction-strat-header');
   header.innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
@@ -5341,55 +5345,26 @@ function showBlockedEnergy(from) {
   blockedCalledFrom = from || 'session';
   blockedEnergy = 0;
 
-  // Reset sections
-  document.getElementById('suppl-card').style.display = 'block';
+  // Reset UI
+  document.getElementById('suppl-card').style.display = 'none';
   document.getElementById('suppl-options').style.display = 'none';
-  document.getElementById('energy-section').style.display = 'none';
+  document.getElementById('energy-boost-hint').style.display = 'none';
+  document.getElementById('btn-energy-next').disabled = true;
 
-  // ── Rebound Ritaline détecté ──
+  // ── Rebound Ritaline ──
   const reboundCard = document.getElementById('rebound-blocked-card');
   const phase = getRitalinPhase();
   if (phase === 'rebound' && hasTakenRitalin()) {
     reboundCard.style.display = 'block';
     reboundCard.innerHTML = `
       <div style="color:#fc5c7d;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:8px">⚠️ Tu es probablement en rebound de Ritaline</div>
-      <p style="color:var(--muted);font-size:13px;line-height:1.6">C'est une cause <strong style="color:var(--text)">chimique</strong>, pas un manque de volonté. L'effet de ta médication baisse — c'est normal et temporaire.<br><br>
-      <strong style="color:var(--text)">Ce qui aide vraiment en rebound :</strong><br>
-      🍽 Manger quelque chose · 💧 Boire de l'eau · 😴 Pause complète · ✏️ Tâche ultra-simple</p>`;
+      <p style="color:var(--muted);font-size:13px;line-height:1.6">C'est une cause <strong style="color:var(--text)">chimique</strong>, pas un manque de volonté.<br><br>
+      <strong style="color:var(--text)">Ce qui aide vraiment :</strong> 🍽 Manger · 💧 Eau · 😴 Pause · ✏️ Tâche ultra-simple</p>`;
   } else {
     reboundCard.style.display = 'none';
   }
-  document.getElementById('energy-boost-hint').style.display = 'none';
-  document.getElementById('btn-energy-next').disabled = true;
 
-  // ── Étape 1 : Compléments ? ──
-  function showEnergySection() {
-    document.getElementById('suppl-card').style.display = 'none';
-    document.getElementById('energy-section').style.display = 'block';
-  }
-
-  function showBoostOptions() {
-    const { drinks, supplements } = getSettings();
-    const all = [...drinks, ...supplements];
-    const listEl = document.getElementById('suppl-options-list');
-    listEl.innerHTML = '';
-    all.forEach(item => {
-      const chip = document.createElement('span');
-      chip.className = 'suppl-option-chip';
-      chip.textContent = item.emoji + ' ' + item.label;
-      listEl.appendChild(chip);
-    });
-    document.getElementById('suppl-options').style.display = 'block';
-  }
-
-  document.getElementById('suppl-yes').onclick = () => showEnergySection();
-  document.getElementById('suppl-no').onclick = () => {
-    showBoostOptions();
-    // After a short pause, reveal energy section below
-    setTimeout(() => showEnergySection(), 1400);
-  };
-
-  // ── Étape 2 : Énergie ──
+  // ── Étape 1 : Échelle d'énergie ──
   const colors = ['#fc5c7d','#fc6e5c','#fc875c','#fc9f5c','#fcba5c','#f0d060','#c8e04a','#9edd4a','#6ed85a','#5cfca0'];
   const scale = document.getElementById('energy-scale');
   scale.innerHTML = '';
@@ -5402,23 +5377,49 @@ function showBlockedEnergy(from) {
       document.querySelectorAll('.energy-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       blockedEnergy = i;
-      document.getElementById('btn-energy-next').disabled = false;
-      // Si énergie < 5 → afficher hint avec boissons + compléments
-      const hint = document.getElementById('energy-boost-hint');
+
+      // ── Étape 2 : Compléments uniquement si énergie basse ──
       if (i < 5) {
-        const { drinks, supplements } = getSettings();
-        const all = [...drinks, ...supplements];
-        const chipsEl = document.getElementById('energy-boost-chips');
-        chipsEl.innerHTML = '';
-        all.slice(0, 6).forEach(item => {
-          const ch = document.createElement('span');
-          ch.className = 'energy-boost-chip';
-          ch.textContent = item.emoji + ' ' + item.label;
-          chipsEl.appendChild(ch);
-        });
-        hint.style.display = 'block';
+        document.getElementById('suppl-card').style.display = 'block';
+        // Réinitialiser les boutons compléments
+        document.getElementById('suppl-options').style.display = 'none';
+        document.getElementById('energy-boost-hint').style.display = 'none';
+        document.getElementById('btn-energy-next').disabled = true;
+
+        document.getElementById('suppl-yes').onclick = () => {
+          document.getElementById('suppl-options').style.display = 'none';
+          document.getElementById('energy-boost-hint').style.display = 'none';
+          document.getElementById('btn-energy-next').disabled = false;
+        };
+        document.getElementById('suppl-no').onclick = () => {
+          // Afficher les options de boost — sans transition forcée
+          const { drinks, supplements } = getSettings();
+          const all = [...drinks, ...supplements];
+          const listEl = document.getElementById('suppl-options-list');
+          listEl.innerHTML = '';
+          all.forEach(item => {
+            const chip = document.createElement('span');
+            chip.className = 'suppl-option-chip';
+            chip.textContent = item.emoji + ' ' + item.label;
+            listEl.appendChild(chip);
+          });
+          document.getElementById('suppl-options').style.display = 'block';
+          // Boost hint avec boissons + compléments
+          const chipsEl = document.getElementById('energy-boost-chips');
+          chipsEl.innerHTML = '';
+          all.slice(0, 6).forEach(item => {
+            const ch = document.createElement('span');
+            ch.className = 'energy-boost-chip';
+            ch.textContent = item.emoji + ' ' + item.label;
+            chipsEl.appendChild(ch);
+          });
+          document.getElementById('energy-boost-hint').style.display = 'block';
+          document.getElementById('btn-energy-next').disabled = false;
+        };
       } else {
-        hint.style.display = 'none';
+        document.getElementById('suppl-card').style.display = 'none';
+        document.getElementById('energy-boost-hint').style.display = 'none';
+        document.getElementById('btn-energy-next').disabled = false;
       }
     };
     scale.appendChild(btn);
@@ -5429,6 +5430,7 @@ function showBlockedEnergy(from) {
 
 // ── Écran stratégies ──
 function showBlockedStrategies() {
+  blockedStrategiesScreen = 'blocked-strategies';
   const ids = getStrategiesForEnergy(blockedEnergy);
   const label = getEnergyLabel(blockedEnergy);
   document.getElementById('strategies-header').innerHTML = `
@@ -5680,11 +5682,14 @@ function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); 
 document.getElementById('btn-blocked').onclick          = () => showBlockedV2('session');
 document.getElementById('btn-energy-next').onclick      = () => showBlockedStrategies();
 document.getElementById('back-blocked-energy').onclick  = () => show('blocked-type');
-document.getElementById('back-blocked-strategies').onclick = () => show('blocked-energy');
+document.getElementById('back-blocked-strategies').onclick = () => {
+  if (blockedStrategiesScreen === 'blocked-friction-strategies') show('blocked-type');
+  else show('blocked-energy');
+};
 document.getElementById('back-blocked-action').onclick  = () => {
   clearInterval(breathInterval); clearInterval(pauseInterval);
   clearInterval(stretchInterval); clearInterval(twoMinInterval);
-  show('blocked-strategies');
+  show(blockedStrategiesScreen);
 };
 document.getElementById('back-blocked-type').onclick    = () => show(blockedCalledFrom);
 document.getElementById('back-friction-strategies').onclick = () => show('blocked-type');
