@@ -1051,6 +1051,87 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .reset-relaunch-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
 
 /* ── BRAIN DUMP ── */
+/* ── BRAIN DUMP GUIDE ── */
+.dump-header-row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; margin-bottom: 8px; flex-wrap: wrap;
+}
+.dump-guide-btn {
+  background: rgba(124,92,252,.12); border: 1.5px solid rgba(124,92,252,.28);
+  color: var(--accent); border-radius: 14px; font-size: 12px; font-weight: 700;
+  font-family: 'Syne', sans-serif; padding: 8px 12px; cursor: pointer;
+  line-height: 1.3; text-align: left; transition: background .15s; flex-shrink: 0;
+}
+.dump-guide-btn:hover { background: rgba(124,92,252,.2); }
+.dump-guide-panel {
+  background: rgba(124,92,252,.06); border: 1.5px solid rgba(124,92,252,.22);
+  border-radius: 20px; padding: 22px 18px; margin-bottom: 16px;
+}
+.dump-guide-q {
+  font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px; line-height: 1.3;
+}
+.dump-guide-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.dump-guide-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.dump-guide-chip {
+  padding: 8px 14px; border-radius: 999px; border: 1.5px solid rgba(124,92,252,.3);
+  background: rgba(124,92,252,.08); color: var(--accent); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .13s; font-family: 'DM Sans', sans-serif;
+}
+.dump-guide-chip.selected {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+.dump-guide-input {
+  width: 100%; border-radius: 12px; border: 1.5px solid rgba(124,92,252,.28);
+  background: rgba(255,255,255,.05); color: var(--text); font-size: 15px;
+  padding: 12px 14px; font-family: 'DM Sans', sans-serif; resize: none;
+  line-height: 1.5; outline: none; box-sizing: border-box; margin-bottom: 14px;
+}
+.dump-guide-input:focus { border-color: var(--accent); }
+.dump-guide-next {
+  background: var(--accent); color: #fff; border: none; border-radius: 14px;
+  font: 700 14px 'Syne', sans-serif; padding: 12px 20px; cursor: pointer;
+  transition: opacity .13s; width: 100%;
+}
+.dump-guide-next:disabled { opacity: .3; cursor: not-allowed; }
+.dump-guide-progress {
+  display: flex; gap: 4px; margin-bottom: 16px;
+}
+.dump-guide-dot {
+  height: 4px; border-radius: 99px; flex: 1;
+  background: rgba(124,92,252,.18); transition: background .2s;
+}
+.dump-guide-dot.active { background: var(--accent); }
+.dump-guide-summary {
+  background: rgba(124,92,252,.08); border-radius: 14px; padding: 14px;
+  font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+
+/* ── SUPPL DRINK CHOICE ── */
+.suppl-drink-label {
+  font-size: 13px; color: var(--muted); margin: 12px 0 10px; line-height: 1.4;
+}
+.suppl-drinks-grid {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;
+}
+.suppl-drink-btn {
+  padding: 8px 14px; border-radius: 999px; border: 1.5px solid rgba(252,186,92,.35);
+  background: rgba(252,186,92,.1); color: #fcba5c; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .13s; font-family: 'DM Sans', sans-serif;
+}
+.suppl-drink-btn:hover { background: rgba(252,186,92,.22); }
+.suppl-drink-chosen {
+  font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+  text-align: center; color: #fcba5c; margin-bottom: 10px;
+}
+.suppl-timer-num {
+  font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800;
+  text-align: center; background: linear-gradient(135deg,#fcba5c,#f0d060);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1;
+  margin-bottom: 8px;
+}
+
 .brain-dump-hint {
   background: rgba(124,92,252,.07); border: 1px solid rgba(124,92,252,.2);
   border-radius: 14px; padding: 12px 16px; font-size: 13px; color: var(--muted);
@@ -1448,15 +1529,18 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
       <button class="suppl-yes" id="suppl-yes">✓ Oui</button>
       <button class="suppl-no-btn" id="suppl-no">Non</button>
     </div>
-    <div id="suppl-options" style="display:none">
-      <p style="color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:8px">Ce qui peut booster ton cerveau TDAH ✦</p>
-      <div class="suppl-options-list" id="suppl-options-list"></div>
+    <!-- Choix boisson (si non) -->
+    <div id="suppl-drink-choice" style="display:none">
+      <p class="suppl-drink-label">Quelle boisson tu peux prendre maintenant ?</p>
+      <div class="suppl-drinks-grid" id="suppl-drinks-grid"></div>
     </div>
-  </div>
-
-  <div id="energy-boost-hint" class="energy-boost-hint" style="display:none;margin-top:12px">
-    <strong>💡 Boissons &amp; compléments disponibles :</strong>
-    <div class="energy-boost-chips" id="energy-boost-chips"></div>
+    <!-- Timer 5 min après choix boisson -->
+    <div id="suppl-drink-timer" style="display:none">
+      <div class="suppl-drink-chosen" id="suppl-drink-chosen"></div>
+      <div class="suppl-timer-num" id="suppl-timer-num">05:00</div>
+      <div class="timer-track" style="margin:8px 0 14px"><div class="timer-bar" id="suppl-timer-bar" style="width:100%;background:linear-gradient(90deg,#fcba5c,#f0d060)"></div></div>
+      <p class="suppl-drink-label" style="text-align:center;margin:0">Prépare et bois ta boisson ☕</p>
+    </div>
   </div>
 
   <button class="btn" id="btn-energy-next" style="margin-top:22px" disabled>Voir mes stratégies →</button>
@@ -1653,12 +1737,22 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- BRAIN DUMP -->
 <section class="screen" id="brain-dump">
   <button class="back" id="back-brain-dump">← Retour</button>
-  <h1>Vide ton <em>cerveau</em></h1>
-  <p class="sub">Écris tout ce qui tourne en boucle. Rien à organiser — juste vider.</p>
-  <div class="brain-dump-hint">💡 Pensées, peurs, tâches oubliées, idées aléatoires, stress… tout y passe.</div>
-  <textarea class="brain-dump-area" id="brain-dump-text" placeholder="Je pense à…&#10;Je dois…&#10;J'ai oublié de…&#10;Je suis stressé par…&#10;J'ai peur que…&#10;J'aurais dû…"></textarea>
-  <button class="btn" id="btn-brain-dump-done" style="margin-top:16px">✓ C'est noté — retour au travail</button>
-  <button class="btn-outline" id="btn-brain-dump-clear">🗑 Effacer tout</button>
+  <div class="dump-header-row">
+    <h1 style="margin:0">Vide ton <em>cerveau</em></h1>
+    <button class="dump-guide-btn" id="btn-dump-guide">🤔 Je ne sais pas par où commencer</button>
+  </div>
+  <!-- Guide interactif (masqué par défaut) -->
+  <div id="dump-guide-panel" class="dump-guide-panel" style="display:none">
+    <div id="dump-guide-content"></div>
+  </div>
+  <!-- Zone libre (visible par défaut) -->
+  <div id="dump-free-zone">
+    <p class="sub" style="margin-top:10px">Écris tout ce qui tourne en boucle. Rien à organiser — juste vider.</p>
+    <div class="brain-dump-hint">💡 Pensées, peurs, tâches oubliées, idées aléatoires, stress… tout y passe.</div>
+    <textarea class="brain-dump-area" id="brain-dump-text" placeholder="Je pense à…&#10;Je dois…&#10;J'ai oublié de…&#10;Je suis stressé par…&#10;J'ai peur que…&#10;J'aurais dû…"></textarea>
+    <button class="btn" id="btn-brain-dump-done" style="margin-top:16px">✓ C'est noté — retour au travail</button>
+    <button class="btn-outline" id="btn-brain-dump-clear">🗑 Effacer tout</button>
+  </div>
 </section>
 
 <!-- TIMER SETUP -->
@@ -5652,9 +5746,10 @@ function showBlockedEnergy(from) {
 
   // Reset UI
   document.getElementById('suppl-card').style.display = 'none';
-  document.getElementById('suppl-options').style.display = 'none';
-  document.getElementById('energy-boost-hint').style.display = 'none';
+  document.getElementById('suppl-drink-choice').style.display = 'none';
+  document.getElementById('suppl-drink-timer').style.display = 'none';
   document.getElementById('btn-energy-next').disabled = true;
+  clearSupplDrinkTimer();
 
   // ── Rebound Ritaline ──
   const reboundCard = document.getElementById('rebound-blocked-card');
@@ -5686,44 +5781,33 @@ function showBlockedEnergy(from) {
       // ── Étape 2 : Compléments uniquement si énergie basse ──
       if (i < 5) {
         document.getElementById('suppl-card').style.display = 'block';
-        // Réinitialiser les boutons compléments
-        document.getElementById('suppl-options').style.display = 'none';
-        document.getElementById('energy-boost-hint').style.display = 'none';
+        document.getElementById('suppl-drink-choice').style.display = 'none';
+        document.getElementById('suppl-drink-timer').style.display = 'none';
         document.getElementById('btn-energy-next').disabled = true;
+        clearSupplDrinkTimer();
 
         document.getElementById('suppl-yes').onclick = () => {
-          document.getElementById('suppl-options').style.display = 'none';
-          document.getElementById('energy-boost-hint').style.display = 'none';
+          document.getElementById('suppl-drink-choice').style.display = 'none';
+          document.getElementById('suppl-drink-timer').style.display = 'none';
           document.getElementById('btn-energy-next').disabled = false;
         };
         document.getElementById('suppl-no').onclick = () => {
-          // Afficher les options de boost — sans transition forcée
-          const { drinks, supplements } = getSettings();
-          const all = [...drinks, ...supplements];
-          const listEl = document.getElementById('suppl-options-list');
-          listEl.innerHTML = '';
-          all.forEach(item => {
-            const chip = document.createElement('span');
-            chip.className = 'suppl-option-chip';
-            chip.textContent = item.emoji + ' ' + item.label;
-            listEl.appendChild(chip);
+          // Proposer uniquement les boissons énergisantes
+          const { drinks } = getSettings();
+          const grid = document.getElementById('suppl-drinks-grid');
+          grid.innerHTML = '';
+          drinks.forEach(drink => {
+            const drinkBtn = document.createElement('button');
+            drinkBtn.className = 'suppl-drink-btn';
+            drinkBtn.textContent = drink.emoji + ' ' + drink.label;
+            drinkBtn.onclick = () => startSupplDrinkTimer(drink);
+            grid.appendChild(drinkBtn);
           });
-          document.getElementById('suppl-options').style.display = 'block';
-          // Boost hint avec boissons + compléments
-          const chipsEl = document.getElementById('energy-boost-chips');
-          chipsEl.innerHTML = '';
-          all.slice(0, 6).forEach(item => {
-            const ch = document.createElement('span');
-            ch.className = 'energy-boost-chip';
-            ch.textContent = item.emoji + ' ' + item.label;
-            chipsEl.appendChild(ch);
-          });
-          document.getElementById('energy-boost-hint').style.display = 'block';
-          document.getElementById('btn-energy-next').disabled = false;
+          document.getElementById('suppl-drink-choice').style.display = 'block';
+          document.getElementById('suppl-drink-timer').style.display = 'none';
         };
       } else {
         document.getElementById('suppl-card').style.display = 'none';
-        document.getElementById('energy-boost-hint').style.display = 'none';
         document.getElementById('btn-energy-next').disabled = false;
       }
     };
@@ -5731,6 +5815,40 @@ function showBlockedEnergy(from) {
   }
 
   show('blocked-energy');
+}
+
+let supplDrinkTimerInterval = null;
+let supplDrinkTimerSec = 0;
+const SUPPL_DRINK_DURATION = 5 * 60;
+
+function startSupplDrinkTimer(drink) {
+  clearSupplDrinkTimer();
+  document.getElementById('suppl-drink-chosen').textContent = drink.emoji + ' ' + drink.label + ' — prépare-toi !';
+  document.getElementById('suppl-drink-choice').style.display = 'none';
+  document.getElementById('suppl-drink-timer').style.display = 'block';
+  supplDrinkTimerSec = SUPPL_DRINK_DURATION;
+  renderSupplDrinkTimer();
+  supplDrinkTimerInterval = setInterval(() => {
+    supplDrinkTimerSec--;
+    renderSupplDrinkTimer();
+    if (supplDrinkTimerSec <= 0) {
+      clearSupplDrinkTimer();
+      document.getElementById('btn-energy-next').disabled = false;
+      document.getElementById('suppl-timer-num').textContent = '✓ Prêt !';
+      document.getElementById('suppl-timer-bar').style.width = '0%';
+    }
+  }, 1000);
+}
+
+function renderSupplDrinkTimer() {
+  document.getElementById('suppl-timer-num').textContent = fmt(supplDrinkTimerSec);
+  const pct = (supplDrinkTimerSec / SUPPL_DRINK_DURATION) * 100;
+  document.getElementById('suppl-timer-bar').style.width = pct + '%';
+}
+
+function clearSupplDrinkTimer() {
+  clearInterval(supplDrinkTimerInterval);
+  supplDrinkTimerInterval = null;
 }
 
 // ── Écran stratégies ──
@@ -6000,7 +6118,164 @@ document.getElementById('back-blocked-type').onclick    = () => show(blockedCall
 document.getElementById('back-friction-strategies').onclick = () => show('blocked-type');
 document.getElementById('back-mode-panique').onclick    = () => { clearPanicTimer(); show('aide-menu'); };
 document.getElementById('back-reset-cognitif').onclick  = () => show('aide-menu');
-document.getElementById('back-brain-dump').onclick      = () => show('aide-menu');
+// ── BRAIN DUMP GUIDE ──
+const DUMP_GUIDE_STEPS = [
+  {
+    type: 'chips', key: 'feeling',
+    q: 'Comment tu te sens en ce moment ?',
+    sub: 'Choisis ce qui te correspond.',
+    options: ['😵 Submergé', '😰 Anxieux', '🥶 Paralysé', '😴 Épuisé', '🌀 Tout à la fois']
+  },
+  {
+    type: 'multichips', key: 'domains',
+    q: 'C\'est dans quel(s) domaine(s) ?',
+    sub: 'Tu peux en sélectionner plusieurs.',
+    options: ['💼 Travail / études', '🏠 Perso', '👨‍👩‍👧 Famille', '💰 Argent', '🏥 Santé', '❓ Je ne sais pas']
+  },
+  {
+    type: 'text', key: 'loops',
+    q: 'Qu\'est-ce qui revient le plus dans ta tête ?',
+    sub: 'Juste quelques mots. Pas de filtre.',
+    placeholder: 'Ce qui tourne en boucle…'
+  },
+  {
+    type: 'chips', key: 'deadline',
+    q: 'Y a-t-il une deadline proche ?',
+    sub: '',
+    options: ['🔴 Oui, c\'est urgent', '🟡 Peut-être', '🟢 Non, pas vraiment']
+  },
+  {
+    type: 'text', key: 'one_thing',
+    q: 'Si tu ne devais faire qu\'UNE chose là, ce serait quoi ?',
+    sub: 'Même petite. Même imparfaite.',
+    placeholder: 'La toute première action…'
+  }
+];
+
+let dumpGuideStep = 0;
+let dumpGuideAnswers = {};
+
+function showDumpGuide() {
+  dumpGuideStep = 0;
+  dumpGuideAnswers = {};
+  document.getElementById('dump-free-zone').style.display = 'none';
+  document.getElementById('dump-guide-panel').style.display = 'block';
+  renderDumpGuideStep();
+}
+
+function hideDumpGuide() {
+  document.getElementById('dump-guide-panel').style.display = 'none';
+  document.getElementById('dump-free-zone').style.display = 'block';
+}
+
+function renderDumpGuideStep() {
+  const total = DUMP_GUIDE_STEPS.length;
+  const content = document.getElementById('dump-guide-content');
+
+  if (dumpGuideStep >= total) {
+    showDumpGuideSummary();
+    return;
+  }
+
+  const step = DUMP_GUIDE_STEPS[dumpGuideStep];
+
+  // Progress dots
+  let dotsHtml = '<div class="dump-guide-progress">';
+  for (let i = 0; i < total; i++) {
+    dotsHtml += `<div class="dump-guide-dot${i <= dumpGuideStep ? ' active' : ''}"></div>`;
+  }
+  dotsHtml += '</div>';
+
+  let bodyHtml = '';
+  if (step.type === 'chips') {
+    bodyHtml = `<div class="dump-guide-chips" id="dg-chips">` +
+      step.options.map((o, idx) => `<button class="dump-guide-chip" data-idx="${idx}">${o}</button>`).join('') +
+      `</div>`;
+  } else if (step.type === 'multichips') {
+    bodyHtml = `<div class="dump-guide-chips" id="dg-chips">` +
+      step.options.map((o, idx) => `<button class="dump-guide-chip" data-idx="${idx}">${o}</button>`).join('') +
+      `</div>
+      <button class="dump-guide-next" id="dg-next" disabled>Continuer →</button>`;
+  } else {
+    bodyHtml = `<textarea class="dump-guide-input" id="dg-text" rows="2" placeholder="${step.placeholder || ''}"></textarea>
+      <button class="dump-guide-next" id="dg-next">Continuer →</button>`;
+  }
+
+  content.innerHTML = `
+    ${dotsHtml}
+    <div class="dump-guide-q">${step.q}</div>
+    ${step.sub ? `<div class="dump-guide-sub">${step.sub}</div>` : ''}
+    ${bodyHtml}
+  `;
+
+  if (step.type === 'chips') {
+    content.querySelectorAll('#dg-chips .dump-guide-chip').forEach(chip => {
+      chip.onclick = () => {
+        dumpGuideAnswers[step.key] = chip.textContent;
+        dumpGuideStep++;
+        renderDumpGuideStep();
+      };
+    });
+  } else if (step.type === 'multichips') {
+    const selected = new Set();
+    const nextBtn = content.querySelector('#dg-next');
+    content.querySelectorAll('#dg-chips .dump-guide-chip').forEach(chip => {
+      chip.onclick = () => {
+        chip.classList.toggle('selected');
+        if (chip.classList.contains('selected')) selected.add(chip.textContent);
+        else selected.delete(chip.textContent);
+        nextBtn.disabled = selected.size === 0;
+      };
+    });
+    nextBtn.onclick = () => {
+      dumpGuideAnswers[step.key] = [...selected];
+      dumpGuideStep++;
+      renderDumpGuideStep();
+    };
+  } else {
+    const textarea = content.querySelector('#dg-text');
+    const nextBtn = content.querySelector('#dg-next');
+    nextBtn.onclick = () => {
+      dumpGuideAnswers[step.key] = textarea.value.trim();
+      dumpGuideStep++;
+      renderDumpGuideStep();
+    };
+  }
+}
+
+function showDumpGuideSummary() {
+  const content = document.getElementById('dump-guide-content');
+  const a = dumpGuideAnswers;
+  const lines = [];
+  if (a.feeling) lines.push('Je me sens : ' + a.feeling);
+  if (a.domains && a.domains.length) lines.push('Domaines : ' + a.domains.join(', '));
+  if (a.loops) lines.push('Ce qui tourne en boucle : ' + a.loops);
+  if (a.deadline) lines.push('Deadline : ' + a.deadline);
+  if (a.one_thing) lines.push('Ma première action : ' + a.one_thing);
+  const summary = lines.join('\n');
+
+  content.innerHTML = `
+    <div class="dump-guide-q" style="font-size:20px">✨ C'est sorti !</div>
+    <div class="dump-guide-sub" style="margin-bottom:14px">Ton cerveau a externalisé. Je l'ai noté pour toi.</div>
+    <div class="dump-guide-summary">${summary.replace(/</g,'&lt;')}</div>
+    <button class="dump-guide-next" id="dg-finish">Voir mes notes →</button>
+  `;
+
+  // Append to textarea
+  const textarea = document.getElementById('brain-dump-text');
+  const existing = textarea.value.trim();
+  const ts = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  textarea.value = (existing ? existing + '\n\n' : '') + '— ' + ts + ' —\n' + summary;
+  localStorage.setItem('focustdah_brain_dump', textarea.value);
+
+  document.getElementById('dg-finish').onclick = () => {
+    hideDumpGuide();
+  };
+}
+
+document.getElementById('btn-dump-guide').onclick = () => showDumpGuide();
+
+document.getElementById('back-brain-dump').onclick      = () => { hideDumpGuide(); show('aide-menu'); };
 document.getElementById('btn-brain-dump-done').onclick  = () => {
   localStorage.setItem('focustdah_brain_dump', document.getElementById('brain-dump-text').value);
   showCheckIn('home', 'dump', 'Après avoir vidé ton cerveau 🧠');
