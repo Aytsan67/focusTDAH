@@ -578,16 +578,14 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .ritalin-no { border:1.5px solid var(--border); border-radius:16px; background:none; color:var(--muted); font:600 14px 'DM Sans',sans-serif; padding:15px; cursor:pointer; }
 
 /* ── SETTINGS FAB ── */
-/* ── TOP-RIGHT STATS WIDGET ── */
+/* ── TOP STATS WIDGET (inline, inside landing) ── */
 .top-stats-widget {
-  position: fixed;
-  top: calc(env(safe-area-inset-top) + 62px);
-  right: 14px;
-  z-index: 448;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-end;
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 10px 0 16px;
 }
 .top-stat-row {
   display: flex;
@@ -596,7 +594,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 4px 8px;
+  padding: 4px 10px;
   font-family: 'Syne', sans-serif;
 }
 .top-stat-num { font-size: 14px; font-weight: 800; }
@@ -623,8 +621,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
 .focus-fab {
   position: fixed;
-  top: calc(env(safe-area-inset-top) + 68px);
-  right: 14px;
+  top: calc(env(safe-area-inset-top) + 14px);
+  right: 62px;
   width: 40px; height: 40px;
   border-radius: 50%;
   border: 1.5px solid var(--border);
@@ -909,13 +907,13 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 #landing {
   display: none;
   min-height: 100vh; min-height: -webkit-fill-available;
-  padding: calc(env(safe-area-inset-top) + 48px) 22px calc(env(safe-area-inset-bottom) + 24px);
+  padding: calc(env(safe-area-inset-top) + 16px) 22px calc(env(safe-area-inset-bottom) + 24px);
   background: var(--bg);
   flex-direction: column;
   align-items: stretch;
 }
 #landing.active { display: flex; }
-.landing-logo-row { display: flex; align-items: center; gap: 0; margin-bottom: 6px; }
+.landing-logo-row { display: flex; align-items: center; gap: 0; margin-bottom: 0; padding-right: 92px; }
 .landing-tagline { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
 
 .work-btn {
@@ -1613,9 +1611,9 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   }
 
   .landing-left {
-    width: 300px;
+    width: 280px;
     flex-shrink: 0;
-    padding: 44px 32px 32px 44px;
+    padding: 36px 28px 28px 36px;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -1631,43 +1629,70 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   .landing-right {
     flex: 1;
     min-width: 0;
-    padding: 44px 48px 40px;
+    padding: 36px 44px 32px;
     overflow-y: auto;
     height: 100vh;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    gap: 0;
+  }
+
+  /* Logo row on desktop: no right padding needed (no FABs overlap) */
+  .landing-logo-row { padding-right: 0 !important; margin-bottom: 4px !important; }
+
+  /* Stats widget on desktop: horizontal in sidebar, full width */
+  .top-stats-widget {
+    margin: 8px 0 14px !important;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
   }
 
   /* Work button full-width in sidebar */
   .work-btn {
-    font-size: 18px;
-    padding: 20px 20px;
-    margin-top: 16px;
+    font-size: 17px;
+    padding: 18px 18px;
+    margin-top: 12px;
   }
 
   /* Actions vertical list on desktop */
   .landing-actions {
     flex-direction: column;
-    gap: 7px;
-    margin-top: 14px !important;
+    gap: 6px;
+    margin-top: 10px !important;
   }
   .landing-action-btn {
     flex-direction: row !important;
     justify-content: flex-start !important;
     gap: 12px !important;
-    padding: 12px 16px !important;
-    border-radius: 14px !important;
+    padding: 11px 14px !important;
+    border-radius: 13px !important;
     font-size: 13px !important;
     text-align: left !important;
   }
   .landing-action-btn .la-icon {
-    font-size: 18px !important;
+    font-size: 17px !important;
     display: inline !important;
     flex-shrink: 0;
   }
   .landing-action-btn br { display: none; }
   .landing-action-btn span:last-child { white-space: nowrap; }
+
+  /* End-of-day button: sit at bottom of sidebar */
+  #btn-end-of-day {
+    margin-top: auto !important;
+    padding-top: 20px !important;
+    text-align: left !important;
+    border-top: 1px solid var(--border) !important;
+  }
+
+  /* Right panel header */
+  .landing-right-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
 
   /* Projects always shown on desktop */
   #home-proj-wrap {
@@ -1740,8 +1765,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   #dumb-guide,
   #reset-cognitif { max-width: 680px; }
 
-  /* ── Focus ring (landing top-bar) ── */
-  .landing-logo-row { margin-bottom: 24px !important; }
 }
 
 /* ── STATS DU JOUR ── */
@@ -1872,13 +1895,16 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <div class="landing-left">
 
   <!-- Barre du haut -->
-  <div class="landing-logo-row" style="justify-content:space-between;align-items:center;margin-bottom:14px">
+  <div class="landing-logo-row" style="justify-content:space-between;align-items:center">
     <span class="logo" style="font-size:24px">✦ focusTDAH</span>
     <div style="display:flex;align-items:center;gap:8px">
       <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 10px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer">🔍</button>
       <div id="landing-user" style="display:none"></div>
     </div>
   </div>
+
+  <!-- Stats du jour -->
+  <div class="top-stats-widget" id="top-stats-widget"></div>
 
   <!-- Bannière rebound Ritaline (si active) -->
   <div id="rebound-banner-slot"></div>
@@ -1911,6 +1937,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
       <span>Plan<br>du jour</span>
     </button>
   </div>
+
+  <button id="btn-end-of-day" style="display:block;width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:16px 0 0;cursor:pointer;text-align:left">🌙 Fin de journée</button>
 
   </div><!-- /.landing-left -->
 
@@ -1947,8 +1975,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div id="qt-list" class="qt-list"></div>
   </div>
 
-  <!-- Fin de journée — discret, en bas -->
-  <button id="btn-end-of-day" style="display:block;width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:18px 0 4px;cursor:pointer;text-align:center">🌙 Fin de journée</button>
 
   </div><!-- /.landing-right -->
 
@@ -2532,7 +2558,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
 <button class="settings-fab" id="settings-fab" title="Paramètres">⚙️</button>
 <button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
-<div class="top-stats-widget" id="top-stats-widget"></div>
 
 <!-- Anneau niveau de focus + badges gamification -->
 <div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus">
