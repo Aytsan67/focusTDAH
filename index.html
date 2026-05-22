@@ -1861,6 +1861,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <button class="btn-ghost" id="btn-anon-continue" style="width:100%;justify-content:center;margin-top:4px;font-size:14px">
       Continuer sans compte →
     </button>
+    <div id="auth-error" style="display:none;margin-top:12px;padding:10px 14px;border-radius:12px;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);font-size:13px;color:#ef5350;line-height:1.5"></div>
     <p class="auth-note">Sans compte, tes données restent sur cet appareil uniquement.</p>
   </div>
 </section>
@@ -2791,22 +2792,41 @@ function initAuth() {
     return;
   }
 
-  const loadingEl = document.getElementById('auth-loading');
-  const googleBtn = document.getElementById('btn-google-login');
+  const loadingEl  = document.getElementById('auth-loading');
+  const googleBtn  = document.getElementById('btn-google-login');
+  const errorEl    = document.getElementById('auth-error');
 
-  // Google sign-in
-  googleBtn.onclick = async () => {
+  function showAuthError(msg) {
+    errorEl.style.display = 'block';
+    errorEl.textContent = msg;
+    loadingEl.style.display = 'none';
+    googleBtn.style.display = 'flex';
+  }
+
+  // Vérifier le résultat d'un redirect Google en cours
+  _auth.getRedirectResult().then(result => {
+    // Si un redirect vient de se terminer, onAuthStateChanged prend le relais
+  }).catch(e => {
+    const msgs = {
+      'auth/popup-blocked':           'Popup bloquée par le navigateur.',
+      'auth/unauthorized-domain':     'Ce domaine n\'est pas autorisé dans Firebase. Ajoute-le dans Firebase Console → Authentication → Authorized domains.',
+      'auth/cancelled-popup-request': null, // ignoré
+      'auth/popup-closed-by-user':    null,
+    };
+    const msg = msgs[e.code];
+    if (msg) showAuthError(msg);
+    else if (msg === undefined) showAuthError('Erreur Google : ' + (e.message || e.code));
+  });
+
+  // Google sign-in — utilise redirect (fiable sur mobile et Vercel)
+  googleBtn.onclick = () => {
     loadingEl.style.display = 'flex';
     googleBtn.style.display = 'none';
-    try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await _auth.signInWithPopup(provider);
-      // onAuthStateChanged prend le relais
-    } catch(e) {
-      loadingEl.style.display = 'none';
-      googleBtn.style.display = 'flex';
-      console.warn('Login error:', e);
-    }
+    errorEl.style.display = 'none';
+    const provider = new firebase.auth.GoogleAuthProvider();
+    _auth.signInWithRedirect(provider).catch(e => {
+      showAuthError('Erreur : ' + (e.message || e.code));
+    });
   };
 
   // Continuer sans compte
@@ -2817,18 +2837,14 @@ function initAuth() {
   _auth.onAuthStateChanged(async user => {
     _fbUser = user;
     if (user) {
-      // Déjà connecté (session en cache) ou vient de se connecter
       if (firstCall) {
-        // Premier appel : charge les données en arrière-plan, affiche l'app directement
         goToApp(user);
         loadFromFirestore(user.uid).then(() => { renderHome(); renderQT(); });
       } else {
-        // Reconnexion après déconnexion
         await loadFromFirestore(user.uid);
         goToApp(user);
       }
     } else {
-      // Pas de session → écran de connexion
       show('auth');
     }
     firstCall = false;
@@ -3470,12 +3486,10 @@ function renderLandingStats() {
   const mins = Math.round(s.focusMin || 0);
   const tasks = s.tasks || 0;
   const sessions = s.sessions || 0;
-  // Only show if something happened today
-  if (mins === 0 && tasks === 0 && sessions === 0) { el.innerHTML = ''; return; }
   el.innerHTML = `
-    ${mins > 0    ? `<div class="top-stat-row"><span class="top-stat-num" style="color:var(--accent)">${mins}</span><span class="top-stat-lbl">min</span></div>` : ''}
-    ${tasks > 0   ? `<div class="top-stat-row"><span class="top-stat-num" style="color:var(--green)">${tasks}</span><span class="top-stat-lbl">tâche${tasks>1?'s':''}</span></div>` : ''}
-    ${sessions > 0? `<div class="top-stat-row"><span class="top-stat-num" style="color:var(--text)">${sessions}</span><span class="top-stat-lbl">sess.</span></div>` : ''}
+    <div class="top-stat-row"><span class="top-stat-num" style="color:var(--accent)">${mins}</span><span class="top-stat-lbl">min</span></div>
+    <div class="top-stat-row"><span class="top-stat-num" style="color:var(--green)">${tasks}</span><span class="top-stat-lbl">tâche${tasks>1?'s':''}</span></div>
+    <div class="top-stat-row"><span class="top-stat-num" style="color:var(--text)">${sessions}</span><span class="top-stat-lbl">sess.</span></div>
   `;
 }
 
