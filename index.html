@@ -6868,16 +6868,43 @@ function unlockAudio() {
 document.addEventListener('touchend', unlockAudio, { passive: true });
 document.addEventListener('click',    unlockAudio, { passive: true });
 
+function _makeToneWavBlob() {
+  const sr = 44100, tones = [[880, 0, 0.4], [1109, 0.38, 0.4], [660, 0.76, 0.7]];
+  const total = Math.ceil(sr * 1.6);
+  const pcm = new Float32Array(total);
+  tones.forEach(([freq, start, dur]) => {
+    const s0 = Math.floor(start * sr), sN = Math.floor(dur * sr);
+    for (let i = 0; i < sN && s0 + i < total; i++) {
+      pcm[s0 + i] += Math.sin(2 * Math.PI * freq * i / sr) * 0.28 * Math.exp(-i / sr * 4);
+    }
+  });
+  const buf = new ArrayBuffer(44 + total * 2), v = new DataView(buf);
+  const ws = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  ws(0,'RIFF'); v.setUint32(4,36+total*2,true); ws(8,'WAVE'); ws(12,'fmt ');
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sr,true); v.setUint32(28,sr*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
+  ws(36,'data'); v.setUint32(40,total*2,true);
+  for (let i = 0; i < total; i++) v.setInt16(44+i*2, Math.max(-1,Math.min(1,pcm[i]))*0x7FFF, true);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+
 function playTimerEndSound() {
+  // Blob → <audio> route correctly through AirPods/BT on iOS
+  try {
+    const url = URL.createObjectURL(_makeToneWavBlob());
+    const a = new Audio(url);
+    a.play().catch(() => {});
+    a.onended = () => URL.revokeObjectURL(url);
+    return;
+  } catch(e) {}
+  // Fallback : oscillateurs (desktop / non-BT)
   try {
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
     [[880, 0, 0.4], [1109, 0.38, 0.4], [660, 0.76, 0.7]].forEach(([freq, start, dur]) => {
-      const osc = ctx.createOscillator();
-      const g   = ctx.createGain();
+      const osc = ctx.createOscillator(), g = ctx.createGain();
       osc.connect(g); g.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = 'sine';
+      osc.frequency.value = freq; osc.type = 'sine';
       g.gain.setValueAtTime(0.28, ctx.currentTime + start);
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
       osc.start(ctx.currentTime + start);
@@ -7106,18 +7133,8 @@ function showFocusCheckIn(source) {
   }
 
   function renderEnd() {
-    const score = calcFocusScore();
-    const color = focusScoreColor(score);
-    bd.innerHTML = `
-      <div class="cat-modal-sheet" style="text-align:center">
-        <div class="cat-modal-handle"></div>
-        <div style="font-size:40px;margin-bottom:8px">📊</div>
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px">Anneau mis à jour</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5">Ta séance a été prise en compte<br>dans ton niveau de focus.</div>
-        <div style="font-size:54px;font-family:'Syne',sans-serif;font-weight:900;color:${color};letter-spacing:-2px">${score}</div>
-        <button class="btn" id="ci-done" style="margin-top:22px">OK</button>
-      </div>`;
-    bd.querySelector('#ci-done').onclick = () => bd.remove();
+    bd.remove();
+    updateFocusRing();
   }
 
   renderQ();
