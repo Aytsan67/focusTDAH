@@ -1345,6 +1345,25 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .brain-dump-area:focus { border-color: var(--accent); }
 .brain-dump-area::placeholder { color: var(--muted); opacity: 1; }
+.btn-dump-sort { display:block; width:100%; margin-top:8px; padding:11px 16px; border:1.5px solid var(--accent); border-radius:14px; background:rgba(124,92,252,.07); color:var(--accent); font:600 14px 'DM Sans',sans-serif; cursor:pointer; transition:all .15s; }
+.btn-dump-sort:hover { background:rgba(124,92,252,.15); }
+
+/* ── DUMP SORTED RESULTS ── */
+.dump-sorted-backdrop { position:fixed; inset:0; background:rgba(10,10,15,.6); display:flex; align-items:flex-end; justify-content:center; z-index:9000; }
+.dump-sorted-sheet { background:var(--card); border-radius:24px 24px 0 0; padding:24px 20px 32px; width:100%; max-width:600px; max-height:85vh; overflow-y:auto; }
+.dump-sort-cat { margin-bottom:18px; }
+.dump-sort-cat-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.dump-sort-item { padding:9px 14px; border-radius:12px; font-size:14px; color:var(--text); margin-bottom:5px; line-height:1.5; }
+
+/* ── ENERGY DOT on steps ── */
+.step-energy-btn { border:none; background:none; cursor:pointer; font-size:14px; padding:2px 3px; border-radius:6px; line-height:1; flex-shrink:0; transition:transform .1s; }
+.step-energy-btn:hover { transform:scale(1.25); }
+
+/* ── CHECKIN EMOTION ── */
+.ci-emotion-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.ci-emotion-btn { flex:1; min-width:80px; display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; border:1.5px solid var(--border); border-radius:14px; background:var(--soft); color:var(--muted); font:600 11px 'DM Sans',sans-serif; cursor:pointer; transition:all .15s; }
+.ci-emotion-btn.selected { border-color:var(--accent); background:rgba(124,92,252,.12); color:var(--accent); }
+.ci-emotion-btn span:first-child { font-size:22px; }
 
 /* ── FOCUS MODAL ── */
 .focus-sheet {
@@ -2445,6 +2464,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     </div>
     <textarea class="brain-dump-area" id="brain-dump-text" placeholder="Je pense à…&#10;Je dois…&#10;J'ai oublié de…&#10;Je suis stressé par…&#10;J'ai peur que…&#10;J'aurais dû…"></textarea>
     <button class="btn" id="btn-brain-dump-done" style="margin-top:16px">✓ C'est noté — retour au travail</button>
+    <button class="btn-dump-sort" id="btn-dump-sort">🧹 Trier automatiquement</button>
     <button class="btn-outline" id="btn-brain-dump-clear">🗑 Effacer tout</button>
   </div>
 </section>
@@ -3318,15 +3338,37 @@ function renderHome() {
   if (projects.length > 0) {
     wrap.style.display = 'block';
     listEl.innerHTML = '';
+    // Energy filter suggestion
+    const score = calcFocusScore();
+    const suggestedEnergy = score < 35 ? 'low' : score < 65 ? 'medium' : 'high';
+    const energyEmoji = { low:'🟢', medium:'🟡', high:'🔴' };
+    const energyLabel = { low:'faible énergie', medium:'énergie normale', high:'haute concentration' };
+    // Find all undone steps with matching energy across all projects
+    const matchedSteps = [];
+    projects.forEach(p => {
+      const allSteps = p.categories
+        ? p.categories.flatMap(c => c.steps || [])
+        : (p.steps || []);
+      allSteps.forEach(st => {
+        if (!stComplete(st) && st.energy === suggestedEnergy) matchedSteps.push({ proj: p.name, step: st.name });
+      });
+    });
+    if (matchedSteps.length) {
+      const hint = document.createElement('div');
+      hint.style.cssText = 'padding:10px 14px;border-radius:14px;background:rgba(124,92,252,.07);border:1px solid rgba(124,92,252,.2);font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5';
+      hint.innerHTML = `${energyEmoji[suggestedEnergy]} <strong style="color:var(--text)">Adapté à ton énergie (${energyLabel[suggestedEnergy]})</strong><br>${matchedSteps.slice(0,2).map(m => `<span style="color:var(--accent)">${m.step}</span> — ${m.proj}`).join('<br>')}`;
+      listEl.appendChild(hint);
+    }
     projects.slice(0, 5).forEach(p => {
       const pct = globalPct(p);
       const step = getCurrentStep(p);
+      const energyDot = step && step.energy ? { low:'🟢', medium:'🟡', high:'🔴' }[step.energy] : '';
       const btn = document.createElement('button');
       btn.className = 'proj-card';
       btn.innerHTML =
         '<div class="proj-info">' +
           '<div class="proj-name">' + p.name + '</div>' +
-          '<div class="proj-meta">' + (step ? step.name : 'Terminé ✓') + '</div>' +
+          '<div class="proj-meta">' + energyDot + (energyDot ? ' ' : '') + (step ? step.name : 'Terminé ✓') + '</div>' +
           '<div class="mini-bar"><div class="mini-fill" style="width:' + pct + '%"></div></div>' +
         '</div>' +
         '<div class="ring" style="background:conic-gradient(var(--accent) ' + (pct * 3.6) + 'deg,var(--soft) 0)">' +
@@ -3585,6 +3627,14 @@ function openWorkModeSheet() {
 // ══════════════════════════════════════════════════
 let _checkinAnswers = {};
 
+const EMOTION_META = [
+  { emoji:'😐', label:'Neutre',      minsAdj:1.0,  tip:'' },
+  { emoji:'😰', label:'Stressante',  minsAdj:0.7,  tip:'Commence 2 min — juste démarrer.' },
+  { emoji:'😱', label:'Intimidante', minsAdj:0.5,  tip:'Micro-action seulement. On verra.' },
+  { emoji:'😴', label:'Ennuyeuse',   minsAdj:0.8,  tip:'Timer court + petite récompense après.' },
+  { emoji:'😊', label:'Agréable',    minsAdj:1.15, tip:'Tu vas adorer ça — lance-toi !' },
+];
+
 function openCheckin() {
   const last = parseInt(localStorage.getItem('ft_checkin_ts') || '0');
   if (Date.now() - last < 3 * 3600 * 1000) { launchAutoSession(); return; }
@@ -3592,20 +3642,40 @@ function openCheckin() {
   const bd = document.createElement('div');
   bd.className = 'cat-modal-backdrop';
 
+  const currentStep = currentProject ? getCurrentStep(currentProject) : null;
+
   function render() {
     const a = _checkinAnswers;
-    const bothDone = a.feeling !== undefined && a.energy !== undefined;
+    const feelEnergyDone = a.feeling !== undefined && a.energy !== undefined;
+    const allDone = feelEnergyDone && (!currentStep || a.emotion !== undefined);
+    let emotionSection = '';
+    if (feelEnergyDone && currentStep) {
+      emotionSection = `
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Cette tâche te semble… ?
+          <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:4px">${currentStep.name}</span>
+        </div>
+        <div class="ci-emotion-row">
+          ${EMOTION_META.map((em, i) =>
+            `<button class="ci-emotion-btn${a.emotion === i ? ' selected' : ''}" data-ci="emotion" data-val="${i}">
+              <span>${em.emoji}</span><span>${em.label}</span>
+            </button>`
+          ).join('')}
+        </div>`;
+    }
     let rec = '';
-    if (bothDone) {
+    if (allDone) {
       const score = calcFocusScore();
-      const adj = (a.feeling + a.energy) / 2; // 0–3 scale
+      const adj = (a.feeling + a.energy) / 2;
       let mins = score < 25 ? 10 : score < 45 ? 15 : score < 65 ? 25 : score < 80 ? 40 : 50;
       mins = Math.round(mins * (0.6 + adj * 0.2));
+      const em = a.emotion !== undefined ? EMOTION_META[a.emotion] : null;
+      if (em) mins = Math.round(mins * em.minsAdj);
       mins = Math.max(5, Math.min(60, mins));
       const color = score < 30 ? '#ef5350' : score < 55 ? '#ffa726' : score < 78 ? '#66bb6a' : '#7c5cfc';
-      const msg = adj < 1 ? 'On commence doucement, sans pression.'
+      let msg = adj < 1 ? 'On commence doucement, sans pression.'
         : adj < 2 ? 'Session modérée — tu verras comment ça va.'
         : 'Tu te sens bien — profites-en.';
+      if (em && em.tip) msg = em.tip;
       rec = `
         <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
           <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
@@ -3637,20 +3707,24 @@ function openCheckin() {
         ).join('')}
       </div>
 
+      ${emotionSection}
       ${rec}
     </div>`;
 
-    bd.querySelectorAll('.checkin-emoji-btn').forEach(btn => {
+    bd.querySelectorAll('.checkin-emoji-btn, .ci-emotion-btn').forEach(btn => {
       btn.onclick = () => {
         _checkinAnswers[btn.dataset.ci] = parseInt(btn.dataset.val);
         render();
-        if (_checkinAnswers.feeling !== undefined && _checkinAnswers.energy !== undefined) {
+        const a2 = _checkinAnswers;
+        const fe2 = a2.feeling !== undefined && a2.energy !== undefined;
+        const all2 = fe2 && (!currentStep || a2.emotion !== undefined);
+        if (all2) {
           setTimeout(() => bd.querySelector('#ci-go') && bd.querySelector('#ci-go').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
         }
       };
     });
 
-    if (bothDone) {
+    if (allDone) {
       bd.querySelector('#ci-go').onclick = () => {
         const mins = parseInt(bd.dataset.mins);
         localStorage.setItem('ft_checkin_ts', Date.now().toString());
@@ -4645,6 +4719,26 @@ function renderStepsList(steps, container, saveFn, seanceMode, _openNames) {
       };
     })(step);
 
+    // Energy level button
+    const energyDots = { low:'🟢', medium:'🟡', high:'🔴' };
+    const energyNext  = { undefined:'low', low:'medium', medium:'high', high:undefined };
+    const energyTitles = { low:'Faible énergie requise', medium:'Énergie moyenne', high:'Haute concentration' };
+    const energyBtn = document.createElement('button');
+    energyBtn.className = 'step-energy-btn';
+    energyBtn.title = step.energy ? energyTitles[step.energy] : 'Définir le niveau d\'énergie';
+    energyBtn.textContent = step.energy ? energyDots[step.energy] : '○';
+    energyBtn.style.cssText = 'opacity:' + (step.energy ? '1' : '0.3');
+    (function(st, btn) {
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        st.energy = energyNext[String(st.energy)];
+        btn.textContent = st.energy ? energyDots[st.energy] : '○';
+        btn.title = st.energy ? energyTitles[st.energy] : 'Définir le niveau d\'énergie';
+        btn.style.opacity = st.energy ? '1' : '0.3';
+        if (saveFn) saveFn();
+      };
+    })(step, energyBtn);
+
     // Right: count + expand arrow
     const right = document.createElement('div');
     right.className = 'plan-step-right';
@@ -4656,7 +4750,7 @@ function renderStepsList(steps, container, saveFn, seanceMode, _openNames) {
     expandArrow.textContent = '▶';
     right.appendChild(countSpan); right.appendChild(expandArrow);
 
-    hdr.appendChild(handle); hdr.appendChild(nameSpan); hdr.appendChild(eb); hdr.appendChild(delStepBtn); hdr.appendChild(right);
+    hdr.appendChild(handle); hdr.appendChild(nameSpan); hdr.appendChild(eb); hdr.appendChild(delStepBtn); hdr.appendChild(energyBtn); hdr.appendChild(right);
 
     /* ── Micros panel ── */
     const microsPanel = document.createElement('div');
@@ -9325,6 +9419,68 @@ function showDumpGuideSummary() {
 
 document.getElementById('btn-dump-guide').onclick = () => showDumpGuide();
 
+// ══════════════════════════════════════════════════
+// MODE BROUILLARD MENTAL — tri automatique du dump
+// ══════════════════════════════════════════════════
+function classifyDumpLine(line) {
+  const l = line.toLowerCase();
+  if (/urgent|deadline|asap|aujourd'hui|maintenant|vite|immédiat|rendre|remettre|demain matin/i.test(l)) return 'urgent';
+  if (/peur|stressé|anxieux|angoissé|culpabilité|suis nul|honte|triste|inquiet|inquiète|overwhelm/i.test(l)) return 'émotionnel';
+  if (/idée|et si|imagine|on pourrait|serait cool|j'aimerais|projet|créer|lancer|inventer/i.test(l)) return 'impulsif';
+  if (/un jour|plus tard|à terme|futur|quand j'aurai|bientôt|long terme|objectif|rêve|un jour peut-être/i.test(l)) return 'long terme';
+  if (/appeler|envoyer|email|acheter|répondre|payer|rappeler|téléphoner|chercher|trouver|commander/i.test(l)) return 'simple';
+  return 'à faire';
+}
+
+const DUMP_CAT_META = {
+  urgent:     { label: '🔴 Urgent',       bg: 'rgba(239,83,80,.08)',   border: 'rgba(239,83,80,.3)',   color: '#ef5350' },
+  simple:     { label: '✅ Simple à faire', bg: 'rgba(102,187,106,.08)', border: 'rgba(102,187,106,.3)', color: '#66bb6a' },
+  'à faire':  { label: '📋 À faire',       bg: 'rgba(124,92,252,.07)', border: 'rgba(124,92,252,.25)', color: 'var(--accent)' },
+  émotionnel: { label: '💛 Émotionnel',    bg: 'rgba(255,193,7,.08)',  border: 'rgba(255,193,7,.3)',   color: '#ffc107' },
+  impulsif:   { label: '⚡ Idée impulsive', bg: 'rgba(255,152,0,.08)',  border: 'rgba(255,152,0,.3)',   color: '#ff9800' },
+  'long terme':{ label: '🌙 Long terme',   bg: 'rgba(100,100,120,.08)', border: 'rgba(100,100,120,.3)', color: 'var(--muted)' },
+};
+
+function showDumpSorted() {
+  const text = document.getElementById('brain-dump-text').value;
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('—'));
+  if (!lines.length) { alert('Écris d\'abord quelques lignes à trier !'); return; }
+
+  const buckets = {};
+  Object.keys(DUMP_CAT_META).forEach(k => { buckets[k] = []; });
+  lines.forEach(line => { buckets[classifyDumpLine(line)].push(line); });
+
+  const bd = document.createElement('div');
+  bd.className = 'dump-sorted-backdrop';
+
+  const order = ['urgent', 'simple', 'à faire', 'émotionnel', 'impulsif', 'long terme'];
+  const catsHtml = order.filter(k => buckets[k].length).map(k => {
+    const m = DUMP_CAT_META[k];
+    const items = buckets[k].map(l =>
+      `<div class="dump-sort-item" style="background:${m.bg};border:1px solid ${m.border}">${l.replace(/</g,'&lt;')}</div>`
+    ).join('');
+    return `<div class="dump-sort-cat">
+      <div class="dump-sort-cat-title" style="color:${m.color}">${m.label}</div>
+      ${items}
+    </div>`;
+  }).join('');
+
+  bd.innerHTML = `<div class="dump-sorted-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800">Ton cerveau, trié 🧠</div>
+      <button id="dump-sort-close" style="border:none;background:none;font-size:22px;cursor:pointer;color:var(--muted)">×</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:18px">${lines.length} élément${lines.length > 1 ? 's' : ''} classé${lines.length > 1 ? 's' : ''} automatiquement</div>
+    ${catsHtml}
+    <button class="btn" id="dump-sort-ok" style="margin-top:8px">✓ OK — retour au dump</button>
+  </div>`;
+
+  document.body.appendChild(bd);
+  document.getElementById('dump-sort-close').onclick = () => bd.remove();
+  document.getElementById('dump-sort-ok').onclick = () => bd.remove();
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+}
+
 document.getElementById('back-brain-dump').onclick      = () => { hideDumpGuide(); show('aide-menu'); };
 document.getElementById('btn-brain-dump-done').onclick  = () => {
   localStorage.setItem('focustdah_brain_dump', document.getElementById('brain-dump-text').value);
@@ -9338,6 +9494,7 @@ document.getElementById('btn-brain-dump-clear').onclick = () => {
     [0,1,2].forEach(i => localStorage.removeItem('ft_dump_' + i));
   }
 };
+document.getElementById('btn-dump-sort').onclick = () => showDumpSorted();
 
 // Panic mode inputs
 document.getElementById('panic-deadline').oninput = document.getElementById('panic-task').oninput = () => {
