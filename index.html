@@ -2830,14 +2830,20 @@ function initAuth() {
     googleBtn.style.display = 'flex';
   }
 
-  // Vérifier le résultat d'un redirect Google en cours
+  // ── Résultat d'un redirect en cours ──────────────────────────────
+  // (fallback quand popup est bloqué sur certains navigateurs)
   _auth.getRedirectResult().then(result => {
-    // Si un redirect vient de se terminer, onAuthStateChanged prend le relais
+    localStorage.removeItem('ft_redirect_pending');
+    // Si pas de user via redirect ET onAuthStateChanged n'a pas encore rendu
+    // le user → montrer l'écran auth maintenant (ITP a bloqué le résultat)
+    if ((!result || !result.user) && !_auth.currentUser) {
+      show('auth');
+    }
   }).catch(e => {
+    localStorage.removeItem('ft_redirect_pending');
     const msgs = {
-      'auth/popup-blocked':           'Popup bloquée par le navigateur.',
-      'auth/unauthorized-domain':     'Ce domaine n\'est pas autorisé dans Firebase. Ajoute-le dans Firebase Console → Authentication → Authorized domains.',
-      'auth/cancelled-popup-request': null, // ignoré
+      'auth/unauthorized-domain': 'Ce domaine n\'est pas autorisé dans Firebase. Ajoute-le dans Firebase Console → Authentication → Authorized domains.',
+      'auth/cancelled-popup-request': null,
       'auth/popup-closed-by-user':    null,
     };
     const msg = msgs[e.code];
@@ -2845,25 +2851,45 @@ function initAuth() {
     else if (msg === undefined) showAuthError('Erreur Google : ' + (e.message || e.code));
   });
 
-  // Google sign-in — utilise redirect (fiable sur mobile et Vercel)
+  // ── Connexion Google ──────────────────────────────────────────────
+  // Essaie popup d'abord (pas d'ITP, résultat via postMessage).
+  // Si bloqué → fallback redirect avec flag de protection.
   googleBtn.onclick = () => {
     loadingEl.style.display = 'flex';
     googleBtn.style.display = 'none';
     errorEl.style.display = 'none';
     const provider = new firebase.auth.GoogleAuthProvider();
-    _auth.signInWithRedirect(provider).catch(e => {
-      showAuthError('Erreur : ' + (e.message || e.code));
+
+    _auth.signInWithPopup(provider).catch(e => {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request') {
+        // Popup bloqué → redirect avec flag pour ne pas afficher l'écran auth prématurément
+        localStorage.setItem('ft_redirect_pending', '1');
+        _auth.signInWithRedirect(provider).catch(e2 => {
+          localStorage.removeItem('ft_redirect_pending');
+          showAuthError('Erreur : ' + (e2.message || e2.code));
+        });
+      } else if (e.code === 'auth/popup-closed-by-user') {
+        // Utilisateur a fermé — montrer le bouton à nouveau
+        loadingEl.style.display = 'none';
+        googleBtn.style.display = 'flex';
+      } else if (e.code === 'auth/unauthorized-domain') {
+        showAuthError('Ce domaine n\'est pas autorisé dans Firebase. Ajoute-le dans Firebase Console → Authentication → Authorized domains.');
+      } else {
+        showAuthError('Erreur Google : ' + (e.message || e.code));
+      }
     });
   };
 
   // Continuer sans compte
   document.getElementById('btn-anon-continue').onclick = () => goToApp(null);
 
-  // Écoute l'état auth — Firebase rappelle IMMÉDIATEMENT avec la session en cache
+  // ── État auth ────────────────────────────────────────────────────
+  // Ne pas afficher l'écran auth si un redirect est en cours (flag ft_redirect_pending).
   let firstCall = true;
   _auth.onAuthStateChanged(async user => {
     _fbUser = user;
     if (user) {
+      localStorage.removeItem('ft_redirect_pending');
       if (firstCall) {
         goToApp(user);
         loadFromFirestore(user.uid).then(() => { renderHome(); renderQT(); });
@@ -2872,7 +2898,10 @@ function initAuth() {
         goToApp(user);
       }
     } else {
-      show('auth');
+      // Ne pas interrompre un redirect en cours
+      if (!localStorage.getItem('ft_redirect_pending')) {
+        show('auth');
+      }
     }
     firstCall = false;
   });
