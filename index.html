@@ -599,46 +599,89 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .top-stat-num { font-size: 14px; font-weight: 800; }
 .top-stat-lbl { font-size: 10px; color: var(--muted); font-weight: 600; font-family: 'DM Sans', sans-serif; }
 
-.settings-fab {
+/* ── TOP-RIGHT STACK (compte + settings + focus + stats) ── */
+.top-right-stack {
   position: fixed;
-  top: calc(env(safe-area-inset-top) + 14px);
+  top: calc(env(safe-area-inset-top) + 10px);
   right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 450;
+}
+.settings-fab {
   width: 40px; height: 40px;
   border-radius: 50%;
   border: 1.5px solid var(--border);
   background: var(--card);
   color: var(--muted);
   font-size: 19px;
-  z-index: 450;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   box-shadow: 0 2px 14px rgba(0,0,0,.4);
   transition: color .2s, border-color .2s, transform .35s;
-  padding: 0;
+  padding: 0; flex-shrink: 0;
 }
 .settings-fab:active { transform: rotate(60deg) scale(.9); border-color: var(--accent); color: var(--accent); }
 
 .focus-fab {
-  position: fixed;
-  top: calc(env(safe-area-inset-top) + 14px);
-  right: 62px;
   width: 40px; height: 40px;
   border-radius: 50%;
   border: 1.5px solid var(--border);
   background: var(--card);
   font-size: 18px;
-  z-index: 450;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   box-shadow: 0 2px 14px rgba(0,0,0,.4);
   transition: border-color .2s, background .2s, transform .15s;
-  padding: 0;
+  padding: 0; flex-shrink: 0;
 }
 .focus-fab:active { transform: scale(.9); }
 .focus-fab.focus-on {
   border-color: var(--accent);
   background: rgba(124,92,252,.15);
 }
+
+.stats-fab {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 14px rgba(0,0,0,.4);
+  transition: border-color .2s, background .2s, transform .15s;
+  padding: 0; flex-shrink: 0;
+}
+.stats-fab:active { transform: scale(.9); }
+.stats-fab.active { border-color: var(--accent); background: rgba(124,92,252,.15); }
+
+/* Stats panel */
+.stats-panel {
+  position: fixed;
+  right: 14px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 16px 18px;
+  z-index: 449;
+  min-width: 190px;
+  box-shadow: 0 6px 28px rgba(0,0,0,.5);
+  animation: up .18s ease;
+}
+.stats-panel-title {
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+}
+.stats-panel-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.stats-panel-row:last-child { margin-bottom: 0; }
+.stats-panel-lbl { font-size: 13px; color: var(--muted); }
+.stats-panel-val { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; }
 
 /* ── Focus level ring ── */
 .focus-level-ring {
@@ -912,7 +955,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   align-items: stretch;
 }
 #landing.active { display: flex; }
-.landing-logo-row { display: flex; align-items: center; gap: 0; margin-bottom: 0; padding-right: 92px; }
+.landing-logo-row { display: flex; align-items: center; gap: 0; margin-bottom: 0; }
 .landing-tagline { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
 
 .work-btn {
@@ -1637,8 +1680,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     gap: 0;
   }
 
-  /* Logo row on desktop: no right padding needed (no FABs overlap) */
-  .landing-logo-row { padding-right: 0 !important; margin-bottom: 4px !important; }
+  /* Logo row on desktop: no extra left padding (ring is far from sidebar content) */
+  .landing-logo-row { padding-left: 0 !important; margin-bottom: 4px !important; }
 
   /* Stats widget on desktop: horizontal in sidebar, full width */
   .top-stats-widget {
@@ -1893,13 +1936,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
   <div class="landing-left">
 
-  <!-- Barre du haut -->
-  <div class="landing-logo-row" style="justify-content:space-between;align-items:center">
+  <!-- Barre du haut — décalée à droite pour ne pas couvrir l'anneau de focus -->
+  <div class="landing-logo-row" style="align-items:center;padding-left:54px">
     <span class="logo" style="font-size:24px">✦ focusTDAH</span>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 10px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer">🔍</button>
-      <div id="landing-user" style="display:none"></div>
-    </div>
+    <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 10px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer;margin-left:auto">🔍</button>
   </div>
 
   <!-- Stats du jour -->
@@ -1921,7 +1961,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <div class="landing-actions">
     <button class="landing-action-btn" id="btn-timers">
       <span class="la-icon">🚀</span>
-      <span>Dé<br>marrer</span>
+      <span>Démarrer</span>
     </button>
     <button class="landing-action-btn landing-action-aide" id="btn-aide-menu">
       <span class="la-icon">🧠</span>
@@ -2558,8 +2598,14 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="btn" id="f-home">← Accueil</button>
 </section>
 
-<button class="settings-fab" id="settings-fab" title="Paramètres">⚙️</button>
-<button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
+<!-- Colonne fixe top-droite : compte → paramètres → focus → stats -->
+<div class="top-right-stack" id="top-right-stack">
+  <div id="landing-user" style="display:none"></div>
+  <button class="settings-fab" id="settings-fab" title="Paramètres">⚙️</button>
+  <button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
+  <button class="stats-fab" id="stats-fab" title="Stats du jour">📊</button>
+</div>
+<div class="stats-panel" id="stats-panel" style="display:none"></div>
 
 <!-- Anneau niveau de focus + badges gamification -->
 <div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus">
@@ -8224,6 +8270,70 @@ function renderShortcutStep() {
     } else {
       showDopamineToast('📵 Mode Focus disponible sur iPhone uniquement');
     }
+  };
+})();
+
+// ── Stats FAB — ouvre le panneau stats ──
+(function() {
+  const btn = document.getElementById('stats-fab');
+  const panel = document.getElementById('stats-panel');
+  if (!btn || !panel) return;
+
+  function renderStatsPanel() {
+    const s = getTodayStats();
+    const mins    = Math.round(s.focusMin || 0);
+    const tasks   = s.tasks || 0;
+    const sessions = s.sessions || 0;
+    const score   = Math.round(calcFocusScore());
+    const mode    = getDayMode ? getDayMode() : null;
+    const modeEmoji = mode === 'calme' ? '🧘' : mode === 'boost' ? '⚡' : mode === 'normal' ? '✨' : null;
+    const modeLabel = mode === 'calme' ? 'Calme' : mode === 'boost' ? 'Boost' : mode === 'normal' ? 'Normal' : null;
+    const scoreColor = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--accent)' : '#fc5c7d';
+
+    panel.innerHTML = `
+      <div class="stats-panel-title">Aujourd'hui</div>
+      <div class="stats-panel-row">
+        <span class="stats-panel-lbl">⏱ Focus</span>
+        <span class="stats-panel-val" style="color:var(--accent)">${mins} min</span>
+      </div>
+      <div class="stats-panel-row">
+        <span class="stats-panel-lbl">✓ Tâches</span>
+        <span class="stats-panel-val" style="color:var(--green)">${tasks}</span>
+      </div>
+      <div class="stats-panel-row">
+        <span class="stats-panel-lbl">🔄 Sessions</span>
+        <span class="stats-panel-val" style="color:var(--text)">${sessions}</span>
+      </div>
+      <div class="stats-panel-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)">
+        <span class="stats-panel-lbl">🎯 Score focus</span>
+        <span class="stats-panel-val" style="color:${scoreColor}">${score}/100</span>
+      </div>
+      ${modeEmoji ? `<div class="stats-panel-row">
+        <span class="stats-panel-lbl">${modeEmoji} Mode</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text)">${modeLabel}</span>
+      </div>` : ''}
+    `;
+  }
+
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    if (panel.style.display !== 'none') {
+      panel.style.display = 'none';
+      btn.classList.remove('active');
+      return;
+    }
+    renderStatsPanel();
+    const stackRect = document.getElementById('top-right-stack').getBoundingClientRect();
+    panel.style.top = (stackRect.bottom + 10) + 'px';
+    panel.style.display = 'block';
+    btn.classList.add('active');
+    setTimeout(() => {
+      document.addEventListener('click', function close() {
+        panel.style.display = 'none';
+        btn.classList.remove('active');
+        document.removeEventListener('click', close);
+      });
+    }, 50);
   };
 })();
 
