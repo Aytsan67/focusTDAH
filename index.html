@@ -2511,7 +2511,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <button class="settings-fab" id="settings-fab" title="Paramètres">⚙️</button>
 <button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
 
-<!-- Anneau niveau de focus -->
+<!-- Anneau niveau de focus + badges gamification -->
 <div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus">
   <svg viewBox="0 0 36 36">
     <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="3.5"/>
@@ -2521,6 +2521,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   </svg>
   <span class="focus-level-ring__num" id="flr-num" style="color:#ef5350">--</span>
 </div>
+<div id="focus-ring-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;max-width:340px"></div>
 </main>
 <script>
 // ─── FIREBASE CONFIG ───────────────────────────────────────────────
@@ -3485,7 +3486,21 @@ function checkAndAwardBadges() {
         setTimeout(() => showDopamineToast('🏅 Badge débloqué : ' + def.label, 3500), 500);
       }
     });
-    if (changed) localStorage.setItem('ft_badges', JSON.stringify(earned));
+    if (changed) { localStorage.setItem('ft_badges', JSON.stringify(earned)); renderFocusRingBadges(); }
+  } catch(e) {}
+}
+
+function renderFocusRingBadges() {
+  const el = document.getElementById('focus-ring-badges');
+  if (!el) return;
+  try {
+    const earned = JSON.parse(localStorage.getItem('ft_badges') || '[]');
+    if (!earned.length) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    el.innerHTML = earned.map(id => {
+      const def = BADGES_DEF.find(d => d.id === id);
+      return def ? `<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(124,92,252,.1);border:1px solid rgba(124,92,252,.25);color:var(--accent);font-weight:600;white-space:nowrap">${def.label}</span>` : '';
+    }).join('');
   } catch(e) {}
 }
 
@@ -7037,6 +7052,105 @@ const SUPPL_KNOWN_EFFECTS = {
 };
 const SUPPL_DEFAULT_EFFECT  = { focusBrut: 2, energie: 1 };
 
+// ── Base de données des composés (effets sur focus/énergie/anxiété) ──
+// focus/energie/anxiete : valeur relative −10..+10
+const COMPOUND_DB = {
+  'Café':       { emoji:'☕', cat:'boisson', focus:+2, energie:+3, anxiete:+1, duree:'4-6h',     note:'Bloque l\'adénosine → vigilance. Crash à 4-6h.' },
+  'Matcha':     { emoji:'🍵', cat:'boisson', focus:+3, energie:+2, anxiete:-1, duree:'5-7h',     note:'Caféine + L-théanine naturelle → focus calme et soutenu.' },
+  'Red Bull':   { emoji:'🐂', cat:'boisson', focus:+2, energie:+5, anxiete:+3, duree:'2-3h',     note:'Pic rapide, crash sévère. ⚠️ Contre-indiqué avec Ritalin.' },
+  'Holy Energy':{ emoji:'⚡', cat:'boisson', focus:+2, energie:+4, anxiete:+2, duree:'2-3h',     note:'Similaire Red Bull. ⚠️ Trop stimulant avec Ritalin.' },
+  'Eau froide': { emoji:'💧', cat:'boisson', focus:+1, energie:+1, anxiete: 0, duree:'30 min',   note:'Déshydratation −10% cognition — l\'eau restaure.' },
+  'Oméga-3':    { emoji:'🐟', cat:'suppl',  focus:+2, energie:+1, anxiete:-1, duree:'cumulatif', note:'Soutient la membrane neuronale et la synthèse de dopamine. Effet à long terme.' },
+  'Oméga 3':    { emoji:'🐟', cat:'suppl',  focus:+2, energie:+1, anxiete:-1, duree:'cumulatif', note:'Soutient la membrane neuronale et la synthèse de dopamine. Effet à long terme.' },
+  'Magnésium':  { emoji:'🪨', cat:'suppl',  focus:+1, energie:+1, anxiete:-2, duree:'4-8h',      note:'Réduit hyperactivité et rebound Ritalin. Déficience fréquente en TDAH.' },
+  'Zinc':       { emoji:'⚗️', cat:'suppl',  focus:+2, energie:+1, anxiete:-1, duree:'cumulatif', note:'Cofacteur dopamine. Potentialise légèrement le méthylphénidate.' },
+  'L-Théanine': { emoji:'🍃', cat:'suppl',  focus:+2, energie: 0, anxiete:-3, duree:'3-4h',      note:'Acide aminé du thé. Synergique avec caféine. Réduit l\'anxiété liée au Ritalin.' },
+  'Rhodiola':   { emoji:'🌿', cat:'suppl',  focus:+2, energie:+3, anxiete:-2, duree:'4-6h',      note:'Adaptogène. Réduit fatigue mentale. Léger effet stimulant — surveiller avec Ritalin.' },
+  'Choline':    { emoji:'🥚', cat:'suppl',  focus:+3, energie:+1, anxiete: 0, duree:'cumulatif', note:'Précurseur acétylcholine → mémoire de travail. Souvent faible chez TDAH.' },
+  'Vitamine D': { emoji:'☀️', cat:'suppl',  focus:+1, energie:+1, anxiete:-1, duree:'cumulatif', note:'Déficience très fréquente en TDAH. Modulation dopaminergique.' },
+  'Vitamine B': { emoji:'🅱️', cat:'suppl',  focus:+1, energie:+1, anxiete:-1, duree:'cumulatif', note:'B6/B12/folate : cofacteurs synthèse dopamine et sérotonine.' },
+  'Ritalin IR': { emoji:'💊', cat:'med',    focus:+8, energie:+5, anxiete:+2, duree:'4-5h',      note:'Méthylphénidate IR. Bloque recapture dopamine/norépinéphrine. Pic à 1-2h.' },
+  'Ritalin LP': { emoji:'💊', cat:'med',    focus:+7, energie:+4, anxiete:+1, duree:'8-12h',     note:'Méthylphénidate LP (Concerta). Libération biphasique, profil plus stable.' },
+};
+
+// ── Autres médicaments (influencent la concentration) ──
+const OTHER_MEDS_DEF = [
+  { name:'Antihistaminique sédatif',   emoji:'💊', focusBrut:-5, energie:-4, surcharge:+2, note:'1ère génération (Phénergan, etc.). Forte sédation, ⚠️ antagonise partiellement le Ritalin.' },
+  { name:'Antihistaminique (2e gén.)', emoji:'💊', focusBrut:-1, energie:-1, surcharge: 0, note:'Loratadine, cétirizine. Peu d\'impact cognitif comparé à la 1ère génération.' },
+  { name:'Ibuprofène',                 emoji:'💊', focusBrut: 0, energie: 0, surcharge: 0, note:'AINS. Neutre pour la concentration. Peut réduire légèrement l\'anxiété si douleur.' },
+  { name:'Paracétamol',                emoji:'💊', focusBrut: 0, energie: 0, surcharge: 0, note:'Antalgique. Neutre. Possible légère émousse émotionnelle à haute dose.' },
+  { name:'Bêta-bloquant',             emoji:'💊', focusBrut:+1, energie:-1, surcharge:-3, note:'Propranolol. Réduit anxiété de performance. Utile avant présentations. Compatible Ritalin.' },
+  { name:'Benzodiazépine',            emoji:'💊', focusBrut:-6, energie:-5, surcharge:-4, note:'Xanax, Valium. Fort impact cognitif négatif. Altère mémoire de travail. Contre-indiqué avec Ritalin.' },
+  { name:'ISRS / IRSN',              emoji:'💊', focusBrut:+1, energie: 0, surcharge:-2, note:'Antidépresseurs (Prozac, Zoloft, Effexor). Compatibles avec Ritalin. Premières semaines : agitation possible.' },
+  { name:'Mélatonine (jour)',         emoji:'🌙', focusBrut:-4, energie:-4, surcharge: 0, note:'Hormone du sommeil. Si pris le jour : forte somnolence. Réservé au coucher.' },
+  { name:'Corticoïde',               emoji:'💊', focusBrut:+2, energie:+3, surcharge:+4, note:'Prednisone, cortisone. ⚠️ Peut causer agitation/hyperactivité, amplifié par Ritalin.' },
+];
+
+// ── Interactions entre paires de composés ──
+const INTERACTION_PAIRS = [
+  { a:'Ritalin IR',  b:'Café',          level:'caution', msg:'Peut amplifier anxiété et palpitations — 1 café max.' },
+  { a:'Ritalin LP',  b:'Café',          level:'caution', msg:'Surveille l\'anxiété. Limite à 1 café.' },
+  { a:'Ritalin IR',  b:'Red Bull',      level:'danger',  msg:'Trop de stimulants — risque cardiovasculaire réel.' },
+  { a:'Ritalin LP',  b:'Red Bull',      level:'danger',  msg:'Trop de stimulants — risque cardiovasculaire réel.' },
+  { a:'Ritalin IR',  b:'Holy Energy',   level:'danger',  msg:'Même risque que Red Bull — trop de stimulants.' },
+  { a:'Ritalin LP',  b:'Holy Energy',   level:'danger',  msg:'Même risque que Red Bull — trop de stimulants.' },
+  { a:'Ritalin IR',  b:'Matcha',        level:'good',    msg:'L-théanine du matcha adoucit les effets — bonne combinaison.' },
+  { a:'Ritalin LP',  b:'Matcha',        level:'good',    msg:'Compatible — L-théanine réduit l\'anxiété de fin de dose.' },
+  { a:'Ritalin IR',  b:'Magnésium',     level:'good',    msg:'Réduit le crash et l\'anxiété en fin de dose — recommandé.' },
+  { a:'Ritalin LP',  b:'Magnésium',     level:'good',    msg:'Réduit l\'anxiété de fin de dose — recommandé.' },
+  { a:'Ritalin IR',  b:'L-Théanine',    level:'good',    msg:'Réduit l\'anxiété sans diminuer l\'effet du Ritalin.' },
+  { a:'Ritalin LP',  b:'L-Théanine',    level:'good',    msg:'Réduit l\'anxiété sans diminuer l\'effet du Ritalin.' },
+  { a:'Ritalin IR',  b:'Zinc',          level:'good',    msg:'Zinc potentialise légèrement le méthylphénidate.' },
+  { a:'Ritalin LP',  b:'Zinc',          level:'good',    msg:'Zinc potentialise légèrement le méthylphénidate.' },
+  { a:'Ritalin IR',  b:'Rhodiola',      level:'caution', msg:'Deux stimulants — surveille la tension et l\'anxiété.' },
+  { a:'Ritalin LP',  b:'Rhodiola',      level:'caution', msg:'Deux stimulants — surveille la tension et l\'anxiété.' },
+  { a:'Ritalin IR',  b:'Benzodiazépine',level:'caution', msg:'Se contre-balancent : l\'un stimule, l\'autre sédationne — consulte ton médecin.' },
+  { a:'Ritalin LP',  b:'Benzodiazépine',level:'caution', msg:'Se contre-balancent — consulte ton médecin.' },
+  { a:'Ritalin IR',  b:'Antihistaminique sédatif', level:'caution', msg:'L\'antihistaminique peut partiellement bloquer l\'effet du Ritalin.' },
+  { a:'Ritalin LP',  b:'Antihistaminique sédatif', level:'caution', msg:'L\'antihistaminique peut partiellement bloquer l\'effet du Ritalin.' },
+  { a:'Ritalin IR',  b:'Corticoïde',    level:'caution', msg:'Peut causer forte agitation et hyperactivité — surveille.' },
+  { a:'Ritalin LP',  b:'Corticoïde',    level:'caution', msg:'Peut causer forte agitation et hyperactivité — surveille.' },
+  { a:'Ritalin IR',  b:'ISRS / IRSN',  level:'neutral', msg:'Généralement compatible. Surveille lors des premières semaines.' },
+  { a:'Ritalin LP',  b:'ISRS / IRSN',  level:'neutral', msg:'Généralement compatible. Surveille lors des premières semaines.' },
+  { a:'Ritalin IR',  b:'Mélatonine (jour)', level:'caution', msg:'Mélatonine de jour = forte somnolence qui annule le Ritalin.' },
+  { a:'Ritalin LP',  b:'Mélatonine (jour)', level:'caution', msg:'Mélatonine de jour = forte somnolence qui annule le Ritalin.' },
+  { a:'Café',        b:'Matcha',        level:'caution', msg:'Double dose de caféine — surveille anxiété et palpitations.' },
+  { a:'Café',        b:'Red Bull',      level:'danger',  msg:'Triple caféine — risque cardiovasculaire réel.' },
+  { a:'Café',        b:'L-Théanine',    level:'good',    msg:'Combinaison classique (2:1 L-théanine:caféine) — focus calme et soutenu.' },
+  { a:'Café',        b:'Benzodiazépine',level:'neutral', msg:'Se neutralisent partiellement.' },
+  { a:'Matcha',      b:'Red Bull',      level:'caution', msg:'Double source de caféine + taurine — surveille.' },
+  { a:'Red Bull',    b:'Holy Energy',   level:'danger',  msg:'Deux energy drinks = surdose de caféine + taurine — évite.' },
+  { a:'Magnésium',   b:'Benzodiazépine',level:'neutral', msg:'Magnésium peut légèrement renforcer l\'effet sédatif.' },
+  { a:'Café',        b:'Mélatonine (jour)', level:'neutral', msg:'Se contre-balancent : stimulant vs sédatif.' },
+];
+
+function getInteractions(compoundNames) {
+  const results = [];
+  INTERACTION_PAIRS.forEach(pair => {
+    const hasA = compoundNames.some(n => n === pair.a || n === pair.b);
+    const hasB = compoundNames.some(n => n === (hasA && n === pair.a ? pair.b : pair.a));
+    if (compoundNames.includes(pair.a) && compoundNames.includes(pair.b)) {
+      results.push(pair);
+    }
+  });
+  return results;
+}
+
+// ── Autres médicaments (localStorage, reset quotidien) ──
+function getOtherMeds() {
+  try {
+    const d = JSON.parse(localStorage.getItem('ft_other_meds') || '{"date":"","list":[]}');
+    if (d.date !== new Date().toDateString()) return { date: new Date().toDateString(), list: [] };
+    return d;
+  } catch(e) { return { date: new Date().toDateString(), list: [] }; }
+}
+function toggleOtherMed(name) {
+  const d = getOtherMeds();
+  d.list = d.list.includes(name) ? d.list.filter(n => n !== name) : [...d.list, name];
+  localStorage.setItem('ft_other_meds', JSON.stringify(d));
+}
+function getOtherMedNames() { return getOtherMeds().list; }
+
 // ── Effets des boissons (phases temps) ──
 const DRINK_PHASE_EFFECTS = {
   'Café': [
@@ -7167,6 +7281,16 @@ function calcSubScores() {
     else if (minAwake < 120) { s.energie -= 2; s.friction += 2; }
   }
 
+  // Autres médicaments
+  getOtherMedNames().forEach(name => {
+    const def = OTHER_MEDS_DEF.find(m => m.name === name);
+    if (def) {
+      if (def.focusBrut) s.focusBrut += def.focusBrut;
+      if (def.energie)   s.energie   += def.energie;
+      if (def.surcharge) s.surcharge += def.surcharge;
+    }
+  });
+
   // Rythme circadien
   const nowH = new Date().getHours() + new Date().getMinutes() / 60;
   if      (nowH < 6)  { s.energie -= 12; s.focusBrut -= 10; s.friction += 6; }
@@ -7240,6 +7364,7 @@ function updateFocusRing() {
   numEl.style.color = color;
   barEl.style.strokeDashoffset = 100 - score;
   barEl.style.stroke = color;
+  renderFocusRingBadges();
 }
 
 function refreshFocusPanelScore() {
@@ -7265,6 +7390,8 @@ function refreshFocusPanelScore() {
   });
   updateFocusRing();
   renderFocusPanelDrinks(document.getElementById('fp-drinks'));
+  renderFocusPanelOtherMeds(document.getElementById('fp-other-meds'));
+  renderFocusPanelEffects(document.getElementById('fp-effects'));
 }
 
 function renderFocusPanelRitalin(container) {
@@ -7348,27 +7475,105 @@ function renderFocusPanelDrinks(container) {
   container.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px">` +
     DRINK_LIST.map(name => {
       const count = drinks.filter(d => d.name === name).length;
-      return `<button class="fp-drink-btn" data-name="${name}"
-        style="display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:12px;border:1.5px solid ${count ? 'var(--accent)' : 'var(--border)'};background:${count ? 'rgba(124,92,252,.09)' : 'var(--soft)'};cursor:pointer;font:600 13px 'DM Sans',sans-serif;color:${count ? 'var(--accent)' : 'var(--muted)'};transition:all .15s;position:relative">
-        <span style="font-size:18px;line-height:1">${DRINK_EMOJI[name]}</span>
-        <span>${name}</span>
-        ${count ? `<span style="min-width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:2px">${count}</span>` : ''}
-      </button>`;
+      const active = count > 0;
+      return `<div style="display:flex;align-items:center;gap:4px">
+        <button class="fp-drink-btn" data-name="${name}"
+          style="display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:12px;border:1.5px solid ${active ? 'var(--accent)' : 'var(--border)'};background:${active ? 'rgba(124,92,252,.09)' : 'var(--soft)'};cursor:pointer;font:600 13px \'DM Sans\',sans-serif;color:${active ? 'var(--accent)' : 'var(--muted)'};transition:all .15s">
+          <span style="font-size:17px;line-height:1">${DRINK_EMOJI[name]}</span>
+          <span>${name}</span>
+          ${active ? `<span style="min-width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${count}</span>` : ''}
+        </button>
+        ${active ? `<button class="fp-drink-rm" data-name="${name}"
+          style="width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:var(--soft);color:var(--muted);font:700 16px \'DM Sans\',sans-serif;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1">−</button>` : ''}
+      </div>`;
     }).join('') + `</div>`;
 
   container.querySelectorAll('.fp-drink-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      addDrink(btn.dataset.name);
-      renderFocusPanelDrinks(container);
-      refreshFocusPanelScore();
-    });
-    btn.addEventListener('contextmenu', e => {
-      e.preventDefault();
-      removeDrink(btn.dataset.name);
-      renderFocusPanelDrinks(container);
-      refreshFocusPanelScore();
-    });
+    btn.onclick = () => { addDrink(btn.dataset.name); renderFocusPanelDrinks(container); refreshFocusPanelScore(); };
   });
+  container.querySelectorAll('.fp-drink-rm').forEach(btn => {
+    btn.onclick = () => { removeDrink(btn.dataset.name); renderFocusPanelDrinks(container); refreshFocusPanelScore(); };
+  });
+}
+
+function renderFocusPanelOtherMeds(container) {
+  if (!container) return;
+  const active = getOtherMedNames();
+  container.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:7px">` +
+    OTHER_MEDS_DEF.map(med => {
+      const on = active.includes(med.name);
+      return `<button class="fp-other-med" data-name="${med.name}"
+        style="padding:8px 13px;border-radius:12px;border:1.5px solid ${on ? 'var(--accent)' : 'var(--border)'};background:${on ? 'rgba(124,92,252,.09)' : 'var(--soft)'};font:600 12px \'DM Sans\',sans-serif;color:${on ? 'var(--accent)' : 'var(--muted)'};cursor:pointer;transition:all .15s">${med.emoji} ${med.name}</button>`;
+    }).join('') + `</div>`;
+  container.querySelectorAll('.fp-other-med').forEach(btn => {
+    btn.onclick = () => { toggleOtherMed(btn.dataset.name); renderFocusPanelOtherMeds(container); refreshFocusPanelScore(); };
+  });
+}
+
+function renderFocusPanelEffects(container) {
+  if (!container) return;
+  const drinkNames   = [...new Set(getDrinks().map(d => d.name))];
+  const supplNames   = getFocusSupplTaken();
+  const otherMeds    = getOtherMedNames();
+  const ritalinAns   = typeof getRitalinAnswer === 'function' ? getRitalinAnswer() : null;
+  const ritalinType  = typeof getRitalinType   === 'function' ? getRitalinType()   : null;
+  const ritalinName  = ritalinAns === 'oui' ? (ritalinType === 'LP' ? 'Ritalin LP' : 'Ritalin IR') : null;
+
+  const allNames = [...drinkNames, ...supplNames, ...(ritalinName ? [ritalinName] : []), ...otherMeds];
+
+  if (!allNames.length) {
+    container.innerHTML = `<div style="font-size:13px;color:var(--muted);padding:8px 0">Aucun composé enregistré aujourd'hui. Ajoute des boissons, compléments ou médicaments ci-dessus.</div>`;
+    return;
+  }
+
+  function effectBar(val, maxAbs) {
+    const norm = Math.max(-1, Math.min(1, val / maxAbs));
+    const isPos = norm >= 0;
+    const w = Math.round(Math.abs(norm) * 100);
+    const col = isPos ? 'var(--accent)' : '#ef5350';
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+      <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div style="width:${w}%;height:100%;background:${col};border-radius:3px;transition:width .4s"></div>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:${col};min-width:28px;text-align:right">${val > 0 ? '+' : ''}${val}</span>
+    </div>`;
+  }
+
+  let html = '';
+
+  // Compound cards
+  allNames.forEach(name => {
+    const c = COMPOUND_DB[name];
+    if (!c) return;
+    html += `<div style="background:var(--soft);border-radius:12px;padding:11px 13px;margin-bottom:8px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:6px">${c.emoji} ${name} <span style="font-size:11px;font-weight:400;color:var(--muted)">${c.duree}</span></div>
+      <div style="display:grid;grid-template-columns:70px 1fr;gap:3px 8px;align-items:center;font-size:11px;color:var(--muted);margin-bottom:6px">
+        <span>Focus brut</span>${effectBar(c.focus, 10)}
+        <span>Énergie</span>${effectBar(c.energie, 10)}
+        <span>Anxiété</span>${effectBar(c.anxiete, 10)}
+      </div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.45">${c.note}</div>
+    </div>`;
+  });
+
+  // Interactions
+  const interactions = getInteractions(allNames);
+  if (interactions.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 8px">Interactions détectées</div>`;
+    const levelStyle = { good: '#66bb6a', caution: '#ffa726', danger: '#ef5350', neutral: 'var(--muted)' };
+    const levelIcon  = { good: '✅', caution: '⚠️', danger: '❌', neutral: '😐' };
+    interactions.forEach(p => {
+      html += `<div style="display:flex;gap:10px;background:var(--soft);border-radius:10px;padding:9px 12px;margin-bottom:6px">
+        <span style="font-size:16px;flex-shrink:0">${levelIcon[p.level] || '•'}</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:${levelStyle[p.level] || 'var(--text)'};margin-bottom:2px">${p.a} × ${p.b}</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.4">${p.msg}</div>
+        </div>
+      </div>`;
+    });
+  }
+
+  container.innerHTML = html;
 }
 
 function renderFocusPanelSleep(container) {
@@ -7519,8 +7724,15 @@ function openFocusPanel() {
       <div id="fp-suggestion" style="margin-bottom:12px"></div>
 
       <div class="settings-section-title" style="margin-bottom:10px">Boissons</div>
-      <div id="fp-drinks" style="margin-bottom:4px"></div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;padding-left:2px">Appuie pour ajouter · Appui long pour retirer</div>
+      <div id="fp-drinks" style="margin-bottom:12px"></div>
+
+      <div class="settings-section-title" style="margin-bottom:10px">Autres médicaments</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.4">Médicaments pris aujourd'hui pouvant influencer la concentration.</div>
+      <div id="fp-other-meds" style="margin-bottom:20px"></div>
+
+      <div class="settings-section-title" style="margin-bottom:10px">Effets & Interactions</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.4">Profil de chaque composé actif + interactions détectées.</div>
+      <div id="fp-effects" style="margin-bottom:20px"></div>
 
       <div class="settings-section-title" style="margin-bottom:10px">Sommeil</div>
       <div id="fp-sleep" style="margin-bottom:20px"></div>
@@ -7566,6 +7778,8 @@ function openFocusPanel() {
   }
 
   renderFocusPanelDrinks(document.getElementById('fp-drinks'));
+  renderFocusPanelOtherMeds(document.getElementById('fp-other-meds'));
+  renderFocusPanelEffects(document.getElementById('fp-effects'));
   renderFocusPanelSleep(document.getElementById('fp-sleep'));
   renderFocusPanelRitalin(document.getElementById('fp-ritalin'));
   renderFocusPanelSuppl(document.getElementById('fp-suppl'));
