@@ -1719,6 +1719,56 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   /* ── Focus ring (landing top-bar) ── */
   .landing-logo-row { margin-bottom: 24px !important; }
 }
+
+/* ── STATS DU JOUR ── */
+.stats-widget { background: var(--soft); border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; }
+.stats-widget-row { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 6px; }
+.stats-num { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 900; line-height: 1; }
+.stats-lbl { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.stats-msg { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+/* ── CHECK-IN SHEET ── */
+.checkin-emoji-row { display: flex; gap: 8px; margin-bottom: 20px; }
+.checkin-emoji-btn {
+  flex: 1; padding: 12px 6px; border-radius: 14px;
+  border: 1.5px solid var(--border); background: var(--soft);
+  font-size: 22px; cursor: pointer; transition: all .13s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.checkin-emoji-btn span.ci-lbl { font-size: 10px; color: var(--muted); font-weight: 600; font-family: 'DM Sans', sans-serif; }
+.checkin-emoji-btn.selected { border-color: var(--accent); background: rgba(124,92,252,.1); }
+.checkin-emoji-btn:active { transform: scale(.95); }
+
+/* ── MÉTHODES ── */
+.methode-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+.methode-filter-btn {
+  padding: 8px 14px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--soft);
+  font: 600 12px 'DM Sans', sans-serif; color: var(--muted);
+  cursor: pointer; transition: all .13s;
+}
+.methode-filter-btn.active {
+  border-color: var(--accent); background: rgba(124,92,252,.1); color: var(--accent);
+}
+.methode-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 14px 16px; margin-bottom: 10px;
+  width: 100%; text-align: left; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.methode-card:hover { border-color: var(--accent); background: rgba(124,92,252,.04); }
+.methode-card-icon { font-size: 28px; flex-shrink: 0; }
+.methode-card-body { flex: 1; min-width: 0; }
+.methode-card-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.methode-card-desc { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.methode-card-action {
+  flex-shrink: 0; padding: 7px 13px; border-radius: 10px;
+  border: 1.5px solid var(--accent); background: rgba(124,92,252,.09);
+  color: var(--accent); font: 700 12px 'DM Sans', sans-serif; cursor: pointer;
+  transition: background .13s; white-space: nowrap;
+}
+.methode-card-action:hover { background: rgba(124,92,252,.18); }
 </style>
 </head>
 <body>
@@ -1802,6 +1852,9 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   </div><!-- /.landing-left -->
 
   <div class="landing-right">
+
+  <!-- Stats du jour -->
+  <div id="landing-stats"></div>
 
   <!-- Bannière notifications -->
   <div id="notif-banner" class="notif-banner" style="display:none;margin-top:14px">
@@ -2110,6 +2163,15 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 </section>
 
 <!-- MENU AIDE -->
+<!-- MÉTHODES -->
+<section class="screen" id="methodes">
+  <button class="back" id="back-methodes">← Retour</button>
+  <h1>Méthodes <em>adaptées</em></h1>
+  <p class="sub" style="margin-bottom:20px">Filtre selon ton état maintenant.</p>
+  <div id="methodes-filters" class="methode-filters"></div>
+  <div id="methodes-list"></div>
+</section>
+
 <section class="screen" id="aide-menu">
   <button class="back" id="back-aide-menu">← Accueil</button>
   <div style="margin-bottom:24px">
@@ -2136,6 +2198,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="block-btn block-reset" id="aide-btn-reset">
     <span class="b-title">🧘 Reset cognitif</span>
     <span class="b-sub">Respiration · Étirement · Eau · Mini victoire</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-methodes" style="margin-top:6px">
+    <span class="b-title">📚 Méthodes de travail</span>
+    <span class="b-sub">Choisir une méthode adaptée à ton niveau d'énergie</span>
   </button>
 </section>
 
@@ -3197,15 +3263,16 @@ function renderHome() {
   if (last) {
     if (titleEl) titleEl.textContent = 'Reprendre · ' + last.name + ' →';
     metaEl.textContent = last.name + ' — ' + globalPct(last) + '% accompli';
-    contBtn.onclick = () => openProject(last);
+    contBtn.onclick = () => { openProject(last); };
   } else {
-    if (titleEl) titleEl.textContent = 'Nouveau projet →';
-    metaEl.textContent = 'Aucun projet en cours';
+    if (titleEl) titleEl.textContent = 'Commencer →';
+    metaEl.textContent = 'Crée ton premier projet';
     contBtn.onclick = () => show('create');
   }
 
   checkNotifBanner();
   renderDailyPlanPreview();
+  renderLandingStats();
   const wrap = document.getElementById('home-proj-wrap');
   const listEl = document.getElementById('home-proj-list');
   if (projects.length > 0) {
@@ -3233,6 +3300,227 @@ function renderHome() {
   }
 }
 
+// ══════════════════════════════════════════════════
+// STATS DU JOUR
+// ══════════════════════════════════════════════════
+function getTodayStats() {
+  try {
+    const s = JSON.parse(localStorage.getItem('ft_today_stats') || '{}');
+    const today = new Date().toISOString().slice(0, 10);
+    if (s.date !== today) return { date: today, focusMin: 0, tasks: 0, sessions: 0 };
+    return s;
+  } catch(e) { return { date: new Date().toISOString().slice(0, 10), focusMin: 0, tasks: 0, sessions: 0 }; }
+}
+function addTodayStats(delta) {
+  const s = getTodayStats();
+  Object.keys(delta).forEach(k => { s[k] = Math.round(((s[k] || 0) + delta[k]) * 10) / 10; });
+  localStorage.setItem('ft_today_stats', JSON.stringify(s));
+}
+
+function renderLandingStats() {
+  const el = document.getElementById('landing-stats');
+  if (!el) return;
+  const s = getTodayStats();
+  if (!s.focusMin && !s.tasks && !s.sessions) { el.innerHTML = ''; return; }
+
+  const msgs = s.focusMin >= 60 ? '🔥 Plus d\'une heure de focus — vraiment bien.'
+    : s.focusMin >= 25 ? '💪 Tu as bien travaillé aujourd\'hui.'
+    : s.focusMin >= 10 ? '✨ Bon début. Continue comme ça.'
+    : s.sessions >= 1  ? '🌱 Tu as commencé — c\'est déjà beaucoup.'
+    : '';
+
+  el.innerHTML = `<div class="stats-widget">
+    <div class="stats-widget-row">
+      ${s.focusMin ? `<div><div class="stats-num" style="color:var(--accent)">${Math.round(s.focusMin)}</div><div class="stats-lbl">min focus</div></div>` : ''}
+      ${s.tasks    ? `<div><div class="stats-num" style="color:var(--green)">${s.tasks}</div><div class="stats-lbl">tâche${s.tasks > 1 ? 's' : ''}</div></div>` : ''}
+      ${s.sessions ? `<div><div class="stats-num" style="color:var(--text)">${s.sessions}</div><div class="stats-lbl">session${s.sessions > 1 ? 's' : ''}</div></div>` : ''}
+    </div>
+    ${msgs ? `<div class="stats-msg">${msgs}</div>` : ''}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════
+// CHECK-IN ÉTAPE PAR ÉTAPE
+// ══════════════════════════════════════════════════
+let _checkinAnswers = {};
+
+function openCheckin() {
+  const last = parseInt(localStorage.getItem('ft_checkin_ts') || '0');
+  if (Date.now() - last < 3 * 3600 * 1000) { launchAutoSession(); return; }
+
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+
+  function render() {
+    const a = _checkinAnswers;
+    const bothDone = a.feeling !== undefined && a.energy !== undefined;
+    let rec = '';
+    if (bothDone) {
+      const score = calcFocusScore();
+      const adj = (a.feeling + a.energy) / 2; // 0–3 scale
+      let mins = score < 25 ? 10 : score < 45 ? 15 : score < 65 ? 25 : score < 80 ? 40 : 50;
+      mins = Math.round(mins * (0.6 + adj * 0.2));
+      mins = Math.max(5, Math.min(60, mins));
+      const color = score < 30 ? '#ef5350' : score < 55 ? '#ffa726' : score < 78 ? '#66bb6a' : '#7c5cfc';
+      const msg = adj < 1 ? 'On commence doucement, sans pression.'
+        : adj < 2 ? 'Session modérée — tu verras comment ça va.'
+        : 'Tu te sens bien — profites-en.';
+      rec = `
+        <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+            <span style="font-family:'Syne',sans-serif;font-size:48px;font-weight:900;color:${color};line-height:1">${mins}</span>
+            <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--muted)">min</span>
+          </div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${msg} · Focus <strong style="color:${color}">${score}/100</strong></div>
+          <button class="btn" id="ci-go">▶ Commencer ${mins} min</button>
+          <button style="background:none;border:none;color:var(--muted);font:600 13px 'DM Sans',sans-serif;width:100%;padding:8px;cursor:pointer;margin-top:4px" id="ci-other">Choisir une autre durée →</button>
+        </div>`;
+      bd.dataset.mins = mins;
+    }
+
+    bd.innerHTML = `<div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px">Avant de commencer</div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Comment tu te sens ?</div>
+      <div class="checkin-emoji-row" id="ci-feeling-row">
+        ${[['😴','Crevé'],['😐','Moyen'],['💪','Bien'],['⚡','Hyper']].map(([ e, l], i) =>
+          `<button class="checkin-emoji-btn${a.feeling === i ? ' selected' : ''}" data-ci="feeling" data-val="${i}">${e}<span class="ci-lbl">${l}</span></button>`
+        ).join('')}
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Énergie mentale ?</div>
+      <div class="checkin-emoji-row" id="ci-energy-row">
+        ${[['🪫','Vide'],['🔋','Normale'],['⚡','Bonne'],['🔥','Max']].map(([e, l], i) =>
+          `<button class="checkin-emoji-btn${a.energy === i ? ' selected' : ''}" data-ci="energy" data-val="${i}">${e}<span class="ci-lbl">${l}</span></button>`
+        ).join('')}
+      </div>
+
+      ${rec}
+    </div>`;
+
+    bd.querySelectorAll('.checkin-emoji-btn').forEach(btn => {
+      btn.onclick = () => {
+        _checkinAnswers[btn.dataset.ci] = parseInt(btn.dataset.val);
+        render();
+        if (_checkinAnswers.feeling !== undefined && _checkinAnswers.energy !== undefined) {
+          setTimeout(() => bd.querySelector('#ci-go') && bd.querySelector('#ci-go').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+        }
+      };
+    });
+
+    if (bothDone) {
+      bd.querySelector('#ci-go').onclick = () => {
+        const mins = parseInt(bd.dataset.mins);
+        localStorage.setItem('ft_checkin_ts', Date.now().toString());
+        _checkinAnswers = {};
+        bd.remove();
+        currentMode = 'micro';
+        startSession();
+        tTotal = mins * 60;
+        tRemain = mins * 60;
+        document.getElementById('s-mode-label').textContent = mins + ' min · Focus ' + calcFocusScore();
+        renderTimerDisplay();
+      };
+      bd.querySelector('#ci-other').onclick = () => {
+        localStorage.setItem('ft_checkin_ts', Date.now().toString());
+        _checkinAnswers = {};
+        bd.remove();
+        show('timer-setup');
+      };
+    }
+  }
+
+  render();
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) { _checkinAnswers = {}; bd.remove(); } });
+}
+
+// ══════════════════════════════════════════════════
+// MÉTHODES ADAPTÉES
+// ══════════════════════════════════════════════════
+const METHODES_LIB = [
+  { icon: '🪜', name: 'Micro-action 2 min', desc: 'Ouvre juste le doc. Une action minuscule pour briser le blocage.', states: ['bloqué','fatigué','moyen'], action: 'micro' },
+  { icon: '🍅', name: 'Pomodoro 25 min',    desc: 'Travail focalisé, pause courte. Classique et efficace.', states: ['moyen','forme'], action: 'pomodoro' },
+  { icon: '🔥', name: 'Deep Work 50 min',   desc: 'Session longue sans interruption. Pour les bons jours.', states: ['forme','hyperfocus'], action: 'deep' },
+  { icon: '⏳', name: 'Timer inversé',       desc: 'Timer qui monte plutôt que de compter. Moins de pression sur la fin.', states: ['bloqué','moyen'], action: 'reverse' },
+  { icon: '🌊', name: 'Brain Dump',          desc: 'Vide ta tête avant de commencer. Réduit la surcharge mentale.', states: ['bloqué','fatigué','panique'], action: 'brain-dump' },
+  { icon: '🆘', name: 'Mode survie',         desc: 'Une seule tâche. La plus urgente. Rien d\'autre.', states: ['panique'], action: 'panique' },
+  { icon: '🧘', name: 'Reset cognitif',      desc: 'Respiration, mouvement, eau. Pour repartir de zéro sans culpabilité.', states: ['fatigué','bloqué'], action: 'reset' },
+  { icon: '👁', name: 'Révision passive',    desc: 'Relis, écoute, regarde. Pas de production active. OK quand tu es à plat.', states: ['fatigué'], action: null },
+  { icon: '👥', name: 'Body double',         desc: 'Travaille en présence de quelqu\'un. Virtuel ou IRL — ça marche vraiment.', states: ['bloqué','moyen'], action: null },
+  { icon: '🎵', name: 'Musique de focus',    desc: 'Lo-fi, bruit blanc, musique instrumentale. Lance et travaille.', states: ['bloqué','moyen','hyperfocus'], action: null },
+];
+
+const METHODE_STATES = [
+  { id: 'fatigué',    label: '😴 Fatigué' },
+  { id: 'moyen',      label: '😐 Moyen' },
+  { id: 'bloqué',     label: '🧠 Bloqué' },
+  { id: 'forme',      label: '✨ En forme' },
+  { id: 'hyperfocus', label: '⚡ Hyperfocus' },
+  { id: 'panique',    label: '🆘 Panique' },
+];
+
+let _methodeFilter = null;
+
+function renderMethodes() {
+  const filtersEl = document.getElementById('methodes-filters');
+  const listEl = document.getElementById('methodes-list');
+  if (!filtersEl || !listEl) return;
+
+  filtersEl.innerHTML = METHODE_STATES.map(st =>
+    `<button class="methode-filter-btn${_methodeFilter === st.id ? ' active' : ''}" data-state="${st.id}">${st.label}</button>`
+  ).join('');
+
+  filtersEl.querySelectorAll('.methode-filter-btn').forEach(btn => {
+    btn.onclick = () => {
+      _methodeFilter = _methodeFilter === btn.dataset.state ? null : btn.dataset.state;
+      renderMethodes();
+    };
+  });
+
+  const visible = _methodeFilter
+    ? METHODES_LIB.filter(m => m.states.includes(_methodeFilter))
+    : METHODES_LIB;
+
+  listEl.innerHTML = visible.map((m, i) => `
+    <div class="methode-card" data-mi="${i}">
+      <span class="methode-card-icon">${m.icon}</span>
+      <div class="methode-card-body">
+        <div class="methode-card-name">${m.name}</div>
+        <div class="methode-card-desc">${m.desc}</div>
+      </div>
+      ${m.action ? `<button class="methode-card-action" data-mi="${i}">Essayer →</button>` : ''}
+    </div>`).join('');
+
+  listEl.querySelectorAll('.methode-card-action').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const m = visible[parseInt(btn.dataset.mi)];
+      switch(m.action) {
+        case 'micro':     currentMode = 'micro'; startSession(); break;
+        case 'pomodoro':  currentMode = '2min';  startSession(); tTotal = 1500; tRemain = 1500; renderTimerDisplay(); break;
+        case 'deep':      currentMode = 'one';   startSession(); tTotal = 3000; tRemain = 3000; renderTimerDisplay(); break;
+        case 'reverse':   currentMode = 'reverse'; startSession(); break;
+        case 'brain-dump': show('brain-dump'); break;
+        case 'panique':   showModePanique(); break;
+        case 'reset':     showResetCognitif(); break;
+      }
+    };
+  });
+}
+
+function showMethodes(fromScreen) {
+  localStorage.setItem('ft_methodes_from', fromScreen || 'aide-menu');
+  _methodeFilter = null;
+  renderMethodes();
+  show('methodes');
+}
+
+document.getElementById('back-methodes').onclick = () => {
+  show(localStorage.getItem('ft_methodes_from') || 'aide-menu');
+};
+
 document.getElementById('btn-new').onclick = () => show('create');
 document.getElementById('btn-aide-menu').onclick = () => { show('aide-menu'); refreshAideBadge(); };
 document.getElementById('back-aide-menu').onclick = () => { renderHome(); show('landing'); };
@@ -3241,6 +3529,7 @@ document.getElementById('aide-btn-panique').onclick = () => showModePanique();
 document.getElementById('aide-btn-reset').onclick = () => showResetCognitif();
 document.getElementById('aide-btn-dump').onclick = () => show('brain-dump');
 document.getElementById('aide-btn-rsd').onclick   = () => showRSDMode();
+document.getElementById('aide-btn-methodes').onclick = () => showMethodes('aide-menu');
 document.getElementById('btn-daily-plan').onclick = () => showDailyPlanning();
 document.getElementById('btn-end-of-day').onclick = () => showEndOfDay();
 document.getElementById('btn-reentry-session').onclick = () => showReentryModal();
@@ -3915,7 +4204,7 @@ document.getElementById('btn-start-project').onclick = () => {
   } else {
     currentCategoryId = null;
   }
-  launchAutoSession();
+  openCheckin();
 };
 
 // ─── FILE HELPERS ───
@@ -4956,7 +5245,7 @@ function renderCategoryCard(cat, proj, container) {
         const list = getProjects(); list.unshift(pendingProject); saveProjects(list);
         setActiveId(pendingProject.id); currentProject = pendingProject; pendingProject = null;
       }
-      launchAutoSession();
+      openCheckin();
     };
   })(cat.id);
 
@@ -5661,9 +5950,20 @@ const MODES = {
 let tRemain = 120, tTotal = 120, tRunning = false, tInterval = null;
 let tEndTimestamp = null, ftEndTimestamp = null;
 
+let _sessionFocusStart = null;
+
 function startSession() {
+  addTodayStats({ sessions: 1 });
+  _sessionFocusStart = Date.now();
   renderSession();
   show('session');
+}
+
+function _flushSessionFocusMin() {
+  if (!_sessionFocusStart) return;
+  const elapsed = Math.floor((Date.now() - _sessionFocusStart) / 60000);
+  if (elapsed > 0) addTodayStats({ focusMin: elapsed });
+  _sessionFocusStart = null;
 }
 
 // ─── SESSION RENDER ───
@@ -5795,7 +6095,7 @@ function advanceMicro() {
   }
 }
 
-document.getElementById('btn-done').onclick = () => { showDopamineToast(); addBehaviorEvent('complete'); advanceMicro(); };
+document.getElementById('btn-done').onclick = () => { _flushSessionFocusMin(); addTodayStats({ tasks: 1 }); renderLandingStats(); showDopamineToast(); addBehaviorEvent('complete'); advanceMicro(); };
 document.getElementById('btn-skip').onclick = advanceMicro;
 
 function finishProject() {
@@ -6156,6 +6456,8 @@ function playTimerEndSound() {
 
 // ─── HELPERS FIN DE TIMER ───
 function onSessionTimerEnd() {
+  _flushSessionFocusMin();
+  renderLandingStats();
   clearInterval(tInterval);
   tRunning = false;
   tEndTimestamp = null;
@@ -6168,6 +6470,7 @@ function onSessionTimerEnd() {
   setTimeout(() => showFocusCheckIn('session'), 900);
 }
 function onFtTimerEnd() {
+  if (ftRunning) { addTodayStats({ focusMin: Math.floor((ftDuration - ftRemain) / 60) }); renderLandingStats(); }
   clearInterval(ftInterval);
   ftRunning = false;
   ftEndTimestamp = null;
