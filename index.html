@@ -1769,6 +1769,44 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   transition: background .13s; white-space: nowrap;
 }
 .methode-card-action:hover { background: rgba(124,92,252,.18); }
+
+/* ── WEEK BAR CHART ── */
+.week-chart { display: flex; align-items: flex-end; gap: 5px; height: 44px; margin: 10px 0 4px; }
+.week-bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.week-bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--accent); opacity: 0.5; min-height: 2px; transition: height .3s; }
+.week-bar.today { opacity: 1; }
+.week-bar-lbl { font-size: 9px; color: var(--muted); font-weight: 600; margin-top: 3px; text-transform: uppercase; }
+
+/* ── BADGES ── */
+.badge-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 10px; }
+.badge-chip { padding: 4px 10px; border-radius: 20px; background: rgba(124,92,252,.12); border: 1px solid rgba(124,92,252,.3); font-size: 11px; color: var(--accent); font-weight: 600; }
+
+/* ── RECENT EVENTS ── */
+.recent-events { margin: 8px 0; }
+.recent-event { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 12px; color: var(--muted); }
+.recent-event:last-child { border-bottom: none; }
+
+/* ── STAT CHIPS ── */
+.stat-chip { display: inline-flex; flex-direction: column; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; }
+
+/* ── WORK MODE SHEET ── */
+.wm-preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.wm-preset-chip { padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--soft); font: 700 13px 'DM Sans', sans-serif; color: var(--text); cursor: pointer; transition: all .13s; }
+.wm-preset-chip:hover { border-color: var(--accent); color: var(--accent); }
+.wm-free-link { background: none; border: none; color: var(--accent); font: 600 13px 'DM Sans', sans-serif; cursor: pointer; padding: 0; text-decoration: underline; }
+
+/* ── SECTION TITLE IN SHEETS ── */
+.wm-section-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; margin-top: 6px; }
+
+/* ── FOCUS SCORE CHIP ── */
+.focus-score-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font: 700 13px 'DM Sans', sans-serif; margin-bottom: 12px; }
+
+@media print {
+  body { max-width: none; background: white; }
+  .screen { display: block !important; padding: 20px; }
+  .screen:not(#plan-preview) { display: none !important; }
+  .back, #btn-start-project, #btn-delete-project, .file-add-btn { display: none !important; }
+}
 </style>
 </head>
 <body>
