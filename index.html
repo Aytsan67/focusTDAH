@@ -7135,6 +7135,13 @@ function showFocusCheckIn(source) {
   function renderEnd() {
     bd.remove();
     updateFocusRing();
+    // Affiche une recommandation courte après la séance
+    try {
+      const ss2 = calcSubScores();
+      const sc2 = calcFocusScore();
+      const recs2 = buildFocusRecs(ss2, sc2);
+      if (recs2.length) showDopamineToast(recs2[0].icon + ' ' + recs2[0].text, 5000);
+    } catch(e) {}
   }
 
   renderQ();
@@ -7168,15 +7175,24 @@ function stopContinuousFocus() {
 
 // ── Effets des compléments ──
 const SUPPL_KNOWN_EFFECTS = {
-  'Oméga-3':    { focusBrut: 3, energie: 2 },
-  'Oméga 3':    { focusBrut: 3, energie: 2 },
-  'Magnésium':  { surcharge: -4, friction: -2, energie: 2 },
-  'Rhodiola':   { energie: 5, surcharge: -3 },
-  'Vitamine B': { energie: 3, dopamine: 2 },
-  'Choline':    { focusBrut: 5, momentum: 2 },
-  'L-Théanine': { focusBrut: 4, surcharge: -3 },
+  'Oméga-3':      { focusBrut: 3, energie: 2 },
+  'Oméga 3':      { focusBrut: 3, energie: 2 },
+  'Magnésium':    { surcharge: -4, friction: -2, energie: 2 },
+  'Rhodiola':     { energie: 5, surcharge: -3 },
+  'Vitamine B':   { energie: 3, dopamine: 2 },
+  'Vitamine D':   { focusBrut: 2, energie: 2, dopamine: 1 },
+  'Zinc':         { focusBrut: 3, dopamine: 3 },
+  'Choline':      { focusBrut: 5, momentum: 2 },
+  'L-Théanine':   { focusBrut: 4, surcharge: -3 },
+  'Ashwagandha':  { surcharge: -5, friction: -3, energie: 2 },
+  'GABA':         { surcharge: -5, friction: -4 },
+  'Fer':          { energie: 3, focusBrut: 2 },
+  'Curcuma':      { surcharge: -2, friction: -2, energie: 1 },
+  'Spiruline':    { energie: 4, focusBrut: 2 },
+  'Probiotiques': { surcharge: -2, energie: 1 },
+  'Vitamine C':   { energie: 2, focusBrut: 1 },
 };
-const SUPPL_DEFAULT_EFFECT  = { focusBrut: 2, energie: 1 };
+const SUPPL_DEFAULT_EFFECT = { focusBrut: 2, energie: 1 };
 
 // ── Base de données des composés (effets sur focus/énergie/anxiété) ──
 // focus/energie/anxiete : valeur relative −10..+10
@@ -7371,8 +7387,23 @@ function calcSubScores() {
 
   // Compléments
   getFocusSupplTaken().forEach(name => {
-    const fx = SUPPL_KNOWN_EFFECTS[name] || SUPPL_DEFAULT_EFFECT;
-    Object.entries(fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
+    const fx = SUPPL_KNOWN_EFFECTS[name];
+    if (fx) {
+      Object.entries(fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
+    } else {
+      // Fallback : COMPOUND_DB (convertit focus/energie/anxiete → sous-scores)
+      const db = COMPOUND_DB[name];
+      if (db) {
+        if (db.focus)          s.focusBrut += db.focus * 1.5;
+        if (db.energie)        s.energie   += db.energie * 1.5;
+        if (db.anxiete && db.anxiete < 0) {
+          s.surcharge += db.anxiete * 2;
+          s.friction  += db.anxiete;
+        }
+      } else {
+        Object.entries(SUPPL_DEFAULT_EFFECT).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
+      }
+    }
   });
 
   // Boissons (plusieurs)
@@ -7777,6 +7808,80 @@ function renderFocusPanelSuppl(container) {
   });
 }
 
+// ── Recommandations contextuelles focus ──
+function buildFocusRecs(ss, score) {
+  const recs = [];
+  const slp  = getSleep();
+  const slpH = slp.hoursSlept !== undefined ? slp.hoursSlept
+             : computeSleepHours(slp.wakeTime, slp.sleepTime);
+  const taken      = getFocusSupplTaken();
+  const suppls     = (getSettings().supplements || []).map(s => s.label || s);
+  const hour       = new Date().getHours();
+
+  // Sommeil non renseigné
+  if (slpH === null || slpH === undefined) {
+    recs.push({ icon:'😴', text:'Entre tes heures de sommeil ici — elles influencent directement le calcul.' });
+  } else if (slpH < 5) {
+    recs.push({ icon:'😴', text:`Seulement ${Math.round(slpH)}h de sommeil — priorité au repos. Limite les tâches cognitives lourdes.` });
+  } else if (slpH < 6.5) {
+    recs.push({ icon:'😴', text:`${Math.round(slpH)}h de sommeil — légère dette. Un matcha plutôt qu'un café pour éviter le crash.` });
+  } else if (slpH >= 7 && slpH <= 9) {
+    recs.push({ icon:'✅', text:`${Math.round(slpH)}h de sommeil — bonne base ! Ton énergie de fond est bien supportée.` });
+  }
+
+  // Compléments configurés mais aucun pris
+  if (suppls.length > 0 && taken.length === 0) {
+    recs.push({ icon:'💊', text:'Tu n\'as pas encore coché tes compléments aujourd\'hui — pense à les marquer.' });
+  }
+
+  // Compléments importants non pris
+  const hasNotTaken = name => suppls.some(s => s.toLowerCase().includes(name)) && !taken.some(t => t.toLowerCase().includes(name));
+  if (hasNotTaken('magnésium') || hasNotTaken('magnesium')) {
+    recs.push({ icon:'🪨', text:'Magnésium non pris — il réduit la surcharge et atténue le rebound Ritalin.' });
+  }
+  if (hasNotTaken('oméga') || hasNotTaken('omega')) {
+    recs.push({ icon:'🐟', text:'Oméga-3 non pris — cofacteur dopamine, prends-le avec un repas.' });
+  }
+
+  // Sous-scores problématiques
+  if (ss.momentum < 18) {
+    recs.push({ icon:'🚀', text:'Momentum à zéro — lance un timer de 5 min, même sans envie. Le mouvement crée la motivation.' });
+  }
+  if (ss.surcharge > 65) {
+    recs.push({ icon:'🌊', text:'Surcharge cognitive élevée — ferme tes onglets, fais un brain dump, puis une seule tâche.' });
+  }
+  if (ss.energie < 22) {
+    recs.push({ icon:'⚡', text:'Énergie basse — bois de l\'eau, mange quelque chose de léger, ou marche 2 minutes.' });
+  }
+  if (ss.friction > 55) {
+    recs.push({ icon:'🧱', text:'Démarrage bloqué — commence par la micro-action la plus petite possible, pas la tâche complète.' });
+  }
+  if (ss.dopamine < 20) {
+    recs.push({ icon:'🧠', text:'Dopamine faible — une petite victoire ou de la musique de travail aidera à repartir.' });
+  }
+
+  // Heure de la journée
+  if (hour >= 13 && hour < 15) {
+    recs.push({ icon:'☀️', text:'Creux post-repas (13-15h) : normal. Un matcha ou 10 min de marche relance mieux qu\'un café.' });
+  } else if (hour >= 20) {
+    recs.push({ icon:'🌙', text:'Tu travailles tard — protège ton sommeil, coupe les écrans dans 1h max.' });
+  } else if (hour >= 8 && hour < 12) {
+    recs.push({ icon:'🌅', text:'Matin : fenêtre de focus optimal. Commence par ta tâche la plus difficile maintenant.' });
+  }
+
+  // Score élevé — conseil préventif
+  if (score >= 68 && recs.filter(r => r.icon !== '✅').length === 0) {
+    recs.push({ icon:'🎯', text:'Excellente fenêtre de focus — attaque la tâche la plus importante en premier.' });
+  }
+
+  // Score moyen — conseil générique
+  if (score >= 45 && score < 68 && ss.momentum < 35) {
+    recs.push({ icon:'⏱', text:'Lance un timer maintenant — le momentum se construit session par session.' });
+  }
+
+  return recs.slice(0, 3);
+}
+
 function openFocusPanel() {
   if (document.getElementById('focus-panel-bd')) {
     document.getElementById('focus-panel-bd').remove(); return;
@@ -7883,24 +7988,16 @@ function openFocusPanel() {
   };
   // Suggestion basée sur le score le plus faible
   const suggEl = document.getElementById('fp-suggestion');
-  const scoreEntries = [
-    { key: 'momentum',  isNeg: false, label: 'Momentum',        tip: 'Lance un timer maintenant — même 5 minutes.' },
-    { key: 'focusBrut', isNeg: false, label: 'Focus brut',      tip: 'Prends la Ritaline ou un café/matcha si pas encore fait.' },
-    { key: 'energie',   isNeg: false, label: 'Énergie mentale', tip: 'Mange quelque chose, hydrate-toi, ou fais 2 min de mouvement.' },
-    { key: 'dopamine',  isNeg: false, label: 'Dopamine',        tip: 'Brain dump ou musique de travail pour booster la dopamine.' },
-    { key: 'surcharge', isNeg: true,  label: 'Surcharge',       tip: 'Ferme les onglets inutiles et fais un brain dump.' },
-    { key: 'friction',  isNeg: true,  label: 'Friction',        tip: 'Fais une seule micro-action de 2 minutes pour démarrer.' },
-  ];
-  const worst = scoreEntries.reduce((prev, cur) => {
-    const prevVal = prev.isNeg ? (100 - ss[prev.key]) : ss[prev.key];
-    const curVal  = cur.isNeg  ? (100 - ss[cur.key])  : ss[cur.key];
-    return curVal < prevVal ? cur : prev;
-  });
   if (suggEl) {
-    suggEl.innerHTML = `<div style="background:rgba(124,92,252,.08);border:1.5px solid rgba(124,92,252,.2);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.55;color:var(--text)">
-      <div style="font-weight:700;margin-bottom:4px;color:var(--accent)">💡 Suggestion — ${worst.label} faible</div>
-      ${worst.tip}
-    </div>`;
+    const recs = buildFocusRecs(ss, score);
+    suggEl.innerHTML = recs.length ? `
+      <div style="margin-bottom:6px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Recommandations</div>
+      ${recs.map(r => `
+        <div style="display:flex;gap:10px;align-items:flex-start;background:rgba(124,92,252,.07);border:1.5px solid rgba(124,92,252,.18);border-radius:13px;padding:11px 13px;margin-bottom:7px;font-size:13px;line-height:1.5;color:var(--text)">
+          <span style="font-size:17px;flex-shrink:0;margin-top:1px">${r.icon}</span>
+          <span>${r.text}</span>
+        </div>`).join('')}
+    ` : '';
   }
 
   renderFocusPanelDrinks(document.getElementById('fp-drinks'));
