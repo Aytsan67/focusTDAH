@@ -578,46 +578,90 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .ritalin-no { border:1.5px solid var(--border); border-radius:16px; background:none; color:var(--muted); font:600 14px 'DM Sans',sans-serif; padding:15px; cursor:pointer; }
 
 /* ── SETTINGS FAB ── */
-.settings-fab {
+
+/* ── TOP-RIGHT STACK (compte + settings + focus + stats) ── */
+.top-right-stack {
   position: fixed;
-  top: calc(env(safe-area-inset-top) + 14px);
+  top: calc(env(safe-area-inset-top) + 10px);
   right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 450;
+}
+.settings-fab {
   width: 40px; height: 40px;
   border-radius: 50%;
   border: 1.5px solid var(--border);
   background: var(--card);
   color: var(--muted);
   font-size: 19px;
-  z-index: 450;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   box-shadow: 0 2px 14px rgba(0,0,0,.4);
   transition: color .2s, border-color .2s, transform .35s;
-  padding: 0;
+  padding: 0; flex-shrink: 0;
 }
 .settings-fab:active { transform: rotate(60deg) scale(.9); border-color: var(--accent); color: var(--accent); }
 
 .focus-fab {
-  position: fixed;
-  top: calc(env(safe-area-inset-top) + 68px);
-  right: 14px;
   width: 40px; height: 40px;
   border-radius: 50%;
   border: 1.5px solid var(--border);
   background: var(--card);
   font-size: 18px;
-  z-index: 450;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   box-shadow: 0 2px 14px rgba(0,0,0,.4);
   transition: border-color .2s, background .2s, transform .15s;
-  padding: 0;
+  padding: 0; flex-shrink: 0;
 }
 .focus-fab:active { transform: scale(.9); }
 .focus-fab.focus-on {
   border-color: var(--accent);
   background: rgba(124,92,252,.15);
 }
+
+.stats-fab {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 14px rgba(0,0,0,.4);
+  transition: border-color .2s, background .2s, transform .15s;
+  padding: 0; flex-shrink: 0;
+}
+.stats-fab:active { transform: scale(.9); }
+.stats-fab.active { border-color: var(--accent); background: rgba(124,92,252,.15); }
+
+/* Stats panel */
+.stats-panel {
+  position: fixed;
+  right: 14px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 16px 18px;
+  z-index: 449;
+  min-width: 190px;
+  box-shadow: 0 6px 28px rgba(0,0,0,.5);
+  animation: up .18s ease;
+}
+.stats-panel-title {
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+}
+.stats-panel-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.stats-panel-row:last-child { margin-bottom: 0; }
+.stats-panel-lbl { font-size: 13px; color: var(--muted); }
+.stats-panel-val { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; }
 
 /* ── Focus level ring ── */
 .focus-level-ring {
@@ -885,13 +929,13 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 #landing {
   display: none;
   min-height: 100vh; min-height: -webkit-fill-available;
-  padding: calc(env(safe-area-inset-top) + 48px) 22px calc(env(safe-area-inset-bottom) + 24px);
+  padding: calc(env(safe-area-inset-top) + 16px) 22px calc(env(safe-area-inset-bottom) + 24px);
   background: var(--bg);
   flex-direction: column;
   align-items: stretch;
 }
 #landing.active { display: flex; }
-.landing-logo-row { display: flex; align-items: center; gap: 0; margin-bottom: 6px; }
+.landing-logo-row { display: flex; align-items: center; gap: 0; margin-bottom: 0; }
 .landing-tagline { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
 
 .work-btn {
@@ -1647,9 +1691,9 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   }
 
   .landing-left {
-    width: 300px;
+    width: 280px;
     flex-shrink: 0;
-    padding: 44px 32px 32px 44px;
+    padding: 36px 28px 28px 36px;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -1665,43 +1709,63 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   .landing-right {
     flex: 1;
     min-width: 0;
-    padding: 44px 48px 40px;
+    padding: 36px 44px 32px;
     overflow-y: auto;
     height: 100vh;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    gap: 0;
   }
+
+  /* Logo row on desktop: no extra left padding (ring is far from sidebar content) */
+  .landing-logo-row { padding-left: 0 !important; margin-bottom: 4px !important; }
 
   /* Work button full-width in sidebar */
   .work-btn {
-    font-size: 18px;
-    padding: 20px 20px;
-    margin-top: 16px;
+    font-size: 17px;
+    padding: 18px 18px;
+    margin-top: 12px;
   }
 
   /* Actions vertical list on desktop */
   .landing-actions {
     flex-direction: column;
-    gap: 7px;
-    margin-top: 14px !important;
+    gap: 6px;
+    margin-top: 10px !important;
   }
   .landing-action-btn {
     flex-direction: row !important;
     justify-content: flex-start !important;
     gap: 12px !important;
-    padding: 12px 16px !important;
-    border-radius: 14px !important;
+    padding: 11px 14px !important;
+    border-radius: 13px !important;
     font-size: 13px !important;
     text-align: left !important;
   }
   .landing-action-btn .la-icon {
-    font-size: 18px !important;
+    font-size: 17px !important;
     display: inline !important;
     flex-shrink: 0;
   }
   .landing-action-btn br { display: none; }
   .landing-action-btn span:last-child { white-space: nowrap; }
+
+  /* End-of-day button: sit at bottom of sidebar */
+  #btn-end-of-day {
+    margin-top: auto !important;
+    padding-top: 20px !important;
+    text-align: left !important;
+    border-top: 1px solid var(--border) !important;
+  }
+
+  /* Right panel header */
+  .landing-right-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
 
   /* Projects always shown on desktop */
   #home-proj-wrap {
@@ -1774,8 +1838,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   #dumb-guide,
   #reset-cognitif { max-width: 680px; }
 
-  /* ── Focus ring (landing top-bar) ── */
-  .landing-logo-row { margin-bottom: 24px !important; }
 }
 
 /* ── STATS DU JOUR ── */
@@ -2057,6 +2119,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <button class="btn-ghost" id="btn-anon-continue" style="width:100%;justify-content:center;margin-top:4px;font-size:14px">
       Continuer sans compte →
     </button>
+    <div id="auth-error" style="display:none;margin-top:12px;padding:10px 14px;border-radius:12px;background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);font-size:13px;color:#ef5350;line-height:1.5"></div>
     <p class="auth-note">Sans compte, tes données restent sur cet appareil uniquement.</p>
   </div>
 </section>
@@ -2066,17 +2129,17 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
   <div class="landing-left">
 
-  <!-- Barre du haut -->
-  <div class="landing-logo-row" style="justify-content:space-between;align-items:center;margin-bottom:14px">
+  <!-- Barre du haut — décalée à droite pour ne pas couvrir l'anneau de focus -->
+  <div class="landing-logo-row" style="align-items:center;padding-left:54px;padding-right:62px">
     <span class="logo" style="font-size:24px">✦ focusTDAH</span>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 10px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer">🔍</button>
-      <div id="landing-user" style="display:none"></div>
-    </div>
+    <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 10px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer;margin-left:auto">🔍</button>
   </div>
 
   <!-- Mode du jour pill -->
   <div id="day-mode-slot" style="display:none;margin-bottom:4px"></div>
+
+  <!-- Mémoire de travail externe (Working Memory Buffer) -->
+  <div class="wmb-card" id="wmb-card"></div>
 
   <!-- Bannière rebound Ritaline (si active) -->
   <div id="rebound-banner-slot"></div>
@@ -2094,7 +2157,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <div class="landing-actions">
     <button class="landing-action-btn" id="btn-timers">
       <span class="la-icon">🚀</span>
-      <span>Dé<br>marrer</span>
+      <span>Démarrer</span>
     </button>
     <button class="landing-action-btn landing-action-aide" id="btn-aide-menu">
       <span class="la-icon">🧠</span>
@@ -2110,12 +2173,11 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     </button>
   </div>
 
+  <button id="btn-end-of-day" style="display:block;width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:16px 0 0;cursor:pointer;text-align:left">🌙 Fin de journée</button>
+
   </div><!-- /.landing-left -->
 
   <div class="landing-right">
-
-  <!-- Stats du jour -->
-  <div id="landing-stats"></div>
 
   <!-- Bannière notifications -->
   <div id="notif-banner" class="notif-banner" style="display:none;margin-top:14px">
@@ -2148,8 +2210,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div id="qt-list" class="qt-list"></div>
   </div>
 
-  <!-- Fin de journée — discret, en bas -->
-  <button id="btn-end-of-day" style="display:block;width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:18px 0 4px;cursor:pointer;text-align:center">🌙 Fin de journée</button>
 
   </div><!-- /.landing-right -->
 
@@ -2167,6 +2227,12 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <div class="field">
     <label>Qu'est-ce que tu veux réussir aujourd'hui ?</label>
     <textarea id="c-goal" placeholder="En une phrase simple, sans pression…" rows="3"></textarea>
+  </div>
+  <div class="field" style="margin-top:4px">
+    <button id="why-toggle" type="button" style="background:none;border:none;color:var(--muted);font-size:13px;padding:0 0 6px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px">
+      <span id="why-toggle-icon">＋</span> Pourquoi ça compte pour toi ? <em style="opacity:.6">(optionnel)</em>
+    </button>
+    <textarea id="c-why" placeholder="Ex : pour réussir mon exam, pour ma liberté financière…" rows="2" style="display:none"></textarea>
   </div>
   <button class="btn" id="btn-create" disabled>Suivant →</button>
 </section>
@@ -2349,7 +2415,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <h2 id="c-title">Étape terminée !</h2>
   <p class="celeb-sub" id="c-sub">Tu avances vraiment bien.</p>
   <button class="btn" id="c-next">Étape suivante →</button>
-  <button class="btn-outline" id="c-home">Retour à l'accueil</button>
+  <button class="btn-outline" id="c-home">← Accueil</button>
 </section>
 
 <!-- BLOCKED: ÉNERGIE -->
@@ -2460,10 +2526,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="block-btn block-reset" id="aide-btn-reset">
     <span class="b-title">🧘 Reset cognitif</span>
     <span class="b-sub">Respiration · Étirement · Eau · Mini victoire</span>
-  </button>
-  <button class="block-btn block-secondary" id="aide-btn-methodes" style="margin-top:6px">
-    <span class="b-title">📚 Méthodes de travail</span>
-    <span class="b-sub">Choisir une méthode adaptée à ton niveau d'énergie</span>
   </button>
 </section>
 
@@ -2656,6 +2718,9 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   </div>
   <!-- Guide interactif (masqué par défaut) -->
   <div id="dump-guide-panel" class="dump-guide-panel" style="display:none">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
+      <button onclick="hideDumpGuide()" style="background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;cursor:pointer;padding:0">Mode libre →</button>
+    </div>
     <div id="dump-guide-content"></div>
   </div>
   <!-- Zone libre (visible par défaut) -->
@@ -2730,14 +2795,20 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <span class="big-emoji">🏆</span>
   <h2>Projet terminé !</h2>
   <p class="celeb-sub" id="f-sub">Tu as accompli quelque chose d'important aujourd'hui.</p>
-  <button class="btn" id="f-home">Retour à l'accueil</button>
+  <button class="btn" id="f-home">← Accueil</button>
 </section>
 
-<button class="settings-fab" id="settings-fab" title="Paramètres">⚙️</button>
-<button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
+<!-- Colonne fixe top-droite : compte → paramètres → focus → stats -->
+<div class="top-right-stack" id="top-right-stack">
+  <div id="landing-user" style="display:none"></div>
+  <button class="settings-fab" id="settings-fab" title="Paramètres">⚙️</button>
+  <button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
+  <button class="stats-fab" id="stats-fab" title="Stats du jour">📊</button>
+</div>
+<div class="stats-panel" id="stats-panel" style="display:none"></div>
 
 <!-- Anneau niveau de focus + badges gamification -->
-<div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus">
+<div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus" style="position:relative">
   <svg viewBox="0 0 36 36">
     <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="3.5"/>
     <circle id="flr-bar" cx="18" cy="18" r="15.9" fill="none" stroke="#ef5350"
@@ -2745,6 +2816,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
       stroke-linecap="round" style="transition:stroke-dashoffset .6s ease,stroke .4s"/>
   </svg>
   <span class="focus-level-ring__num" id="flr-num" style="color:#ef5350">--</span>
+  <span class="guardian-active-badge" id="guardian-badge" style="display:none" title="Gardien actif — appuie pour voir"></span>
 </div>
 <div id="focus-ring-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;max-width:340px"></div>
 </main>
@@ -2953,7 +3025,7 @@ function showRitalinModal() {
           <button class="ritalin-type-btn" id="rt-lp">🌊 LP · 8-12 heures</button>
         </div>
         <div class="ritalin-btns">
-          <button class="ritalin-yes" id="rm-confirm">C'est noté ✓</button>
+          <button class="ritalin-yes" id="rm-confirm">✓ C'est noté</button>
           <button class="ritalin-no" id="rm-skip">Passer cette étape</button>
         </div>
       </div>
@@ -2994,45 +3066,89 @@ function initAuth() {
     return;
   }
 
-  const loadingEl = document.getElementById('auth-loading');
-  const googleBtn = document.getElementById('btn-google-login');
+  const loadingEl  = document.getElementById('auth-loading');
+  const googleBtn  = document.getElementById('btn-google-login');
+  const errorEl    = document.getElementById('auth-error');
 
-  // Google sign-in
-  googleBtn.onclick = async () => {
+  function showAuthError(msg) {
+    errorEl.style.display = 'block';
+    errorEl.textContent = msg;
+    loadingEl.style.display = 'none';
+    googleBtn.style.display = 'flex';
+  }
+
+  // ── Résultat d'un redirect en cours ──────────────────────────────
+  // (fallback quand popup est bloqué sur certains navigateurs)
+  _auth.getRedirectResult().then(result => {
+    localStorage.removeItem('ft_redirect_pending');
+    // Si pas de user via redirect ET onAuthStateChanged n'a pas encore rendu
+    // le user → montrer l'écran auth maintenant (ITP a bloqué le résultat)
+    if ((!result || !result.user) && !_auth.currentUser) {
+      show('auth');
+    }
+  }).catch(e => {
+    localStorage.removeItem('ft_redirect_pending');
+    const msgs = {
+      'auth/unauthorized-domain': 'Ce domaine n\'est pas autorisé dans Firebase. Ajoute-le dans Firebase Console → Authentication → Authorized domains.',
+      'auth/cancelled-popup-request': null,
+      'auth/popup-closed-by-user':    null,
+    };
+    const msg = msgs[e.code];
+    if (msg) showAuthError(msg);
+    else if (msg === undefined) showAuthError('Erreur Google : ' + (e.message || e.code));
+  });
+
+  // ── Connexion Google ──────────────────────────────────────────────
+  // Essaie popup d'abord (pas d'ITP, résultat via postMessage).
+  // Si bloqué → fallback redirect avec flag de protection.
+  googleBtn.onclick = () => {
     loadingEl.style.display = 'flex';
     googleBtn.style.display = 'none';
-    try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await _auth.signInWithPopup(provider);
-      // onAuthStateChanged prend le relais
-    } catch(e) {
-      loadingEl.style.display = 'none';
-      googleBtn.style.display = 'flex';
-      console.warn('Login error:', e);
-    }
+    errorEl.style.display = 'none';
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    _auth.signInWithPopup(provider).catch(e => {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request') {
+        // Popup bloqué → redirect avec flag pour ne pas afficher l'écran auth prématurément
+        localStorage.setItem('ft_redirect_pending', '1');
+        _auth.signInWithRedirect(provider).catch(e2 => {
+          localStorage.removeItem('ft_redirect_pending');
+          showAuthError('Erreur : ' + (e2.message || e2.code));
+        });
+      } else if (e.code === 'auth/popup-closed-by-user') {
+        // Utilisateur a fermé — montrer le bouton à nouveau
+        loadingEl.style.display = 'none';
+        googleBtn.style.display = 'flex';
+      } else if (e.code === 'auth/unauthorized-domain') {
+        showAuthError('Ce domaine n\'est pas autorisé dans Firebase. Ajoute-le dans Firebase Console → Authentication → Authorized domains.');
+      } else {
+        showAuthError('Erreur Google : ' + (e.message || e.code));
+      }
+    });
   };
 
   // Continuer sans compte
   document.getElementById('btn-anon-continue').onclick = () => goToApp(null);
 
-  // Écoute l'état auth — Firebase rappelle IMMÉDIATEMENT avec la session en cache
+  // ── État auth ────────────────────────────────────────────────────
+  // Ne pas afficher l'écran auth si un redirect est en cours (flag ft_redirect_pending).
   let firstCall = true;
   _auth.onAuthStateChanged(async user => {
     _fbUser = user;
     if (user) {
-      // Déjà connecté (session en cache) ou vient de se connecter
+      localStorage.removeItem('ft_redirect_pending');
       if (firstCall) {
-        // Premier appel : charge les données en arrière-plan, affiche l'app directement
         goToApp(user);
         loadFromFirestore(user.uid).then(() => { renderHome(); renderQT(); });
       } else {
-        // Reconnexion après déconnexion
         await loadFromFirestore(user.uid);
         goToApp(user);
       }
     } else {
-      // Pas de session → écran de connexion
-      show('auth');
+      // Ne pas interrompre un redirect en cours
+      if (!localStorage.getItem('ft_redirect_pending')) {
+        show('auth');
+      }
     }
     firstCall = false;
   });
@@ -3835,7 +3951,7 @@ function addTodayStats(delta) {
 }
 
 function renderLandingStats() {
-  const el = document.getElementById('landing-stats');
+  const el = document.getElementById('top-stats-widget');
   if (!el) return;
   const s = getTodayStats();
 
@@ -3901,19 +4017,14 @@ function renderLandingStats() {
     }
   } catch(e) {}
 
-  el.innerHTML = `<div class="stats-widget">
-    <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Aujourd'hui</div>
-    <div class="stats-widget-row">
-      <div class="stat-chip"><div class="stats-num" style="color:var(--accent)">${Math.round(s.focusMin || 0)}</div><div class="stats-lbl">min</div></div>
-      <div class="stat-chip"><div class="stats-num" style="color:var(--green)">${s.tasks || 0}</div><div class="stats-lbl">tâches</div></div>
-      <div class="stat-chip"><div class="stats-num" style="color:var(--text)">${s.sessions || 0}</div><div class="stats-lbl">sessions</div></div>
-    </div>
-    ${badgesHtml}
-    <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:12px 0 4px">Cette semaine</div>
-    ${weekHtml}
-    ${eventsHtml}
-    <div class="stats-msg" style="margin-top:8px">${motiv}</div>
-  </div>`;
+  const mins = Math.round(s.focusMin || 0);
+  const tasks = s.tasks || 0;
+  const sessions = s.sessions || 0;
+  el.innerHTML = `
+    <div class="top-stat-row"><span class="top-stat-num" style="color:var(--accent)">${mins}</span><span class="top-stat-lbl">min</span></div>
+    <div class="top-stat-row"><span class="top-stat-num" style="color:var(--green)">${tasks}</span><span class="top-stat-lbl">tâche${tasks>1?'s':''}</span></div>
+    <div class="top-stat-row"><span class="top-stat-num" style="color:var(--text)">${sessions}</span><span class="top-stat-lbl">sess.</span></div>
+  `;
 }
 
 // ══════════════════════════════════════════════════
@@ -4258,7 +4369,6 @@ document.getElementById('aide-btn-panique').onclick = () => showModePanique();
 document.getElementById('aide-btn-reset').onclick = () => showResetCognitif();
 document.getElementById('aide-btn-dump').onclick = () => show('brain-dump');
 document.getElementById('aide-btn-rsd').onclick   = () => showRSDMode();
-document.getElementById('aide-btn-methodes').onclick = () => showMethodes('aide-menu');
 document.getElementById('btn-daily-plan').onclick = () => showDailyPlanning();
 document.getElementById('btn-end-of-day').onclick = () => showEndOfDay();
 document.getElementById('btn-reentry-session').onclick = () => showReentryModal();
@@ -4503,9 +4613,12 @@ function showNewProjectModeModal() {
 
   sheet.innerHTML = `
     <div class="cat-modal-handle"></div>
-    <h2 style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;margin-bottom:8px">
-      Comment organiser <em style="font-style:normal;${grad}">ton plan</em> ?
-    </h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <h2 style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;margin:0">
+        Comment organiser <em style="font-style:normal;${grad}">ton plan</em> ?
+      </h2>
+      <button id="npm-close" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0">✕</button>
+    </div>
     <p style="color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:20px">Tu pourras toujours changer de mode plus tard.</p>
     <div id="npm-s1">
       <button class="cm-mode-card npm-card" data-mode="default">
@@ -4539,6 +4652,9 @@ function showNewProjectModeModal() {
 
   backdrop.appendChild(sheet);
   document.body.appendChild(backdrop);
+
+  // Close button → apply default plan
+  document.getElementById('npm-close').onclick = () => { backdrop.remove(); applyNewProjectMode('default', null); };
 
   // Mode cards
   sheet.querySelectorAll('.npm-card').forEach(card => {
@@ -5190,7 +5306,7 @@ function renderStepsList(steps, container, saveFn, seanceMode, _openNames) {
 
       // Delete micro button
       const delMicro = document.createElement('button');
-      delMicro.className = 'micro-del-btn'; delMicro.textContent = '×'; delMicro.title = 'Supprimer';
+      delMicro.className = 'micro-del-btn'; delMicro.textContent = '✕'; delMicro.title = 'Supprimer';
 
       (function(st, mIdx, ckBtn, txtEl) {
         ckBtn.onclick = function(e) {
@@ -6112,7 +6228,7 @@ function renderCategoryCard(cat, proj, container) {
         chip.textContent = '📎 ' + fname; chip.title = 'Ouvrir';
         (function(n) { chip.onclick = function() { openStoredFile(proj.id, n); }; })(fname);
         const del = document.createElement('button');
-        del.className = 'file-chip-del'; del.textContent = '×'; del.title = 'Supprimer';
+        del.className = 'file-chip-del'; del.textContent = '✕'; del.title = 'Supprimer';
         (function(n) { del.onclick = function(e) { e.stopPropagation(); deleteFile(proj, n); }; })(fname);
         chipWrap.appendChild(chip); chipWrap.appendChild(del);
         chipsWrap.appendChild(chipWrap);
@@ -6220,7 +6336,7 @@ function renderFilesSection(proj, container) {
       chip.textContent = '📎 ' + f; chip.title = 'Ouvrir';
       (function(name) { chip.onclick = () => openStoredFile(proj.id, name); })(f);
       const del = document.createElement('button');
-      del.className = 'file-chip-del'; del.textContent = '×'; del.title = 'Supprimer';
+      del.className = 'file-chip-del'; del.textContent = '✕'; del.title = 'Supprimer';
       (function(name) { del.onclick = e => { e.stopPropagation(); deleteFile(proj, name); }; })(f);
       chipWrap.appendChild(chip); chipWrap.appendChild(del); wrap.appendChild(chipWrap);
     });
@@ -6570,20 +6686,10 @@ function renderSettingsList(container, s, key, title, defaultEmoji) {
 
 function renderSettingsFocus(container) {
   const ready      = localStorage.getItem(LS_SHORTCUTS_READY) === 'true';
-  const timerReady = localStorage.getItem(LS_TIMER_SHORTCUT_READY) === 'true';
   container.innerHTML = `
     <div style="padding:0 0 8px">
       <div style="font-size:13px;color:var(--muted);margin-bottom:16px">
         Le Mode Focus combine deux outils : un raccourci Apple qui active ton mode Ne pas déranger, et l'app Dumb qui remplace les icônes colorées par des boutons texte. Ensemble, ils éliminent les distractions visuelles et les notifications.
-      </div>
-
-      <div class="settings-section-title" style="margin-bottom:8px">⏱ Minuteur iPhone (sonne même Chrome fermé)</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border-radius:12px;margin-bottom:16px">
-        <div>
-          <div style="font-size:15px;font-weight:600;color:var(--text)">${timerReady ? '✅ Minuteur configuré' : '⚠️ Pas encore configuré'}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">${timerReady ? 'Sonne même si Chrome est fermé' : 'Lance le minuteur natif iPhone à chaque timer'}</div>
-        </div>
-        <button class="btn-outline" id="sf-timer-shortcut-btn" style="font-size:13px;padding:8px 14px;white-space:nowrap;margin-left:10px">${timerReady ? 'Reconfigurer' : 'Configurer'}</button>
       </div>
 
       <div class="settings-section-title" style="margin-bottom:8px">Raccourci Mode Focus</div>
@@ -6613,7 +6719,6 @@ function renderSettingsFocus(container) {
       </div>
     </div>
   `;
-  document.getElementById('sf-timer-shortcut-btn').onclick = () => showTimerShortcutSetupModal();
   document.getElementById('sf-shortcut-btn').onclick = () => {
     localStorage.setItem('ft_shortcuts_return_from', 'settings');
     show('shortcuts-setup');
@@ -6895,7 +7000,6 @@ document.getElementById('t-toggle').onclick = function() {
       renderTimerDisplay();
       if (tRemain <= 0) onSessionTimerEnd();
     }, 1000);
-    triggerTimerShortcut(tRemain);
   }
 };
 document.getElementById('t-reset').onclick = resetTimer;
@@ -6930,13 +7034,15 @@ function advanceMicro() {
   }
 }
 
-document.getElementById('btn-done').onclick = () => { _flushSessionFocusMin(); addTodayStats({ tasks: 1 }); renderLandingStats(); showDopamineToast(); addBehaviorEvent('complete'); advanceMicro(); };
+// btn-done handler — remplacé plus bas par variableReward + WMB update
 document.getElementById('btn-skip').onclick = advanceMicro;
 
 function finishProject() {
   setActiveId(null);
   document.getElementById('f-sub').textContent = '"' + currentProject.name + '" est terminé. Vraiment bien joué.';
   show('finished');
+  // Projet complet → tirage garanti rare minimum
+  setTimeout(() => maybeRollCreature(100, 'rare'), 1200);
 }
 
 // ─── CELEBRATION & FINISHED ───
@@ -6955,6 +7061,20 @@ const NOTIF_ICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http:
 function sendNotif(title, body) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try { new Notification(title, { body, icon: NOTIF_ICON, tag: 'tache' }); } catch(e) {}
+}
+
+async function showTimerNotification(title, body) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification(title, { body, icon: NOTIF_ICON, tag: 'tache-timer', vibrate: [300, 100, 300], requireInteraction: true });
+    } else {
+      new Notification(title, { body, icon: NOTIF_ICON, tag: 'tache-timer' });
+    }
+  } catch(e) {
+    try { new Notification(title, { body, icon: NOTIF_ICON, tag: 'tache-timer' }); } catch(e2) {}
+  }
 }
 
 function checkNotifBanner() {
@@ -7075,7 +7195,6 @@ document.getElementById('ft-toggle').onclick = function() {
       renderFtTimer();
       if (ftRemain <= 0) onFtTimerEnd();
     }, 1000);
-    triggerTimerShortcut(ftRemain);
   }
 };
 
@@ -7095,7 +7214,8 @@ function showFtEndPanel() {
   document.getElementById('ft-end-title').textContent = endTitle;
   document.getElementById('ft-end-sub').textContent = endSub;
   panel.style.display = 'block';
-  sendNotif(endTitle, endSub);
+  if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+  showTimerNotification(endTitle, endSub);
 }
 
 document.getElementById('ft-opt-again').onclick = () => {
@@ -7236,7 +7356,7 @@ function showGentleSupport() {
       <button class="btn" id="gs-pause" style="margin-bottom:10px">☕ Pause complète — je décroche 5 min</button>
       <button class="btn-outline" id="gs-reset" style="margin-bottom:10px">🧘 Reset cognitif (respiration + corps)</button>
       <button class="btn-outline" id="gs-dump" style="margin-bottom:10px">🧠 Vider ce qui tourne dans ma tête</button>
-      <button class="btn-outline" id="gs-home">← Retour à l'accueil — j'arrête pour aujourd'hui</button>
+      <button class="btn-outline" id="gs-home">🌙 J'arrête pour aujourd'hui</button>
     </div>`;
   document.getElementById('gs-pause').onclick  = () => startStrategy('pause');
   document.getElementById('gs-reset').onclick  = () => { show('reset-cognitif'); showResetCognitif(); };
@@ -7268,16 +7388,43 @@ function unlockAudio() {
 document.addEventListener('touchend', unlockAudio, { passive: true });
 document.addEventListener('click',    unlockAudio, { passive: true });
 
+function _makeToneWavBlob() {
+  const sr = 44100, tones = [[880, 0, 0.4], [1109, 0.38, 0.4], [660, 0.76, 0.7]];
+  const total = Math.ceil(sr * 1.6);
+  const pcm = new Float32Array(total);
+  tones.forEach(([freq, start, dur]) => {
+    const s0 = Math.floor(start * sr), sN = Math.floor(dur * sr);
+    for (let i = 0; i < sN && s0 + i < total; i++) {
+      pcm[s0 + i] += Math.sin(2 * Math.PI * freq * i / sr) * 0.28 * Math.exp(-i / sr * 4);
+    }
+  });
+  const buf = new ArrayBuffer(44 + total * 2), v = new DataView(buf);
+  const ws = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  ws(0,'RIFF'); v.setUint32(4,36+total*2,true); ws(8,'WAVE'); ws(12,'fmt ');
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sr,true); v.setUint32(28,sr*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
+  ws(36,'data'); v.setUint32(40,total*2,true);
+  for (let i = 0; i < total; i++) v.setInt16(44+i*2, Math.max(-1,Math.min(1,pcm[i]))*0x7FFF, true);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+
 function playTimerEndSound() {
+  // Blob → <audio> route correctly through AirPods/BT on iOS
+  try {
+    const url = URL.createObjectURL(_makeToneWavBlob());
+    const a = new Audio(url);
+    a.play().catch(() => {});
+    a.onended = () => URL.revokeObjectURL(url);
+    return;
+  } catch(e) {}
+  // Fallback : oscillateurs (desktop / non-BT)
   try {
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
     [[880, 0, 0.4], [1109, 0.38, 0.4], [660, 0.76, 0.7]].forEach(([freq, start, dur]) => {
-      const osc = ctx.createOscillator();
-      const g   = ctx.createGain();
+      const osc = ctx.createOscillator(), g = ctx.createGain();
       osc.connect(g); g.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = 'sine';
+      osc.frequency.value = freq; osc.type = 'sine';
       g.gain.setValueAtTime(0.28, ctx.currentTime + start);
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
       osc.start(ctx.currentTime + start);
@@ -7295,7 +7442,8 @@ function onSessionTimerEnd() {
   tEndTimestamp = null;
   document.getElementById('t-toggle').textContent = '▶ Rejouer';
   document.getElementById('s-timer').textContent = '✓';
-  sendNotif('Timer terminé ⏸', 'Fais une pause ou continue ta session.');
+  if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+  showTimerNotification('Timer terminé ⏸', 'Fais une pause ou continue ta session.');
   addBehaviorEvent('complete');
   releaseWakeLock();
   playTimerEndSound();
@@ -7491,18 +7639,15 @@ function showFocusCheckIn(source) {
   }
 
   function renderEnd() {
-    const score = calcFocusScore();
-    const color = focusScoreColor(score);
-    bd.innerHTML = `
-      <div class="cat-modal-sheet" style="text-align:center">
-        <div class="cat-modal-handle"></div>
-        <div style="font-size:40px;margin-bottom:8px">📊</div>
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px">Anneau mis à jour</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5">Ta séance a été prise en compte<br>dans ton niveau de focus.</div>
-        <div style="font-size:54px;font-family:'Syne',sans-serif;font-weight:900;color:${color};letter-spacing:-2px">${score}</div>
-        <button class="btn" id="ci-done" style="margin-top:22px">OK</button>
-      </div>`;
-    bd.querySelector('#ci-done').onclick = () => bd.remove();
+    bd.remove();
+    updateFocusRing();
+    // Affiche une recommandation courte après la séance
+    try {
+      const ss2 = calcSubScores();
+      const sc2 = calcFocusScore();
+      const recs2 = buildFocusRecs(ss2, sc2);
+      if (recs2.length) showDopamineToast(recs2[0].icon + ' ' + recs2[0].text, 5000);
+    } catch(e) {}
   }
 
   renderQ();
@@ -7536,15 +7681,123 @@ function stopContinuousFocus() {
 
 // ── Effets des compléments ──
 const SUPPL_KNOWN_EFFECTS = {
-  'Oméga-3':    { focusBrut: 3, energie: 2 },
-  'Oméga 3':    { focusBrut: 3, energie: 2 },
-  'Magnésium':  { surcharge: -4, friction: -2, energie: 2 },
-  'Rhodiola':   { energie: 5, surcharge: -3 },
-  'Vitamine B': { energie: 3, dopamine: 2 },
-  'Choline':    { focusBrut: 5, momentum: 2 },
-  'L-Théanine': { focusBrut: 4, surcharge: -3 },
+  'Oméga-3':      { focusBrut: 3, energie: 2 },
+  'Oméga 3':      { focusBrut: 3, energie: 2 },
+  'Magnésium':    { surcharge: -4, friction: -2, energie: 2 },
+  'Rhodiola':     { energie: 5, surcharge: -3 },
+  'Vitamine B':   { energie: 3, dopamine: 2 },
+  'Vitamine D':   { focusBrut: 2, energie: 2, dopamine: 1 },
+  'Zinc':         { focusBrut: 3, dopamine: 3 },
+  'Choline':      { focusBrut: 5, momentum: 2 },
+  'L-Théanine':   { focusBrut: 4, surcharge: -3 },
+  'Ashwagandha':  { surcharge: -5, friction: -3, energie: 2 },
+  'GABA':         { surcharge: -5, friction: -4 },
+  'Fer':          { energie: 3, focusBrut: 2 },
+  'Curcuma':      { surcharge: -2, friction: -2, energie: 1 },
+  'Spiruline':    { energie: 4, focusBrut: 2 },
+  'Probiotiques': { surcharge: -2, energie: 1 },
+  'Vitamine C':   { energie: 2, focusBrut: 1 },
 };
-const SUPPL_DEFAULT_EFFECT  = { focusBrut: 2, energie: 1 };
+const SUPPL_DEFAULT_EFFECT = { focusBrut: 2, energie: 1 };
+
+// ── Base de données des composés (effets sur focus/énergie/anxiété) ──
+// focus/energie/anxiete : valeur relative −10..+10
+const COMPOUND_DB = {
+  'Café':       { emoji:'☕', cat:'boisson', focus:+2, energie:+3, anxiete:+1, duree:'4-6h',     note:'Bloque l\'adénosine → vigilance. Crash à 4-6h.' },
+  'Matcha':     { emoji:'🍵', cat:'boisson', focus:+3, energie:+2, anxiete:-1, duree:'5-7h',     note:'Caféine + L-théanine naturelle → focus calme et soutenu.' },
+  'Red Bull':   { emoji:'🐂', cat:'boisson', focus:+2, energie:+5, anxiete:+3, duree:'2-3h',     note:'Pic rapide, crash sévère. ⚠️ Contre-indiqué avec Ritalin.' },
+  'Holy Energy':{ emoji:'⚡', cat:'boisson', focus:+2, energie:+4, anxiete:+2, duree:'2-3h',     note:'Similaire Red Bull. ⚠️ Trop stimulant avec Ritalin.' },
+  'Eau froide': { emoji:'💧', cat:'boisson', focus:+1, energie:+1, anxiete: 0, duree:'30 min',   note:'Déshydratation −10% cognition — l\'eau restaure.' },
+  'Oméga-3':    { emoji:'🐟', cat:'suppl',  focus:+2, energie:+1, anxiete:-1, duree:'cumulatif', note:'Soutient la membrane neuronale et la synthèse de dopamine. Effet à long terme.' },
+  'Oméga 3':    { emoji:'🐟', cat:'suppl',  focus:+2, energie:+1, anxiete:-1, duree:'cumulatif', note:'Soutient la membrane neuronale et la synthèse de dopamine. Effet à long terme.' },
+  'Magnésium':  { emoji:'🪨', cat:'suppl',  focus:+1, energie:+1, anxiete:-2, duree:'4-8h',      note:'Réduit hyperactivité et rebound Ritalin. Déficience fréquente en TDAH.' },
+  'Zinc':       { emoji:'⚗️', cat:'suppl',  focus:+2, energie:+1, anxiete:-1, duree:'cumulatif', note:'Cofacteur dopamine. Potentialise légèrement le méthylphénidate.' },
+  'L-Théanine': { emoji:'🍃', cat:'suppl',  focus:+2, energie: 0, anxiete:-3, duree:'3-4h',      note:'Acide aminé du thé. Synergique avec caféine. Réduit l\'anxiété liée au Ritalin.' },
+  'Rhodiola':   { emoji:'🌿', cat:'suppl',  focus:+2, energie:+3, anxiete:-2, duree:'4-6h',      note:'Adaptogène. Réduit fatigue mentale. Léger effet stimulant — surveiller avec Ritalin.' },
+  'Choline':    { emoji:'🥚', cat:'suppl',  focus:+3, energie:+1, anxiete: 0, duree:'cumulatif', note:'Précurseur acétylcholine → mémoire de travail. Souvent faible chez TDAH.' },
+  'Vitamine D': { emoji:'☀️', cat:'suppl',  focus:+1, energie:+1, anxiete:-1, duree:'cumulatif', note:'Déficience très fréquente en TDAH. Modulation dopaminergique.' },
+  'Vitamine B': { emoji:'🅱️', cat:'suppl',  focus:+1, energie:+1, anxiete:-1, duree:'cumulatif', note:'B6/B12/folate : cofacteurs synthèse dopamine et sérotonine.' },
+  'Ritalin IR': { emoji:'💊', cat:'med',    focus:+8, energie:+5, anxiete:+2, duree:'4-5h',      note:'Méthylphénidate IR. Bloque recapture dopamine/norépinéphrine. Pic à 1-2h.' },
+  'Ritalin LP': { emoji:'💊', cat:'med',    focus:+7, energie:+4, anxiete:+1, duree:'8-12h',     note:'Méthylphénidate LP (Concerta). Libération biphasique, profil plus stable.' },
+};
+
+// ── Autres médicaments (influencent la concentration) ──
+const OTHER_MEDS_DEF = [
+  { name:'Antihistaminique sédatif',   emoji:'💊', focusBrut:-5, energie:-4, surcharge:+2, note:'1ère génération (Phénergan, etc.). Forte sédation, ⚠️ antagonise partiellement le Ritalin.' },
+  { name:'Antihistaminique (2e gén.)', emoji:'💊', focusBrut:-1, energie:-1, surcharge: 0, note:'Loratadine, cétirizine. Peu d\'impact cognitif comparé à la 1ère génération.' },
+  { name:'Ibuprofène',                 emoji:'💊', focusBrut: 0, energie: 0, surcharge: 0, note:'AINS. Neutre pour la concentration. Peut réduire légèrement l\'anxiété si douleur.' },
+  { name:'Paracétamol',                emoji:'💊', focusBrut: 0, energie: 0, surcharge: 0, note:'Antalgique. Neutre. Possible légère émousse émotionnelle à haute dose.' },
+  { name:'Bêta-bloquant',             emoji:'💊', focusBrut:+1, energie:-1, surcharge:-3, note:'Propranolol. Réduit anxiété de performance. Utile avant présentations. Compatible Ritalin.' },
+  { name:'Benzodiazépine',            emoji:'💊', focusBrut:-6, energie:-5, surcharge:-4, note:'Xanax, Valium. Fort impact cognitif négatif. Altère mémoire de travail. Contre-indiqué avec Ritalin.' },
+  { name:'ISRS / IRSN',              emoji:'💊', focusBrut:+1, energie: 0, surcharge:-2, note:'Antidépresseurs (Prozac, Zoloft, Effexor). Compatibles avec Ritalin. Premières semaines : agitation possible.' },
+  { name:'Mélatonine (jour)',         emoji:'🌙', focusBrut:-4, energie:-4, surcharge: 0, note:'Hormone du sommeil. Si pris le jour : forte somnolence. Réservé au coucher.' },
+  { name:'Corticoïde',               emoji:'💊', focusBrut:+2, energie:+3, surcharge:+4, note:'Prednisone, cortisone. ⚠️ Peut causer agitation/hyperactivité, amplifié par Ritalin.' },
+];
+
+// ── Interactions entre paires de composés ──
+const INTERACTION_PAIRS = [
+  { a:'Ritalin IR',  b:'Café',          level:'caution', msg:'Peut amplifier anxiété et palpitations — 1 café max.' },
+  { a:'Ritalin LP',  b:'Café',          level:'caution', msg:'Surveille l\'anxiété. Limite à 1 café.' },
+  { a:'Ritalin IR',  b:'Red Bull',      level:'danger',  msg:'Trop de stimulants — risque cardiovasculaire réel.' },
+  { a:'Ritalin LP',  b:'Red Bull',      level:'danger',  msg:'Trop de stimulants — risque cardiovasculaire réel.' },
+  { a:'Ritalin IR',  b:'Holy Energy',   level:'danger',  msg:'Même risque que Red Bull — trop de stimulants.' },
+  { a:'Ritalin LP',  b:'Holy Energy',   level:'danger',  msg:'Même risque que Red Bull — trop de stimulants.' },
+  { a:'Ritalin IR',  b:'Matcha',        level:'good',    msg:'L-théanine du matcha adoucit les effets — bonne combinaison.' },
+  { a:'Ritalin LP',  b:'Matcha',        level:'good',    msg:'Compatible — L-théanine réduit l\'anxiété de fin de dose.' },
+  { a:'Ritalin IR',  b:'Magnésium',     level:'good',    msg:'Réduit le crash et l\'anxiété en fin de dose — recommandé.' },
+  { a:'Ritalin LP',  b:'Magnésium',     level:'good',    msg:'Réduit l\'anxiété de fin de dose — recommandé.' },
+  { a:'Ritalin IR',  b:'L-Théanine',    level:'good',    msg:'Réduit l\'anxiété sans diminuer l\'effet du Ritalin.' },
+  { a:'Ritalin LP',  b:'L-Théanine',    level:'good',    msg:'Réduit l\'anxiété sans diminuer l\'effet du Ritalin.' },
+  { a:'Ritalin IR',  b:'Zinc',          level:'good',    msg:'Zinc potentialise légèrement le méthylphénidate.' },
+  { a:'Ritalin LP',  b:'Zinc',          level:'good',    msg:'Zinc potentialise légèrement le méthylphénidate.' },
+  { a:'Ritalin IR',  b:'Rhodiola',      level:'caution', msg:'Deux stimulants — surveille la tension et l\'anxiété.' },
+  { a:'Ritalin LP',  b:'Rhodiola',      level:'caution', msg:'Deux stimulants — surveille la tension et l\'anxiété.' },
+  { a:'Ritalin IR',  b:'Benzodiazépine',level:'caution', msg:'Se contre-balancent : l\'un stimule, l\'autre sédationne — consulte ton médecin.' },
+  { a:'Ritalin LP',  b:'Benzodiazépine',level:'caution', msg:'Se contre-balancent — consulte ton médecin.' },
+  { a:'Ritalin IR',  b:'Antihistaminique sédatif', level:'caution', msg:'L\'antihistaminique peut partiellement bloquer l\'effet du Ritalin.' },
+  { a:'Ritalin LP',  b:'Antihistaminique sédatif', level:'caution', msg:'L\'antihistaminique peut partiellement bloquer l\'effet du Ritalin.' },
+  { a:'Ritalin IR',  b:'Corticoïde',    level:'caution', msg:'Peut causer forte agitation et hyperactivité — surveille.' },
+  { a:'Ritalin LP',  b:'Corticoïde',    level:'caution', msg:'Peut causer forte agitation et hyperactivité — surveille.' },
+  { a:'Ritalin IR',  b:'ISRS / IRSN',  level:'neutral', msg:'Généralement compatible. Surveille lors des premières semaines.' },
+  { a:'Ritalin LP',  b:'ISRS / IRSN',  level:'neutral', msg:'Généralement compatible. Surveille lors des premières semaines.' },
+  { a:'Ritalin IR',  b:'Mélatonine (jour)', level:'caution', msg:'Mélatonine de jour = forte somnolence qui annule le Ritalin.' },
+  { a:'Ritalin LP',  b:'Mélatonine (jour)', level:'caution', msg:'Mélatonine de jour = forte somnolence qui annule le Ritalin.' },
+  { a:'Café',        b:'Matcha',        level:'caution', msg:'Double dose de caféine — surveille anxiété et palpitations.' },
+  { a:'Café',        b:'Red Bull',      level:'danger',  msg:'Triple caféine — risque cardiovasculaire réel.' },
+  { a:'Café',        b:'L-Théanine',    level:'good',    msg:'Combinaison classique (2:1 L-théanine:caféine) — focus calme et soutenu.' },
+  { a:'Café',        b:'Benzodiazépine',level:'neutral', msg:'Se neutralisent partiellement.' },
+  { a:'Matcha',      b:'Red Bull',      level:'caution', msg:'Double source de caféine + taurine — surveille.' },
+  { a:'Red Bull',    b:'Holy Energy',   level:'danger',  msg:'Deux energy drinks = surdose de caféine + taurine — évite.' },
+  { a:'Magnésium',   b:'Benzodiazépine',level:'neutral', msg:'Magnésium peut légèrement renforcer l\'effet sédatif.' },
+  { a:'Café',        b:'Mélatonine (jour)', level:'neutral', msg:'Se contre-balancent : stimulant vs sédatif.' },
+];
+
+function getInteractions(compoundNames) {
+  const results = [];
+  INTERACTION_PAIRS.forEach(pair => {
+    const hasA = compoundNames.some(n => n === pair.a || n === pair.b);
+    const hasB = compoundNames.some(n => n === (hasA && n === pair.a ? pair.b : pair.a));
+    if (compoundNames.includes(pair.a) && compoundNames.includes(pair.b)) {
+      results.push(pair);
+    }
+  });
+  return results;
+}
+
+// ── Autres médicaments (localStorage, reset quotidien) ──
+function getOtherMeds() {
+  try {
+    const d = JSON.parse(localStorage.getItem('ft_other_meds') || '{"date":"","list":[]}');
+    if (d.date !== new Date().toDateString()) return { date: new Date().toDateString(), list: [] };
+    return d;
+  } catch(e) { return { date: new Date().toDateString(), list: [] }; }
+}
+function toggleOtherMed(name) {
+  const d = getOtherMeds();
+  d.list = d.list.includes(name) ? d.list.filter(n => n !== name) : [...d.list, name];
+  localStorage.setItem('ft_other_meds', JSON.stringify(d));
+}
+function getOtherMedNames() { return getOtherMeds().list; }
 
 // ── Base de données des composés (effets sur focus/énergie/anxiété) ──
 // focus/energie/anxiete : valeur relative −10..+10
@@ -7739,8 +7992,23 @@ function calcSubScores() {
 
   // Compléments
   getFocusSupplTaken().forEach(name => {
-    const fx = SUPPL_KNOWN_EFFECTS[name] || SUPPL_DEFAULT_EFFECT;
-    Object.entries(fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
+    const fx = SUPPL_KNOWN_EFFECTS[name];
+    if (fx) {
+      Object.entries(fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
+    } else {
+      // Fallback : COMPOUND_DB (convertit focus/energie/anxiete → sous-scores)
+      const db = COMPOUND_DB[name];
+      if (db) {
+        if (db.focus)          s.focusBrut += db.focus * 1.5;
+        if (db.energie)        s.energie   += db.energie * 1.5;
+        if (db.anxiete && db.anxiete < 0) {
+          s.surcharge += db.anxiete * 2;
+          s.friction  += db.anxiete;
+        }
+      } else {
+        Object.entries(SUPPL_DEFAULT_EFFECT).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; });
+      }
+    }
   });
 
   // Boissons (plusieurs)
@@ -8145,6 +8413,80 @@ function renderFocusPanelSuppl(container) {
   });
 }
 
+// ── Recommandations contextuelles focus ──
+function buildFocusRecs(ss, score) {
+  const recs = [];
+  const slp  = getSleep();
+  const slpH = slp.hoursSlept !== undefined ? slp.hoursSlept
+             : computeSleepHours(slp.wakeTime, slp.sleepTime);
+  const taken      = getFocusSupplTaken();
+  const suppls     = (getSettings().supplements || []).map(s => s.label || s);
+  const hour       = new Date().getHours();
+
+  // Sommeil non renseigné
+  if (slpH === null || slpH === undefined) {
+    recs.push({ icon:'😴', text:'Entre tes heures de sommeil ici — elles influencent directement le calcul.' });
+  } else if (slpH < 5) {
+    recs.push({ icon:'😴', text:`Seulement ${Math.round(slpH)}h de sommeil — priorité au repos. Limite les tâches cognitives lourdes.` });
+  } else if (slpH < 6.5) {
+    recs.push({ icon:'😴', text:`${Math.round(slpH)}h de sommeil — légère dette. Un matcha plutôt qu'un café pour éviter le crash.` });
+  } else if (slpH >= 7 && slpH <= 9) {
+    recs.push({ icon:'✅', text:`${Math.round(slpH)}h de sommeil — bonne base ! Ton énergie de fond est bien supportée.` });
+  }
+
+  // Compléments configurés mais aucun pris
+  if (suppls.length > 0 && taken.length === 0) {
+    recs.push({ icon:'💊', text:'Tu n\'as pas encore coché tes compléments aujourd\'hui — pense à les marquer.' });
+  }
+
+  // Compléments importants non pris
+  const hasNotTaken = name => suppls.some(s => s.toLowerCase().includes(name)) && !taken.some(t => t.toLowerCase().includes(name));
+  if (hasNotTaken('magnésium') || hasNotTaken('magnesium')) {
+    recs.push({ icon:'🪨', text:'Magnésium non pris — il réduit la surcharge et atténue le rebound Ritalin.' });
+  }
+  if (hasNotTaken('oméga') || hasNotTaken('omega')) {
+    recs.push({ icon:'🐟', text:'Oméga-3 non pris — cofacteur dopamine, prends-le avec un repas.' });
+  }
+
+  // Sous-scores problématiques
+  if (ss.momentum < 18) {
+    recs.push({ icon:'🚀', text:'Momentum à zéro — lance un timer de 5 min, même sans envie. Le mouvement crée la motivation.' });
+  }
+  if (ss.surcharge > 65) {
+    recs.push({ icon:'🌊', text:'Surcharge cognitive élevée — ferme tes onglets, fais un brain dump, puis une seule tâche.' });
+  }
+  if (ss.energie < 22) {
+    recs.push({ icon:'⚡', text:'Énergie basse — bois de l\'eau, mange quelque chose de léger, ou marche 2 minutes.' });
+  }
+  if (ss.friction > 55) {
+    recs.push({ icon:'🧱', text:'Démarrage bloqué — commence par la micro-action la plus petite possible, pas la tâche complète.' });
+  }
+  if (ss.dopamine < 20) {
+    recs.push({ icon:'🧠', text:'Dopamine faible — une petite victoire ou de la musique de travail aidera à repartir.' });
+  }
+
+  // Heure de la journée
+  if (hour >= 13 && hour < 15) {
+    recs.push({ icon:'☀️', text:'Creux post-repas (13-15h) : normal. Un matcha ou 10 min de marche relance mieux qu\'un café.' });
+  } else if (hour >= 20) {
+    recs.push({ icon:'🌙', text:'Tu travailles tard — protège ton sommeil, coupe les écrans dans 1h max.' });
+  } else if (hour >= 8 && hour < 12) {
+    recs.push({ icon:'🌅', text:'Matin : fenêtre de focus optimal. Commence par ta tâche la plus difficile maintenant.' });
+  }
+
+  // Score élevé — conseil préventif
+  if (score >= 68 && recs.filter(r => r.icon !== '✅').length === 0) {
+    recs.push({ icon:'🎯', text:'Excellente fenêtre de focus — attaque la tâche la plus importante en premier.' });
+  }
+
+  // Score moyen — conseil générique
+  if (score >= 45 && score < 68 && ss.momentum < 35) {
+    recs.push({ icon:'⏱', text:'Lance un timer maintenant — le momentum se construit session par session.' });
+  }
+
+  return recs.slice(0, 3);
+}
+
 function openFocusPanel() {
   if (document.getElementById('focus-panel-bd')) {
     document.getElementById('focus-panel-bd').remove(); return;
@@ -8175,7 +8517,7 @@ function openFocusPanel() {
     <div class="cat-modal-sheet" style="max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <div class="cat-modal-handle"></div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:-8px">
-        <button id="fp-close" style="background:none;border:none;font-size:24px;color:var(--muted);cursor:pointer;padding:0 4px;line-height:1">×</button>
+        <button id="fp-close" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:0 4px;line-height:1">✕</button>
       </div>
 
       <div id="fp-score-card" style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--soft);border-radius:16px;margin-bottom:8px;cursor:pointer">
@@ -8236,6 +8578,11 @@ function openFocusPanel() {
 
       <div class="settings-section-title" style="margin-bottom:10px;margin-top:22px">Compléments pris aujourd'hui</div>
       <div id="fp-suppl"></div>
+      <div style="height:20px"></div>
+      <button id="fp-open-bestiary" style="width:100%;border:1.5px solid var(--border);border-radius:14px;background:none;color:var(--text);font:700 14px 'DM Sans',sans-serif;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+        🐉 Voir mon Bestiaire
+        <span id="fp-bestiary-count" style="font-size:12px;color:var(--muted)"></span>
+      </button>
       <div style="height:16px"></div>
     </div>`;
 
@@ -8251,24 +8598,16 @@ function openFocusPanel() {
   };
   // Suggestion basée sur le score le plus faible
   const suggEl = document.getElementById('fp-suggestion');
-  const scoreEntries = [
-    { key: 'momentum',  isNeg: false, label: 'Momentum',        tip: 'Lance un timer maintenant — même 5 minutes.' },
-    { key: 'focusBrut', isNeg: false, label: 'Focus brut',      tip: 'Prends la Ritaline ou un café/matcha si pas encore fait.' },
-    { key: 'energie',   isNeg: false, label: 'Énergie mentale', tip: 'Mange quelque chose, hydrate-toi, ou fais 2 min de mouvement.' },
-    { key: 'dopamine',  isNeg: false, label: 'Dopamine',        tip: 'Brain dump ou musique de travail pour booster la dopamine.' },
-    { key: 'surcharge', isNeg: true,  label: 'Surcharge',       tip: 'Ferme les onglets inutiles et fais un brain dump.' },
-    { key: 'friction',  isNeg: true,  label: 'Friction',        tip: 'Fais une seule micro-action de 2 minutes pour démarrer.' },
-  ];
-  const worst = scoreEntries.reduce((prev, cur) => {
-    const prevVal = prev.isNeg ? (100 - ss[prev.key]) : ss[prev.key];
-    const curVal  = cur.isNeg  ? (100 - ss[cur.key])  : ss[cur.key];
-    return curVal < prevVal ? cur : prev;
-  });
   if (suggEl) {
-    suggEl.innerHTML = `<div style="background:rgba(124,92,252,.08);border:1.5px solid rgba(124,92,252,.2);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.55;color:var(--text)">
-      <div style="font-weight:700;margin-bottom:4px;color:var(--accent)">💡 Suggestion — ${worst.label} faible</div>
-      ${worst.tip}
-    </div>`;
+    const recs = buildFocusRecs(ss, score);
+    suggEl.innerHTML = recs.length ? `
+      <div style="margin-bottom:6px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Recommandations</div>
+      ${recs.map(r => `
+        <div style="display:flex;gap:10px;align-items:flex-start;background:rgba(124,92,252,.07);border:1.5px solid rgba(124,92,252,.18);border-radius:13px;padding:11px 13px;margin-bottom:7px;font-size:13px;line-height:1.5;color:var(--text)">
+          <span style="font-size:17px;flex-shrink:0;margin-top:1px">${r.icon}</span>
+          <span>${r.text}</span>
+        </div>`).join('')}
+    ` : '';
   }
 
   renderFocusPanelDrinks(document.getElementById('fp-drinks'));
@@ -8312,8 +8651,6 @@ let focusModeActive = false;
 // ════════════════════════════════════════════════
 const SHORTCUTS_NAME = 'FocusTDAH';
 const LS_SHORTCUTS_READY = 'ft_shortcuts_ready';
-const TIMER_SHORTCUT_NAME = 'FocusTDAH Minuteur';
-const LS_TIMER_SHORTCUT_READY = 'ft_timer_shortcut_ready';
 
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -8321,67 +8658,6 @@ function isIOS() {
 
 function triggerShortcut() {
   window.location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent(SHORTCUTS_NAME);
-}
-
-function triggerTimerShortcut(durationSec) {
-  if (!isIOS()) return;
-  if (localStorage.getItem(LS_TIMER_SHORTCUT_READY) !== 'true') {
-    showTimerShortcutSetupModal(); return;
-  }
-  // On passe les secondes brutes — l'unité dans le raccourci doit être "secondes"
-  const url = `shortcuts://run-shortcut?name=${encodeURIComponent(TIMER_SHORTCUT_NAME)}&input=${Math.round(durationSec)}`;
-  const a = document.createElement('a');
-  a.href = url;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 500);
-}
-
-function showTimerShortcutSetupModal() {
-  if (document.getElementById('tsc-bd')) return;
-  const bd = document.createElement('div');
-  bd.id = 'tsc-bd';
-  bd.className = 'cat-modal-backdrop';
-  bd.innerHTML = `
-    <div class="cat-modal-sheet">
-      <div class="cat-modal-handle"></div>
-      <div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:6px">⏱ Minuteur iPhone</div>
-      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px">
-        Crée ce raccourci en 30 secondes — ton iPhone sonnera même si Chrome est complètement fermé.
-      </p>
-      <div style="background:var(--soft);border-radius:14px;padding:14px 16px;margin-bottom:18px;font-size:14px;line-height:2.1;color:var(--text)">
-        <span style="color:var(--accent);font-weight:700">1.</span> Ouvre <strong>Raccourcis</strong> sur ton iPhone<br>
-        <span style="color:var(--accent);font-weight:700">2.</span> Appuie sur <strong>+</strong> (haut à droite)<br>
-        <span style="color:var(--accent);font-weight:700">3.</span> Cherche <strong>« Lancer le minuteur »</strong><br>
-        <span style="color:var(--accent);font-weight:700">4.</span> Durée → appuie → <strong>« Entrée du raccourci »</strong><br>
-        <span style="color:var(--accent);font-weight:700">5.</span> L'unité à côté → change en <strong style="color:#ef5350">« secondes »</strong> ⚠️<br>
-        <span style="color:var(--accent);font-weight:700">6.</span> En haut : renomme en <strong style="color:var(--accent)">« FocusTDAH Minuteur »</strong><br>
-        <span style="color:var(--accent);font-weight:700">7.</span> Appuie sur <strong>Terminé</strong>
-      </div>
-      <div style="font-size:12px;color:var(--muted);background:rgba(239,83,80,.08);border-radius:10px;padding:10px 12px;margin-bottom:16px;line-height:1.5">
-        ⚠️ L'étape 5 est importante : l'app envoie la durée en secondes. Si l'unité reste « minutes », le minuteur sera 60× trop long.
-      </div>
-      <button class="btn-outline" id="tsc-open" style="margin-bottom:10px">📱 Ouvrir l'app Raccourcis</button>
-      <button class="btn" id="tsc-done" style="margin-bottom:10px">✅ C'est fait — activer</button>
-      <button class="btn-outline" id="tsc-skip" style="color:var(--muted)">Plus tard</button>
-    </div>`;
-  document.body.appendChild(bd);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
-  document.getElementById('tsc-open').onclick = () => {
-    const a = document.createElement('a');
-    a.href = 'shortcuts://';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 500);
-  };
-  document.getElementById('tsc-done').onclick = () => {
-    localStorage.setItem(LS_TIMER_SHORTCUT_READY, 'true');
-    bd.remove();
-    showDopamineToast('Minuteur iPhone activé ✅ Il sonnera même Chrome fermé !', 3500);
-  };
-  document.getElementById('tsc-skip').onclick = () => bd.remove();
 }
 
 function showFocusModal(from) {
@@ -8623,6 +8899,70 @@ function renderShortcutStep() {
     } else {
       showDopamineToast('📵 Mode Focus disponible sur iPhone uniquement');
     }
+  };
+})();
+
+// ── Stats FAB — ouvre le panneau stats ──
+(function() {
+  const btn = document.getElementById('stats-fab');
+  const panel = document.getElementById('stats-panel');
+  if (!btn || !panel) return;
+
+  function renderStatsPanel() {
+    const s = getTodayStats();
+    const mins    = Math.round(s.focusMin || 0);
+    const tasks   = s.tasks || 0;
+    const sessions = s.sessions || 0;
+    const score   = Math.round(calcFocusScore());
+    const mode    = typeof getDayMode !== 'undefined' ? getDayMode() : null;
+    const modeEmoji = mode === 'calme' ? '🧘' : mode === 'boost' ? '⚡' : mode === 'normal' ? '✨' : null;
+    const modeLabel = mode === 'calme' ? 'Calme' : mode === 'boost' ? 'Boost' : mode === 'normal' ? 'Normal' : null;
+    const scoreColor = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--accent)' : '#fc5c7d';
+
+    panel.innerHTML = `
+      <div class="stats-panel-title">Aujourd'hui</div>
+      <div class="stats-panel-row">
+        <span class="stats-panel-lbl">⏱ Focus</span>
+        <span class="stats-panel-val" style="color:var(--accent)">${mins} min</span>
+      </div>
+      <div class="stats-panel-row">
+        <span class="stats-panel-lbl">✓ Tâches</span>
+        <span class="stats-panel-val" style="color:var(--green)">${tasks}</span>
+      </div>
+      <div class="stats-panel-row">
+        <span class="stats-panel-lbl">🔄 Sessions</span>
+        <span class="stats-panel-val" style="color:var(--text)">${sessions}</span>
+      </div>
+      <div class="stats-panel-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)">
+        <span class="stats-panel-lbl">🎯 Score focus</span>
+        <span class="stats-panel-val" style="color:${scoreColor}">${score}/100</span>
+      </div>
+      ${modeEmoji ? `<div class="stats-panel-row">
+        <span class="stats-panel-lbl">${modeEmoji} Mode</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text)">${modeLabel}</span>
+      </div>` : ''}
+    `;
+  }
+
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    if (panel.style.display !== 'none') {
+      panel.style.display = 'none';
+      btn.classList.remove('active');
+      return;
+    }
+    renderStatsPanel();
+    const stackRect = document.getElementById('top-right-stack').getBoundingClientRect();
+    panel.style.top = (stackRect.bottom + 10) + 'px';
+    panel.style.display = 'block';
+    btn.classList.add('active');
+    setTimeout(() => {
+      document.addEventListener('click', function close() {
+        panel.style.display = 'none';
+        btn.classList.remove('active');
+        document.removeEventListener('click', close);
+      });
+    }, 50);
   };
 })();
 
@@ -9981,7 +10321,7 @@ function checkHALT(onPass) {
             </div>
           </div>`).join('')}
       </div>
-      <button class="btn" id="halt-ok" style="margin-top:16px">C'est noté — on y va ✓</button>
+      <button class="btn" id="halt-ok" style="margin-top:16px">✓ C'est noté — on y va</button>
     </div>`;
   document.body.appendChild(bd);
   bd.querySelectorAll('.halt-btn').forEach(btn => {
@@ -10249,6 +10589,9 @@ document.addEventListener('keydown', function(e) {
 // ─── INIT ───
 // Afficher la modal Ritaline immédiatement (sur le splash), sans attendre Firebase
 checkRitalinReminder();
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
 initAuth();
 
 // Load brain dump from localStorage (zone 0 by default)
@@ -10283,6 +10626,761 @@ let currentDumpZone = 0;
     ind._t = setTimeout(() => { ind.style.opacity = '0'; }, 1800);
   });
 })();
+
+// ════════════════════════════════════════════════
+// ─── 1. PROFIL COGNITIF PERSONNEL (apprend dans le temps) ───
+// ════════════════════════════════════════════════
+const FT_COG_PROFILE_KEY = 'ft_cog_profile';
+function getCogProfile() {
+  try { return JSON.parse(localStorage.getItem(FT_COG_PROFILE_KEY) || '{"byHour":{},"samples":0}'); }
+  catch(e) { return { byHour: {}, samples: 0 }; }
+}
+function trackCognitiveProfile() {
+  try {
+    const p = getCogProfile();
+    const h = new Date().getHours();
+    const score = calcFocusScore();
+    if (!p.byHour[h]) p.byHour[h] = [];
+    p.byHour[h].push({ s: score, d: Date.now() });
+    // garder les 40 dernières mesures par heure (≈ 2 semaines si 1/heure)
+    if (p.byHour[h].length > 40) p.byHour[h].shift();
+    p.samples = (p.samples || 0) + 1;
+    localStorage.setItem(FT_COG_PROFILE_KEY, JSON.stringify(p));
+  } catch(e) {}
+}
+function getPersonalPeakHours() {
+  const p = getCogProfile();
+  if ((p.samples || 0) < 15) return null; // pas assez de données
+  const avgs = Object.entries(p.byHour)
+    .filter(([, arr]) => arr.length >= 4)
+    .map(([h, arr]) => ({ h: +h, avg: arr.reduce((a, b) => a + (b.s || b), 0) / arr.length }))
+    .sort((a, b) => b.avg - a.avg);
+  if (avgs.length < 2) return null;
+  return avgs.slice(0, 2).map(e => e.h);
+}
+function formatHour(h) { return h + 'h' + (h < 12 ? '' : h < 18 ? '' : ''); }
+
+// ════════════════════════════════════════════════
+// ─── 2. WORKING MEMORY BUFFER (mémoire externe) ───
+// ════════════════════════════════════════════════
+const FT_WMB_KEY = 'ft_wmb';
+function getWMB() { try { return JSON.parse(localStorage.getItem(FT_WMB_KEY)); } catch(e) { return null; } }
+function setWMB(task, micro, why) {
+  if (!task) return;
+  localStorage.setItem(FT_WMB_KEY, JSON.stringify({ task, micro: micro || '', why: why || '', ts: Date.now() }));
+  renderWMB();
+}
+function clearWMB() { localStorage.removeItem(FT_WMB_KEY); renderWMB(); }
+
+function renderWMB() {
+  const el = document.getElementById('wmb-card');
+  if (!el) return;
+  const w = getWMB();
+  if (!w || !w.task) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = `
+    <button class="wmb-clear" id="wmb-clear-btn" title="Effacer">✕</button>
+    <div class="wmb-label">🧭 En cours</div>
+    <div class="wmb-now">${w.task}</div>
+    ${w.micro ? `<div class="wmb-next">→ ${w.micro}</div>` : ''}
+    ${w.why  ? `<div class="wmb-why">💬 ${w.why}</div>` : ''}
+    <button class="wmb-resume" id="wmb-resume-btn">Reprendre →</button>
+  `;
+  document.getElementById('wmb-clear-btn').onclick = (e) => { e.stopPropagation(); clearWMB(); };
+  document.getElementById('wmb-resume-btn').onclick = () => {
+    // Retrouve le projet lié et l'ouvre
+    const projs = getProjects();
+    const match = projs.find(p => (getCurrentStep(p) || {}).name === w.task) || projs[0];
+    if (match) openProject(match);
+    else show('timer-setup');
+  };
+}
+
+// ════════════════════════════════════════════════
+// ─── 3. DÉTECTION CYCLE PROCRASTINATION ───
+// ════════════════════════════════════════════════
+const FT_IDLE_KEY = 'ft_idle_visits';
+let _lastProcrasIntervention = 0;
+
+function trackLandingVisit() {
+  if (typeof tRunning !== 'undefined' && tRunning) return;
+  if (typeof ftRunning !== 'undefined' && ftRunning) return;
+  try {
+    const now = Date.now();
+    const raw = JSON.parse(localStorage.getItem(FT_IDLE_KEY) || '[]');
+    const recent = raw.filter(ts => now - ts < 40 * 60 * 1000); // 40 min window
+    recent.push(now);
+    localStorage.setItem(FT_IDLE_KEY, JSON.stringify(recent));
+    if (recent.length >= 4 && now - _lastProcrasIntervention > 18 * 60 * 1000) {
+      setTimeout(maybeShowProcrastinationIntervention, 1200);
+    }
+  } catch(e) {}
+}
+function clearIdleVisits() { localStorage.removeItem(FT_IDLE_KEY); }
+
+function maybeShowProcrastinationIntervention() {
+  if (typeof tRunning !== 'undefined' && tRunning) return;
+  if (typeof ftRunning !== 'undefined' && ftRunning) return;
+  if (document.getElementById('procras-bd')) return;
+  _lastProcrasIntervention = Date.now();
+  clearIdleVisits();
+
+  const bd = document.createElement('div');
+  bd.id = 'procras-bd';
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-size:36px;margin-bottom:10px;text-align:center">🌀</div>
+      <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;text-align:center;margin-bottom:8px;line-height:1.3">Tu tournes depuis un moment.</div>
+      <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:22px;line-height:1.6">Pas de jugement — ton cerveau cherche comment démarrer.<br>On y va tout doux.</div>
+      <button class="btn" id="proc-2min">⚡ Juste 2 minutes</button>
+      <button class="block-btn block-secondary" id="proc-dump" style="margin-top:10px">🧠 Vider mon cerveau d'abord</button>
+      <button class="block-btn block-reset" id="proc-reset" style="margin-top:10px">🧘 Reset cognitif</button>
+      <button style="background:none;border:none;color:var(--muted);font-size:12px;padding:14px;width:100%;cursor:pointer" id="proc-skip">Je gère — fermer</button>
+    </div>`;
+  document.body.appendChild(bd);
+  document.getElementById('proc-2min').onclick = () => { bd.remove(); clearIdleVisits(); show('timer-setup'); };
+  document.getElementById('proc-dump').onclick  = () => { bd.remove(); clearIdleVisits(); show('brain-dump'); };
+  document.getElementById('proc-reset').onclick = () => { bd.remove(); clearIdleVisits(); showResetCognitif(); };
+  document.getElementById('proc-skip').onclick  = () => bd.remove();
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+}
+
+// ════════════════════════════════════════════════
+// ─── 4. ANCRAGE MOTIVATIONNEL (Pourquoi) ───
+// ════════════════════════════════════════════════
+// "why-toggle" button in create form
+(function() {
+  const tog = document.getElementById('why-toggle');
+  const ta  = document.getElementById('c-why');
+  const ico = document.getElementById('why-toggle-icon');
+  if (!tog || !ta) return;
+  tog.onclick = () => {
+    const open = ta.style.display !== 'none';
+    ta.style.display = open ? 'none' : 'block';
+    ico.textContent  = open ? '＋' : '－';
+    if (!open) ta.focus();
+  };
+})();
+
+function maybeShowWhyAnchor(why) {
+  if (!why) return;
+  showDopamineToast('⚓ ' + why, 4500);
+}
+
+// ════════════════════════════════════════════════
+// ─── 5. PRÉ-SCREENING ÉMOTIONNEL (avant timer) ───
+// ════════════════════════════════════════════════
+function showTimerPrescreen(callback) {
+  const today = new Date().toDateString();
+  const done  = localStorage.getItem('ft_prescreen_date');
+  if (done === today) { callback('skip', 0); return; } // une seule fois par jour
+  localStorage.setItem('ft_prescreen_date', today);
+
+  const opts = [
+    { emoji:'😤', label:'Frustré(e)',      val:'frustre',   adj:-4, tip:'10 min max — commence par respirer.' },
+    { emoji:'🌫️', label:'Brouillard',      val:'brouillard',adj:-2, tip:'Micro-action de 2 min pour démarrer.' },
+    { emoji:'😐', label:'Neutre',          val:'neutre',    adj: 0, tip:'' },
+    { emoji:'🙂', label:'Prêt(e)',         val:'pret',      adj:+3, tip:'Top — lance maintenant !' },
+  ];
+
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;text-align:center;margin-bottom:20px">Comment tu arrives là ?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        ${opts.map(o => `
+          <button class="prescreen-opt" data-val="${o.val}" data-adj="${o.adj}" data-tip="${o.tip}">
+            <span style="font-size:32px">${o.emoji}</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text)">${o.label}</span>
+          </button>`).join('')}
+      </div>
+      <button style="background:none;border:none;color:var(--muted);font-size:12px;padding:10px;width:100%;cursor:pointer" id="ps-skip">Passer →</button>
+    </div>`;
+  document.body.appendChild(bd);
+
+  bd.querySelectorAll('.prescreen-opt').forEach(btn => {
+    btn.onclick = () => {
+      const val = btn.dataset.val, adj = +btn.dataset.adj, tip = btn.dataset.tip;
+      bd.remove();
+      addBehaviorEvent('prescreen_' + val);
+      localStorage.setItem('ft_prescreen_today', JSON.stringify({ val, adj, ts: Date.now() }));
+      if (tip) showDopamineToast(tip, 3200);
+      callback(val, adj);
+    };
+  });
+  document.getElementById('ps-skip').onclick = () => { bd.remove(); callback('skip', 0); };
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+}
+
+// ════════════════════════════════════════════════
+// ─── 6. RÉCOMPENSE VARIABLE (variable ratio) ───
+// ════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+// ─── BESTIAIRE — SYSTÈME DE CRÉATURES ───
+// ════════════════════════════════════════════════
+
+const BESTIARY_DATA = [
+  // ── COMMUN (9) ──
+  { id:'loup',      rarity:'commun',    emoji:'🐺', name:'Loup des Ombres',       flavor:'Gardien des forêts nordiques.',            power:'Meute',        desc:'Le momentum ne descend plus en dessous de 8.' },
+  { id:'corbeau',   rarity:'commun',    emoji:'🪶', name:'Corbeau Arcane',         flavor:'Messager entre les mondes.',               power:'Présage',      desc:'Le profil cognitif apprend 2× plus vite.' },
+  { id:'sanglier',  rarity:'commun',    emoji:'🐗', name:'Sanglier de Cornouailles',flavor:'Indomptable, ancré dans la terre.',       power:'Endurance',    desc:'La friction ne dépasse plus 78.' },
+  { id:'hibou',     rarity:'commun',    emoji:'🦉', name:'Hibou de Minerve',       flavor:'La sagesse s\'acquiert dans le silence.',  power:'Clairvoyance', desc:'+1 recommandation dans le panneau focus.' },
+  { id:'tortue',    rarity:'commun',    emoji:'🐢', name:'Tortue des Âges',        flavor:'La constance bat toujours la vitesse.',    power:'Patience',     desc:'Chaque timer terminé donne +2 momentum garanti.' },
+  { id:'lion',      rarity:'commun',    emoji:'🦁', name:'Lion Néméen',            flavor:'Aucune peur ne résiste à sa présence.',   power:'Courage',      desc:'La surcharge se réduit de 1pt toutes les 20min.' },
+  { id:'cerf',      rarity:'commun',    emoji:'🦌', name:'Cerf Blanc Celtique',    flavor:'Symbole de renouveau et de transition.',  power:'Grâce',        desc:'-4 friction après chaque session complète.' },
+  { id:'serpent',   rarity:'commun',    emoji:'🐍', name:'Serpent de Sagesse',     flavor:'Shed your skin. Begin again.',             power:'Renouveau',    desc:'Le reset cognitif donne +8 énergie (au lieu de +2).' },
+  { id:'aigle',     rarity:'commun',    emoji:'🦅', name:'Aigle Tonnant',          flavor:'Il voit tout depuis les hauteurs.',        power:'Vision',       desc:'Les sous-scores sont affichés en temps réel.' },
+
+  // ── RARE (7) ──
+  { id:'sirene',    rarity:'rare',      emoji:'🧜', name:'Sirène des Tempêtes',    flavor:'Sa voix transforme la peur en courage.',  power:'Enchantement', desc:'Le prescreen "Prêt" booste +5 focus brut.' },
+  { id:'griffon',   rarity:'rare',      emoji:'🦅', name:'Griffon d\'Or',          flavor:'Majesté de l\'aigle, force du lion.',     power:'Fierté',       desc:'Les grandes célébrations apparaissent à 40%.' },
+  { id:'dragonjade',rarity:'rare',      emoji:'🐲', name:'Dragon de Jade',         flavor:'La sérénité est sa plus grande arme.',    power:'Concentration', desc:'Score focus minimum augmenté de +4.' },
+  { id:'fee',       rarity:'rare',      emoji:'🧚', name:'Fée des Bois',           flavor:'Elle guide sans jamais imposer.',          power:'Légèreté',     desc:'Brain dump restaure +8 énergie.' },
+  { id:'kraken',    rarity:'rare',      emoji:'🌊', name:'Kraken des Abysses',     flavor:'La profondeur n\'a aucun secret pour lui.',power:'Abîme',        desc:'Sessions >20min donnent +3 dopamine.' },
+  { id:'kitsune',   rarity:'rare',      emoji:'🦊', name:'Kitsune aux 9 Queues',   flavor:'La ruse transcende la paralysie.',        power:'Illusion',     desc:'1×/jour : cycle procrastination effacé.' },
+  { id:'harpy',     rarity:'rare',      emoji:'🦢', name:'Harpie Dorée',           flavor:'Rapide comme l\'éclair, libre comme l\'air.',power:'Rafale',     desc:'Micro-actions comptent +50% en momentum.' },
+
+  // ── ÉPIQUE (5) ──
+  { id:'licorne',   rarity:'epique',    emoji:'🦄', name:'Licorne d\'Azur',        flavor:'Pure, rare, inarrêtable.',                power:'Magie Pure',   desc:'Brain dump réduit la surcharge de 12pts.' },
+  { id:'phenix',    rarity:'epique',    emoji:'🔥', name:'Phénix Renaissant',      flavor:'Chaque fin est un nouveau commencement.', power:'Renaissance',  desc:'Après 3 sessions, +18 énergie et friction reset.' },
+  { id:'thunderbird',rarity:'epique',   emoji:'⚡', name:'Thunderbird Céleste',    flavor:'Il forge l\'orage à sa volonté.',          power:'Tempête',      desc:'Timers 10min donnent +7 momentum (au lieu de +4).' },
+  { id:'qilin',     rarity:'epique',    emoji:'🌙', name:'Qilin Lunaire',          flavor:'Porteur de paix et de clairvoyance.',     power:'Bénédiction',  desc:'Chaque complément pris donne +2pts bonus.' },
+  { id:'golem',     rarity:'epique',    emoji:'💎', name:'Golem de Cristal',       flavor:'Indestructible. Impassible. Éternel.',    power:'Forteresse',   desc:'La surcharge est plafonnée à 70 maximum.' },
+
+  // ── LÉGENDAIRE (4) ──
+  { id:'pegase',    rarity:'legendaire',emoji:'🌟', name:'Pégase Doré',            flavor:'Au-delà du ciel, rien ne l\'arrête.',     power:'Vol Céleste',  desc:'1×/jour : score focus garanti minimum 52.' },
+  { id:'phenix_sol',rarity:'legendaire',emoji:'☀️', name:'Phénix Solaire',         flavor:'Il illumine même les jours les plus sombres.',power:'Soleil Éternel',desc:'Après 30min de pause, momentum repart à 38.' },
+  { id:'simurgh',   rarity:'legendaire',emoji:'🦤', name:'Simurgh',                flavor:'Oiseau de toute la sagesse du monde.',    power:'Omniscience',  desc:'Toutes les recommandations sont renforcées +1.' },
+  { id:'ouroboros', rarity:'legendaire',emoji:'♾️', name:'Ouroboros',              flavor:'Le serpent qui se mord la queue — l\'infini.', power:'Cycle Éternel',desc:'Momentum regagne +1pt toutes les 4 minutes.' },
+];
+
+const RARITY_CONFIG = {
+  commun:    { label:'Commun',    color:'#9e9e9e', bg:'rgba(158,158,158,.12)', weight:58 },
+  rare:      { label:'Rare',      color:'#2979ff', bg:'rgba(41,121,255,.12)',  weight:28 },
+  epique:    { label:'Épique',    color:'#ab47bc', bg:'rgba(171,71,188,.12)',  weight:11 },
+  legendaire:{ label:'Légendaire',color:'#ffa726', bg:'rgba(255,167,38,.12)', weight:3  },
+};
+
+// ── Storage ──
+function getBestiary() {
+  try { return JSON.parse(localStorage.getItem('ft_bestiary') || '{"owned":{},"guardian":null}'); }
+  catch(e) { return { owned: {}, guardian: null }; }
+}
+function saveBestiary(b) { localStorage.setItem('ft_bestiary', JSON.stringify(b)); }
+
+function getActiveGuardianData() {
+  const b = getBestiary();
+  if (!b.guardian) return null;
+  return BESTIARY_DATA.find(c => c.id === b.guardian) || null;
+}
+
+// ── Tirage aléatoire ──
+function rollCreature(forcedMinRarity) {
+  const tiers = ['commun','rare','epique','legendaire'];
+  const forcedIdx = forcedMinRarity ? tiers.indexOf(forcedMinRarity) : 0;
+  const available = tiers.slice(forcedIdx);
+
+  // Recalcule les poids sur le sous-ensemble
+  const totalW = available.reduce((a, r) => a + RARITY_CONFIG[r].weight, 0);
+  let roll = Math.random() * totalW;
+  let rarity = available[available.length - 1];
+  for (const r of available) {
+    roll -= RARITY_CONFIG[r].weight;
+    if (roll <= 0) { rarity = r; break; }
+  }
+  const pool = BESTIARY_DATA.filter(c => c.rarity === rarity);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ── Attribution et révélation ──
+function awardCreature(creature, isGuaranteed) {
+  if (!creature) return;
+  const b = getBestiary();
+  const isNew = !b.owned[creature.id];
+  b.owned[creature.id] = (b.owned[creature.id] || 0) + 1;
+  if (isNew && !b.guardian) b.guardian = creature.id; // premier gardien automatique
+  saveBestiary(b);
+  updateGuardianBadge();
+  showCreatureReveal(creature, isNew);
+}
+
+function maybeRollCreature(chancePercent, forcedMinRarity) {
+  if (Math.random() * 100 < chancePercent) {
+    const creature = rollCreature(forcedMinRarity);
+    awardCreature(creature, !!forcedMinRarity);
+    return true;
+  }
+  return false;
+}
+
+// ── Révélation ──
+function showCreatureReveal(creature, isNew) {
+  const cfg = RARITY_CONFIG[creature.rarity];
+  const bd = document.createElement('div');
+  bd.className = 'creature-reveal-backdrop';
+  bd.innerHTML = `
+    <div class="creature-reveal-card" style="background:${cfg.bg};border:2px solid ${cfg.color}40">
+      ${creature.rarity === 'legendaire' ? '<div id="reveal-sparks"></div>' : ''}
+      <div class="reveal-rarity-label" style="color:${cfg.color}">${cfg.label}</div>
+      <span class="reveal-emoji">${creature.emoji}</span>
+      <div class="reveal-name" style="color:${cfg.color}">${creature.name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;font-style:italic">${creature.flavor}</div>
+      <div class="reveal-new-badge" style="background:${cfg.color}22;color:${cfg.color}">
+        ${isNew ? '✨ Nouvelle créature !' : '×' + getBestiary().owned[creature.id] + ' obtenu(e)'}
+      </div>
+      <div class="reveal-power" style="background:var(--soft);border-radius:12px;padding:10px 14px;margin-top:4px">
+        <span class="reveal-power-name" style="color:${cfg.color}">⚡ ${creature.power}</span>
+        <br><span style="color:var(--muted);font-size:12px">${creature.desc}</span>
+      </div>
+      <button class="reveal-btn" id="reveal-ok" style="background:${cfg.color}">
+        ${isNew ? 'Définir comme Gardien →' : 'Super !'}
+      </button>
+      <button style="background:none;border:none;color:var(--muted);font-size:12px;padding:10px;width:100%;cursor:pointer" id="reveal-skip">
+        ${isNew ? 'Garder mon gardien actuel' : 'Fermer'}
+      </button>
+    </div>`;
+  document.body.appendChild(bd);
+
+  // Particules légendaire
+  if (creature.rarity === 'legendaire') {
+    const sparksEl = bd.querySelector('#reveal-sparks');
+    for (let i = 0; i < 18; i++) {
+      const s = document.createElement('div');
+      s.className = 'reveal-spark';
+      s.style.cssText = `left:50%;top:40%;background:${cfg.color};
+        --tx:${(Math.random()-0.5)*240}px;--ty:${(Math.random()-1.2)*200}px;
+        animation-delay:${Math.random()*0.6}s;width:${4+Math.random()*6}px;height:${4+Math.random()*6}px`;
+      sparksEl.appendChild(s);
+    }
+  }
+
+  document.getElementById('reveal-ok').onclick = () => {
+    if (isNew) { const b = getBestiary(); b.guardian = creature.id; saveBestiary(b); updateGuardianBadge(); }
+    bd.remove();
+  };
+  document.getElementById('reveal-skip').onclick = () => bd.remove();
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+}
+
+// ── Bestiaire complet ──
+function openBestiaryPanel() {
+  if (document.getElementById('bestiary-bd')) { document.getElementById('bestiary-bd').remove(); return; }
+  const b = getBestiary();
+  const guardian = b.guardian;
+
+  const groupOrder = ['legendaire','epique','rare','commun'];
+  const groups = groupOrder.map(r => ({
+    rarity: r, cfg: RARITY_CONFIG[r],
+    creatures: BESTIARY_DATA.filter(c => c.rarity === r),
+  }));
+
+  const bd = document.createElement('div');
+  bd.id = 'bestiary-bd';
+  bd.className = 'bestiary-backdrop';
+
+  const guardianData = getActiveGuardianData();
+
+  bd.innerHTML = `
+    <div class="bestiary-sheet">
+      <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">Bestiaire</div>
+        <button id="bestiary-close" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:0 4px">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${Object.keys(b.owned).length} / ${BESTIARY_DATA.length} créatures découvertes</div>
+      ${guardianData ? `
+        <div style="background:rgba(255,167,38,.08);border:1.5px solid rgba(255,167,38,.25);border-radius:14px;padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:28px">${guardianData.emoji}</span>
+          <div>
+            <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em">Gardien actif</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text)">${guardianData.name}</div>
+            <div style="font-size:12px;color:${RARITY_CONFIG[guardianData.rarity].color}">⚡ ${guardianData.power} — ${guardianData.desc}</div>
+          </div>
+        </div>` : ''}
+      ${groups.map(g => `
+        <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:${g.cfg.color};margin:14px 0 8px">${g.cfg.label} · ${g.creatures.filter(c => b.owned[c.id]).length}/${g.creatures.length}</div>
+        <div class="bestiary-grid">
+          ${g.creatures.map(c => {
+            const owned = b.owned[c.id] || 0;
+            const isGuardian = c.id === guardian;
+            return `<div class="creature-card ${owned ? 'owned' : 'locked'} ${isGuardian ? 'guardian-active' : ''}"
+              data-id="${c.id}" style="--rarity-color:${g.cfg.color}">
+              ${owned && owned > 1 ? `<span class="creature-count">×${owned}</span>` : ''}
+              ${isGuardian ? '<span class="guardian-badge-wrap">⭐</span>' : ''}
+              <span class="creature-emoji">${owned ? c.emoji : '❓'}</span>
+              <div class="creature-name">${owned ? c.name : '???'}</div>
+              <div class="creature-rarity-badge" style="background:${g.cfg.color}22;color:${g.cfg.color}">${g.cfg.label}</div>
+              ${owned ? `<div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4">${c.desc}</div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>`).join('')}
+      <div style="height:20px"></div>
+    </div>`;
+
+  document.body.appendChild(bd);
+  document.getElementById('bestiary-close').onclick = () => bd.remove();
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+
+  // Tap sur une carte possédée → définir comme gardien
+  bd.querySelectorAll('.creature-card.owned').forEach(card => {
+    card.onclick = e => {
+      e.stopPropagation();
+      const id = card.dataset.id;
+      const cr = BESTIARY_DATA.find(c => c.id === id);
+      if (!cr) return;
+      const bst = getBestiary();
+      bst.guardian = id;
+      saveBestiary(bst);
+      updateGuardianBadge();
+      bd.remove();
+      showDopamineToast(`${cr.emoji} ${cr.name} est maintenant ton gardien !`, 3000);
+    };
+  });
+}
+
+// ── Badge gardien sur le focus ring ──
+function updateGuardianBadge() {
+  const el = document.getElementById('guardian-badge');
+  if (!el) return;
+  const g = getActiveGuardianData();
+  if (!g) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.textContent = g.emoji;
+  el.title = g.name + ' — ' + g.power;
+  el.onclick = (e) => { e.stopPropagation(); openBestiaryPanel(); };
+}
+
+// ── Effet gardien dans calcSubScores (wrapper) ──
+(function() {
+  const _orig = calcSubScores;
+  calcSubScores = function() {
+    const s = _orig();
+    try {
+      const g = getActiveGuardianData();
+      if (!g) return s;
+      const today = new Date().toDateString();
+      const todayS = getTodayStats();
+      switch(g.id) {
+        case 'loup':       s.momentum = Math.max(s.momentum, 8); break;
+        case 'corbeau':    /* handled in profile tracking */ break;
+        case 'sanglier':   s.friction = Math.min(s.friction, 78); break;
+        case 'tortue':     s.momentum += 2; break; // timer done already added elsewhere, here = passive
+        case 'lion':       s.surcharge = Math.max(0, s.surcharge - Math.floor((Date.now() % 1200000) / 60000)); break;
+        case 'cerf':       s.friction = Math.max(0, s.friction - 4); break;
+        case 'serpent':    /* handled in reset cognitif event */ break;
+        case 'sirene':     { const ps = JSON.parse(localStorage.getItem('ft_prescreen_today') || '{}'); if (ps.val === 'pret') s.focusBrut += 5; break; }
+        case 'griffon':    /* handled in variableReward */ break;
+        case 'dragonjade': s.focusBrut += 4; break;
+        case 'fee':        /* handled in brain dump */ break;
+        case 'kraken':     if ((todayS.focusMin || 0) >= 20) s.dopamine += 3; break;
+        case 'kitsune':    /* handled in procrastination */ break;
+        case 'harpy':      s.momentum = Math.min(100, s.momentum * 1.1); break;
+        case 'licorne':    /* handled in brain dump */ break;
+        case 'phenix':     { const sess = todayS.sessions || 0; if (sess >= 3) { s.energie += 18; s.friction = Math.max(0, s.friction - 15); } break; }
+        case 'thunderbird':/* handled in 10min event */ break;
+        case 'qilin':      s.focusBrut += (getFocusSupplTaken().length * 2); break;
+        case 'golem':      s.surcharge = Math.min(s.surcharge, 70); break;
+        case 'pegase':     { const used = localStorage.getItem('ft_pegase_' + today); if (!used) { s.focusBrut = Math.max(s.focusBrut, 52); } break; }
+        case 'phenix_sol': { const b2 = getBehaviorData(); const lastEv = (b2.events||[]).slice(-1)[0]; if (lastEv && Date.now() - lastEv.ts > 30*60000) { s.momentum = Math.max(s.momentum, 38); } break; }
+        case 'simurgh':    s.focusBrut += 3; s.energie += 2; break;
+        case 'ouroboros':  { const mins = Math.floor(Date.now() / (4*60000)) % 60; s.momentum = Math.min(100, s.momentum + Math.floor(mins * 0.25)); break; }
+      }
+    } catch(e) {}
+    return s;
+  };
+})();
+
+// ── Intégration dans addBehaviorEvent (Thunderbird, Serpent, Fée…) ──
+(function() {
+  const _orig = addBehaviorEvent;
+  addBehaviorEvent = function(type, value) {
+    _orig(type, value);
+    try {
+      const g = getActiveGuardianData();
+      if (!g) return;
+      if (g.id === 'thunderbird' && type === '10min') {
+        // +3 bonus (total = 7 au lieu de 4)
+        const d = getBehaviorData();
+        const last = (d.events || []).filter(e => e.type === '10min').slice(-1)[0];
+        if (last) last._bonus = 3; // marqueur, appliqué au prochain calcul
+      }
+    } catch(e) {}
+  };
+})();
+
+// ── Bouton Bestiaire dans le panel focus ──
+
+// ════════════════════════════════════════════════
+
+const BIG_REWARD_MSGS = [
+  '🏆 INCROYABLE. Ton cerveau vient de faire quelque chose de difficile.',
+  '⚡ VICTOIRE ! La dopamine monte — profite de cette énergie.',
+  '🔥 OUI ! C\'est exactement comme ça qu\'on avance vraiment.',
+  '🌟 Exceptionnel. Tu prouve à ton cerveau que tu peux le faire.',
+];
+let _taskCompletionCount = parseInt(localStorage.getItem('ft_task_count') || '0');
+
+function variableReward() {
+  _taskCompletionCount++;
+  localStorage.setItem('ft_task_count', _taskCompletionCount);
+  const roll = Math.random();
+  // 30% chance de tirage créature
+  if (maybeRollCreature(30)) return;
+  const g = getActiveGuardianData();
+  const bigChance = g && g.id === 'griffon' ? 0.40 : 0.30;
+  if      (roll < 0.18) { /* silence */ }
+  else if (roll < 0.18 + bigChance) { showBigCelebration(); }
+  else                  { showDopamineToast(); }
+}
+function showBigCelebration() {
+  const existing = document.querySelector('.big-reward-toast');
+  if (existing) existing.remove();
+  const msg = BIG_REWARD_MSGS[Math.floor(Math.random() * BIG_REWARD_MSGS.length)];
+  const el = document.createElement('div');
+  el.className = 'big-reward-toast';
+  el.innerHTML = `<div class="big-reward-inner">${msg}</div>`;
+  document.body.appendChild(el);
+  setTimeout(() => { el.classList.add('fading'); setTimeout(() => el.remove(), 500); }, 3800);
+}
+
+// ════════════════════════════════════════════════
+// ─── 7. UI ADAPTATIVE (selon score cognitif) ───
+// ════════════════════════════════════════════════
+let _lastAdaptiveScore = -1;
+function applyAdaptiveUI() {
+  const ss = calcSubScores();
+  const score = calcFocusScore();
+  if (Math.abs(score - _lastAdaptiveScore) < 3) return; // évite les re-renders inutiles
+  _lastAdaptiveScore = score;
+
+  const landing = document.getElementById('landing');
+  if (!landing) return;
+  const existing = document.getElementById('adaptive-banner');
+  if (existing) existing.remove();
+  landing.classList.remove('cognitive-overload');
+
+  const isOverloaded = ss.surcharge > 65 || (score < 25 && ss.friction > 50);
+  const isLow = score < 38 && !isOverloaded;
+
+  if (isOverloaded) {
+    landing.classList.add('cognitive-overload');
+    const b = document.createElement('div');
+    b.id = 'adaptive-banner';
+    b.className = 'adaptive-banner adaptive-overload';
+    b.innerHTML = `<span>🌊 Ton cerveau est surchargé.</span><span style="font-size:12px;font-weight:400;color:var(--muted);margin-top:2px">Une seule chose visible. Rien d'autre. C'est fait exprès.</span>`;
+    const wmbEl = document.getElementById('wmb-card');
+    const ref = wmbEl?.nextSibling || document.getElementById('rebound-banner-slot');
+    if (ref) ref.parentNode.insertBefore(b, ref);
+  } else if (isLow) {
+    const b = document.createElement('div');
+    b.id = 'adaptive-banner';
+    b.className = 'adaptive-banner adaptive-low';
+    b.innerHTML = `<span>⚡ Énergie basse — commence par quelque chose de petit.</span>`;
+    const wmbEl = document.getElementById('wmb-card');
+    const ref = wmbEl?.nextSibling || document.getElementById('rebound-banner-slot');
+    if (ref) ref.parentNode.insertBefore(b, ref);
+  }
+}
+
+// ════════════════════════════════════════════════
+// ─── INTÉGRATION DANS LES FONCTIONS EXISTANTES ───
+// ════════════════════════════════════════════════
+
+// A — Enrichit buildFocusRecs avec le profil cognitif personnel
+(function() {
+  const _origBFR = buildFocusRecs;
+  buildFocusRecs = function(ss, score) {
+    const recs = _origBFR(ss, score);
+    try {
+      const peaks = getPersonalPeakHours();
+      if (peaks) {
+        const h = new Date().getHours();
+        const isPeak = peaks.some(ph => Math.abs(ph - h) <= 1);
+        const nextPeak = peaks.find(ph => ph > h) || peaks[0];
+        if (isPeak && score >= 45) {
+          recs.unshift({ icon:'⭐', text:`C'est ton créneau de focus habituel (${formatHour(peaks[0])}-${formatHour(peaks[1])}). Profite-en maintenant.` });
+        } else if (!isPeak && score < 55) {
+          recs.push({ icon:'🕐', text:`Ton meilleur créneau est habituellement ${formatHour(nextPeak)}. Garde les tâches difficiles pour là.` });
+        }
+      }
+    } catch(e) {}
+    return recs.slice(0, 3);
+  };
+})();
+
+// B — Modifier renderHome pour tracker + adapter UI + WMB
+(function() {
+  const _origRH = renderHome;
+  renderHome = function() {
+    _origRH();
+    renderWMB();
+    applyAdaptiveUI();
+    trackLandingVisit();
+    trackCognitiveProfile();
+  };
+})();
+
+// C — Modifier updateFocusRing pour adapter UI et profil
+(function() {
+  const _origUFR = updateFocusRing;
+  updateFocusRing = function() {
+    _origUFR();
+    applyAdaptiveUI();
+  };
+})();
+
+// D — Modifier t-toggle start pour effacer idle + WMB automatique
+(function() {
+  const orig = document.getElementById('t-toggle').onclick;
+  document.getElementById('t-toggle').onclick = function(e) {
+    const wasRunning = tRunning;
+    orig.call(this, e);
+    if (!wasRunning && tRunning) {
+      clearIdleVisits();
+      // WMB : tâche en cours dans le projet
+      try {
+        if (currentProject) {
+          const step = getCurrentStep(currentProject);
+          const micro = step && step.micros && step.micros[step.done] ? step.micros[step.done] : '';
+          const why   = currentProject.why || '';
+          setWMB(step ? step.name : currentProject.name, micro, why);
+          if (why && Math.random() < 0.3) setTimeout(() => maybeShowWhyAnchor(why), 1500);
+        }
+      } catch(er) {}
+    }
+  };
+})();
+
+// E — Modifier ft-toggle (timer libre) de même
+(function() {
+  const orig = document.getElementById('ft-toggle').onclick;
+  document.getElementById('ft-toggle').onclick = function(e) {
+    const wasRunning = ftRunning;
+    orig.call(this, e);
+    if (!wasRunning && ftRunning) {
+      clearIdleVisits();
+      const taskInput = document.getElementById('ft-task-input');
+      const taskName = taskInput ? taskInput.value.trim() : '';
+      if (taskName) {
+        const why = currentProject ? (currentProject.why || '') : '';
+        setWMB(taskName, '', why);
+      }
+    }
+  };
+})();
+
+// F — Relier btn-timers au prescreen (une fois/jour)
+(function() {
+  const orig = document.getElementById('btn-timers').onclick;
+  document.getElementById('btn-timers').onclick = function() {
+    showTimerPrescreen((val) => {
+      // val influence les suggestions mais n'empêche pas d'accéder aux timers
+      orig.call(this);
+    });
+  };
+})();
+
+// G — btn-done utilise variableReward + clear WMB
+(function() {
+  const doneBtn = document.getElementById('btn-done');
+  const origOnclick = doneBtn.onclick;
+  doneBtn.onclick = function() {
+    _flushSessionFocusMin();
+    addTodayStats({ tasks: 1 });
+    renderLandingStats();
+    variableReward(); // remplace showDopamineToast()
+    addBehaviorEvent('complete');
+    advanceMicro();
+    // Actualise le WMB avec la nouvelle micro-action
+    try {
+      if (currentProject) {
+        const step = getCurrentStep(currentProject);
+        const micro = step && step.micros && step.micros[step.done] ? step.micros[step.done] : '';
+        if (step) setWMB(step.name, micro, currentProject.why || '');
+        else clearWMB();
+      }
+    } catch(er) {}
+  };
+})();
+
+// H — buildProject lit c-why
+(function() {
+  const _orig = buildProject;
+  buildProject = function(name, goal, files) {
+    const proj = _orig(name, goal, files);
+    const whyEl = document.getElementById('c-why');
+    if (whyEl) proj.why = whyEl.value.trim();
+    return proj;
+  };
+
+  // Reset champ "why" après création
+  const orig = btnCreate.onclick;
+  btnCreate.onclick = function() {
+    orig.call(this);
+    const whyEl = document.getElementById('c-why');
+    const ta = document.getElementById('c-why');
+    const ico = document.getElementById('why-toggle-icon');
+    if (whyEl) { whyEl.value = ''; whyEl.style.display = 'none'; }
+    if (ico) ico.textContent = '＋';
+  };
+})();
+
+// I — Afficher "why" comme ancre si score chute brutalement
+(function() {
+  let _prevScore = 0;
+  setInterval(() => {
+    try {
+      const score = calcFocusScore();
+      if (_prevScore - score >= 12 && _prevScore > 0) {
+        const why = currentProject && currentProject.why;
+        if (why) setTimeout(() => maybeShowWhyAnchor(why), 800);
+      }
+      _prevScore = score;
+    } catch(e) {}
+  }, 5 * 60 * 1000); // vérification toutes les 5 min
+})();
+
+// J — Initialisation Bestiaire
+(function() {
+  updateGuardianBadge();
+
+  // Brain dump → 5% chance de créature
+  const _origBrainDump = document.getElementById('btn-after-reset')?.onclick;
+  // Hook sur addBehaviorEvent brain_dump
+  const _origABE = addBehaviorEvent;
+  addBehaviorEvent = function(type, value) {
+    _origABE(type, value);
+    if (type === 'brain_dump') setTimeout(() => maybeRollCreature(5), 600);
+    // Fée : brain dump restaure +8 énergie (handled via garde, pas besoin d'action ici)
+  };
+
+  // Bouton bestiaire dans le panel focus
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'fp-open-bestiary') {
+      const cnt = document.getElementById('fp-bestiary-count');
+      if (cnt) cnt.textContent = Object.keys(getBestiary().owned).length + ' / ' + BESTIARY_DATA.length;
+      openBestiaryPanel();
+    }
+  });
+
+  // Pegase — marquer utilisation journalière quand score < 52
+  setInterval(() => {
+    try {
+      const g = getActiveGuardianData();
+      if (g && g.id === 'pegase') {
+        const today = new Date().toDateString();
+        if (!localStorage.getItem('ft_pegase_' + today) && calcFocusScore() >= 52) {
+          localStorage.setItem('ft_pegase_' + today, '1');
+        }
+      }
+    } catch(e) {}
+  }, 3 * 60 * 1000);
+})();
+
 </script>
 </body>
 </html>
