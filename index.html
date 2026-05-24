@@ -1626,6 +1626,14 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .sec-btn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
 .sec-btn.primary:hover { opacity:.9; }
 
+/* ── TASK TIME TRACKER ── */
+.task-time-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; background:rgba(124,92,252,.1); border:1px solid rgba(124,92,252,.2); font:700 11px 'DM Sans',sans-serif; color:var(--accent); white-space:nowrap; }
+.task-pct-pill  { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; background:rgba(92,252,160,.08); border:1px solid rgba(92,252,160,.22); font:700 11px 'DM Sans',sans-serif; color:var(--green); white-space:nowrap; }
+.pct-picker { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.pct-btn { flex:1; min-width:46px; padding:10px 4px; border-radius:12px; border:1.5px solid var(--border); background:var(--soft); font:700 13px 'DM Sans',sans-serif; color:var(--text); cursor:pointer; text-align:center; transition:all .13s; }
+.pct-btn.selected { border-color:var(--accent); background:rgba(124,92,252,.12); color:var(--accent); }
+.pct-btn:active { transform:scale(.95); }
+
 /* ── MICRO CHECK PULSE ── */
 @keyframes checkPulse { 0%{transform:scale(1)} 40%{transform:scale(1.35)} 70%{transform:scale(.92)} 100%{transform:scale(1)} }
 .plan-micro-check.checked { animation: checkPulse .32s ease; }
@@ -2414,6 +2422,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div class="step-dots" id="s-dots"></div>
   </div>
   <div class="task-name" id="s-task-name"></div>
+  <!-- Temps cumulé + % déclaré sur cette tâche -->
+  <div id="s-task-progress" style="display:none;margin:-6px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
   <div class="micro-box" id="micro-box">
     <span class="micro-text" id="s-micro"></span>
   </div>
@@ -7537,7 +7547,10 @@ function onSessionTimerEnd() {
   addBehaviorEvent('complete');
   releaseWakeLock();
   playTimerEndSound();
-  setTimeout(() => showSessionEndChoice(Math.round(tTotal / 60)), 600);
+  // Calcule les minutes réelles de cette session (depuis le dernier démarrage)
+  const _elapsedMins = _sessionStartTs ? Math.round((Date.now() - _sessionStartTs) / 60000) : Math.round(tTotal / 60);
+  _sessionStartTs = null;
+  setTimeout(() => showSessionEndChoice(Math.max(1, _elapsedMins || Math.round(tTotal / 60))), 600);
 }
 function onFtTimerEnd() {
   if (ftRunning) { addTodayStats({ focusMin: Math.floor((ftDuration - ftRemain) / 60) }); renderLandingStats(); }
@@ -11537,6 +11550,199 @@ setInterval(() => {
     if (score > 0) localStorage.setItem('ft_score_' + today, score);
   } catch(e) {}
 }, 5 * 60 * 1000);
+
+// ══════════════════════════════════════════════
+// ── SUIVI TEMPS & POURCENTAGE PAR TÂCHE ───────
+// ══════════════════════════════════════════════
+
+function _taskKey(projId, stepName) {
+  return 'ft_tp_' + (projId || 'free') + '_' + (stepName || '').replace(/\s+/g, '_').slice(0, 40);
+}
+
+function getTaskProgress(projId, stepName) {
+  try { return JSON.parse(localStorage.getItem(_taskKey(projId, stepName)) || 'null') || { mins: 0, pct: null }; }
+  catch(e) { return { mins: 0, pct: null }; }
+}
+
+function saveTaskProgress(projId, stepName, addMins, pct) {
+  const key = _taskKey(projId, stepName);
+  const cur = getTaskProgress(projId, stepName);
+  const next = {
+    mins: (cur.mins || 0) + (addMins || 0),
+    pct:  pct !== undefined ? pct : cur.pct,
+    updatedAt: Date.now(),
+  };
+  localStorage.setItem(key, JSON.stringify(next));
+  return next;
+}
+
+function resetTaskProgress(projId, stepName) {
+  localStorage.removeItem(_taskKey(projId, stepName));
+}
+
+// ── Affiche les pills de temps et % dans la session ──
+
+function renderTaskProgressPills() {
+  const el = document.getElementById('s-task-progress');
+  if (!el) return;
+  if (!currentProject) { el.style.display = 'none'; return; }
+  const step = getCurrentStep(currentProject);
+  if (!step) { el.style.display = 'none'; return; }
+  const tp = getTaskProgress(currentProject.id, step.name);
+  if (!tp.mins && tp.pct === null) { el.style.display = 'none'; return; }
+
+  el.style.display = 'flex';
+  let html = '';
+  if (tp.mins > 0) {
+    const h = Math.floor(tp.mins / 60);
+    const m = tp.mins % 60;
+    const label = h > 0 ? h + 'h' + (m > 0 ? m + 'min' : '') : m + ' min';
+    html += `<span class="task-time-pill">⏱️ ${label} sur cette tâche</span>`;
+  }
+  if (tp.pct !== null) {
+    html += `<span class="task-pct-pill">✅ ${tp.pct}% accompli</span>`;
+  }
+  el.innerHTML = html;
+}
+
+// ── Question % intégrée dans le modal fin de session ──
+
+function _injectPctQuestion(bd, projId, stepName, mins) {
+  const sheet = bd.querySelector('.session-end-sheet');
+  if (!sheet) return;
+
+  const tp = getTaskProgress(projId, stepName);
+  const currentPct = tp.pct;
+
+  // Inject the % section before the choice buttons
+  const choiceDiv = sheet.querySelector('.session-end-choice');
+  if (!choiceDiv) return;
+
+  const pctSection = document.createElement('div');
+  pctSection.style.cssText = 'margin-bottom:20px';
+  pctSection.innerHTML = `
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">
+      À quel % es-tu de "<em style="font-style:normal;color:var(--accent)">${stepName}</em>" ?
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+      Temps total sur cette tâche : <strong id="sec-total-time">${_fmtMins((tp.mins || 0) + mins)}</strong>
+    </div>
+    <div class="pct-picker" id="sec-pct-picker">
+      ${[10, 25, 50, 75, 90, 100].map(p =>
+        `<button class="pct-btn${currentPct === p ? ' selected' : ''}" data-pct="${p}">${p}%</button>`
+      ).join('')}
+    </div>
+  `;
+
+  sheet.insertBefore(pctSection, choiceDiv);
+
+  let selectedPct = currentPct;
+  pctSection.querySelectorAll('.pct-btn').forEach(btn => {
+    btn.onclick = () => {
+      pctSection.querySelectorAll('.pct-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedPct = parseInt(btn.dataset.pct);
+    };
+  });
+
+  // Save on any exit from the modal
+  function saveAndClose() {
+    saveTaskProgress(projId, stepName, mins, selectedPct !== undefined ? selectedPct : currentPct);
+    renderTaskProgressPills();
+    // If 100%, offer to mark step as done
+    if (selectedPct === 100) {
+      showDopamineToast('🎯 100% ! N\'oublie pas d\'appuyer sur "C\'est fait" pour passer à la suite.', 4500);
+    }
+  }
+
+  const origPause = document.getElementById('sec-pause');
+  const origMore  = document.getElementById('sec-more');
+  if (origPause) { const _op = origPause.onclick; origPause.onclick = () => { saveAndClose(); _op && _op(); }; }
+  if (origMore)  { const _om = origMore.onclick;  origMore.onclick  = () => { saveAndClose(); _om && _om(); }; }
+  bd.addEventListener('click', function onBdClick(e) {
+    if (e.target === bd) { saveAndClose(); bd.removeEventListener('click', onBdClick); }
+  });
+}
+
+function _fmtMins(totalMins) {
+  if (!totalMins) return '0 min';
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  if (h > 0) return h + 'h' + (m > 0 ? ' ' + m + 'min' : '');
+  return m + ' min';
+}
+
+// ── Patch showSessionEndChoice pour injecter la question ──
+(function() {
+  const _orig = showSessionEndChoice;
+  showSessionEndChoice = function(mins) {
+    _orig(mins);
+    // After the modal is rendered, inject % question if in a task session
+    setTimeout(() => {
+      const bd = document.getElementById('session-end-bd');
+      if (!bd) return;
+      if (!currentProject) return;
+      const step = getCurrentStep(currentProject);
+      if (!step) return;
+      _injectPctQuestion(bd, currentProject.id, step.name, mins);
+    }, 0);
+  };
+})();
+
+// ── Patch renderSession pour afficher les pills ──
+(function() {
+  const _orig = renderSession;
+  renderSession = function() {
+    _orig();
+    renderTaskProgressPills();
+  };
+})();
+
+// ── Quand btn-done → marquer 100% automatiquement ──
+(function() {
+  const doneBtn = document.getElementById('btn-done');
+  if (!doneBtn) return;
+  doneBtn.addEventListener('click', function() {
+    try {
+      if (!currentProject) return;
+      const step = getCurrentStep(currentProject);
+      if (!step) return;
+      // Save 0 extra mins here (the session mins were already flushed by _flushSessionFocusMin)
+      // Just mark as 100% if they explicitly say "C'est fait"
+      saveTaskProgress(currentProject.id, step.name, 0, 100);
+      // After advancing, the new step will have a clean slate
+      setTimeout(renderTaskProgressPills, 300);
+    } catch(e) {}
+  }, true); // capture: runs before the existing onclick
+})();
+
+// ── Accumuler le temps en cours (session active) ──
+// tRunning est déjà mis à jour par onclick avant que addEventListener fire
+let _sessionStartTs = null;
+(function() {
+  const toggle = document.getElementById('t-toggle');
+  if (!toggle) return;
+  toggle.addEventListener('click', function() {
+    // onclick a déjà inversé tRunning :
+    //   tRunning=true  → on vient de démarrer → enregistre le timestamp
+    //   tRunning=false → on vient de pauser  → calcule le temps écoulé
+    if (tRunning) {
+      // On vient de démarrer
+      _sessionStartTs = Date.now();
+    } else {
+      // On vient de pauser — sauvegarde silencieuse (pas de mise à jour %)
+      if (_sessionStartTs && currentProject) {
+        const elapsed = Math.round((Date.now() - _sessionStartTs) / 60000);
+        if (elapsed >= 1) {
+          const step = getCurrentStep(currentProject);
+          if (step) saveTaskProgress(currentProject.id, step.name, elapsed, undefined);
+        }
+        _sessionStartTs = null;
+        renderTaskProgressPills();
+      }
+    }
+  });
+})();
 
 // ── SPACEBAR SHORTCUT ───
 document.addEventListener('keydown', function(e) {
