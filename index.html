@@ -1863,6 +1863,81 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 /* ── FOCUS SCORE CHIP ── */
 .focus-score-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font: 700 13px 'DM Sans', sans-serif; margin-bottom: 12px; }
 
+/* ── BESTIAIRE — RARETÉS ── */
+:root {
+  --rarity-commun:    #9e9e9e;
+  --rarity-rare:      #2979ff;
+  --rarity-epique:    #ab47bc;
+  --rarity-legendaire:#ffa726;
+}
+.bestiary-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 600;
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: up .22s ease;
+}
+.bestiary-sheet {
+  background: var(--card); border-radius: 24px 24px 0 0;
+  padding: 20px 18px 36px; width: 100%; max-width: 520px;
+  max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.bestiary-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 14px;
+}
+.creature-card {
+  border-radius: 16px; border: 2px solid var(--border);
+  background: var(--soft); padding: 12px 8px; text-align: center;
+  cursor: pointer; transition: all .18s; position: relative;
+}
+.creature-card.owned { border-color: var(--rarity-color); }
+.creature-card.guardian-active { box-shadow: 0 0 0 3px var(--rarity-color); }
+.creature-card.locked { opacity: .38; cursor: default; filter: grayscale(1); }
+.creature-emoji { font-size: 34px; display: block; margin-bottom: 6px; }
+.creature-name { font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.creature-rarity-badge {
+  font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 6px; margin-top: 4px; display: inline-block;
+}
+.creature-count { position: absolute; top: 6px; right: 6px; font-size: 10px; font-weight: 700;
+  color: var(--muted); background: var(--card); border-radius: 6px; padding: 1px 5px; }
+.guardian-badge-wrap { position: absolute; top: 5px; left: 5px; font-size: 14px; }
+
+/* ── RÉVÉLATION CRÉATURE ── */
+.creature-reveal-backdrop {
+  position: fixed; inset: 0; z-index: 900;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.88); animation: fadeIn .3s ease;
+}
+.creature-reveal-card {
+  text-align: center; padding: 36px 28px; border-radius: 28px;
+  max-width: 320px; width: 88%; position: relative; overflow: hidden;
+  animation: revealPop .45s cubic-bezier(.17,.84,.44,1);
+}
+.reveal-emoji { font-size: 80px; display: block; margin-bottom: 12px; animation: revealFloat 2s ease-in-out infinite; }
+.reveal-rarity-label { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.reveal-name { font-family:'Syne',sans-serif; font-size: 24px; font-weight: 900; margin-bottom: 8px; line-height: 1.2; }
+.reveal-power { font-size: 13px; line-height: 1.55; margin-bottom: 6px; }
+.reveal-power-name { font-weight: 700; }
+.reveal-new-badge { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; margin-bottom: 16px; display: inline-block; }
+.reveal-btn { border: none; border-radius: 14px; color: #fff; font: 800 15px 'Syne',sans-serif;
+  padding: 14px 32px; cursor: pointer; margin-top: 18px; width: 100%; }
+/* Particules légendaire */
+.reveal-spark { position: absolute; width: 6px; height: 6px; border-radius: 50%;
+  animation: sparkFly 1.2s ease-out forwards; pointer-events: none; }
+@keyframes sparkFly { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)} }
+@keyframes revealPop { from{opacity:0;transform:scale(.6)} to{opacity:1;transform:scale(1)} }
+@keyframes revealFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+/* ── GARDIEN ACTIF (mini badge près du focus ring) ── */
+.guardian-active-badge {
+  position: absolute; bottom: -4px; right: -4px;
+  font-size: 14px; background: var(--card); border-radius: 50%;
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  cursor: pointer; font-style: normal; z-index: 2;
+}
+
 /* ── WORKING MEMORY BUFFER ── */
 .wmb-card {
   display: none;
@@ -2632,7 +2707,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <div class="stats-panel" id="stats-panel" style="display:none"></div>
 
 <!-- Anneau niveau de focus + badges gamification -->
-<div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus">
+<div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus" style="position:relative">
   <svg viewBox="0 0 36 36">
     <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="3.5"/>
     <circle id="flr-bar" cx="18" cy="18" r="15.9" fill="none" stroke="#ef5350"
@@ -2640,6 +2715,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
       stroke-linecap="round" style="transition:stroke-dashoffset .6s ease,stroke .4s"/>
   </svg>
   <span class="focus-level-ring__num" id="flr-num" style="color:#ef5350">--</span>
+  <span class="guardian-active-badge" id="guardian-badge" style="display:none" title="Gardien actif — appuie pour voir"></span>
 </div>
 <div id="focus-ring-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;max-width:340px"></div>
 </main>
@@ -6581,6 +6657,8 @@ function finishProject() {
   setActiveId(null);
   document.getElementById('f-sub').textContent = '"' + currentProject.name + '" est terminé. Vraiment bien joué.';
   show('finished');
+  // Projet complet → tirage garanti rare minimum
+  setTimeout(() => maybeRollCreature(100, 'rare'), 1200);
 }
 
 // ─── CELEBRATION & FINISHED ───
@@ -8031,6 +8109,11 @@ function openFocusPanel() {
 
       <div class="settings-section-title" style="margin-bottom:10px;margin-top:22px">Compléments pris aujourd'hui</div>
       <div id="fp-suppl"></div>
+      <div style="height:20px"></div>
+      <button id="fp-open-bestiary" style="width:100%;border:1.5px solid var(--border);border-radius:14px;background:none;color:var(--text);font:700 14px 'DM Sans',sans-serif;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+        🐉 Voir mon Bestiaire
+        <span id="fp-bestiary-count" style="font-size:12px;color:var(--muted)"></span>
+      </button>
       <div style="height:16px"></div>
     </div>`;
 
@@ -10168,6 +10251,303 @@ function showTimerPrescreen(callback) {
 // ════════════════════════════════════════════════
 // ─── 6. RÉCOMPENSE VARIABLE (variable ratio) ───
 // ════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+// ─── BESTIAIRE — SYSTÈME DE CRÉATURES ───
+// ════════════════════════════════════════════════
+
+const BESTIARY_DATA = [
+  // ── COMMUN (9) ──
+  { id:'loup',      rarity:'commun',    emoji:'🐺', name:'Loup des Ombres',       flavor:'Gardien des forêts nordiques.',            power:'Meute',        desc:'Le momentum ne descend plus en dessous de 8.' },
+  { id:'corbeau',   rarity:'commun',    emoji:'🪶', name:'Corbeau Arcane',         flavor:'Messager entre les mondes.',               power:'Présage',      desc:'Le profil cognitif apprend 2× plus vite.' },
+  { id:'sanglier',  rarity:'commun',    emoji:'🐗', name:'Sanglier de Cornouailles',flavor:'Indomptable, ancré dans la terre.',       power:'Endurance',    desc:'La friction ne dépasse plus 78.' },
+  { id:'hibou',     rarity:'commun',    emoji:'🦉', name:'Hibou de Minerve',       flavor:'La sagesse s\'acquiert dans le silence.',  power:'Clairvoyance', desc:'+1 recommandation dans le panneau focus.' },
+  { id:'tortue',    rarity:'commun',    emoji:'🐢', name:'Tortue des Âges',        flavor:'La constance bat toujours la vitesse.',    power:'Patience',     desc:'Chaque timer terminé donne +2 momentum garanti.' },
+  { id:'lion',      rarity:'commun',    emoji:'🦁', name:'Lion Néméen',            flavor:'Aucune peur ne résiste à sa présence.',   power:'Courage',      desc:'La surcharge se réduit de 1pt toutes les 20min.' },
+  { id:'cerf',      rarity:'commun',    emoji:'🦌', name:'Cerf Blanc Celtique',    flavor:'Symbole de renouveau et de transition.',  power:'Grâce',        desc:'-4 friction après chaque session complète.' },
+  { id:'serpent',   rarity:'commun',    emoji:'🐍', name:'Serpent de Sagesse',     flavor:'Shed your skin. Begin again.',             power:'Renouveau',    desc:'Le reset cognitif donne +8 énergie (au lieu de +2).' },
+  { id:'aigle',     rarity:'commun',    emoji:'🦅', name:'Aigle Tonnant',          flavor:'Il voit tout depuis les hauteurs.',        power:'Vision',       desc:'Les sous-scores sont affichés en temps réel.' },
+
+  // ── RARE (7) ──
+  { id:'sirene',    rarity:'rare',      emoji:'🧜', name:'Sirène des Tempêtes',    flavor:'Sa voix transforme la peur en courage.',  power:'Enchantement', desc:'Le prescreen "Prêt" booste +5 focus brut.' },
+  { id:'griffon',   rarity:'rare',      emoji:'🦅', name:'Griffon d\'Or',          flavor:'Majesté de l\'aigle, force du lion.',     power:'Fierté',       desc:'Les grandes célébrations apparaissent à 40%.' },
+  { id:'dragonjade',rarity:'rare',      emoji:'🐲', name:'Dragon de Jade',         flavor:'La sérénité est sa plus grande arme.',    power:'Concentration', desc:'Score focus minimum augmenté de +4.' },
+  { id:'fee',       rarity:'rare',      emoji:'🧚', name:'Fée des Bois',           flavor:'Elle guide sans jamais imposer.',          power:'Légèreté',     desc:'Brain dump restaure +8 énergie.' },
+  { id:'kraken',    rarity:'rare',      emoji:'🌊', name:'Kraken des Abysses',     flavor:'La profondeur n\'a aucun secret pour lui.',power:'Abîme',        desc:'Sessions >20min donnent +3 dopamine.' },
+  { id:'kitsune',   rarity:'rare',      emoji:'🦊', name:'Kitsune aux 9 Queues',   flavor:'La ruse transcende la paralysie.',        power:'Illusion',     desc:'1×/jour : cycle procrastination effacé.' },
+  { id:'harpy',     rarity:'rare',      emoji:'🦢', name:'Harpie Dorée',           flavor:'Rapide comme l\'éclair, libre comme l\'air.',power:'Rafale',     desc:'Micro-actions comptent +50% en momentum.' },
+
+  // ── ÉPIQUE (5) ──
+  { id:'licorne',   rarity:'epique',    emoji:'🦄', name:'Licorne d\'Azur',        flavor:'Pure, rare, inarrêtable.',                power:'Magie Pure',   desc:'Brain dump réduit la surcharge de 12pts.' },
+  { id:'phenix',    rarity:'epique',    emoji:'🔥', name:'Phénix Renaissant',      flavor:'Chaque fin est un nouveau commencement.', power:'Renaissance',  desc:'Après 3 sessions, +18 énergie et friction reset.' },
+  { id:'thunderbird',rarity:'epique',   emoji:'⚡', name:'Thunderbird Céleste',    flavor:'Il forge l\'orage à sa volonté.',          power:'Tempête',      desc:'Timers 10min donnent +7 momentum (au lieu de +4).' },
+  { id:'qilin',     rarity:'epique',    emoji:'🌙', name:'Qilin Lunaire',          flavor:'Porteur de paix et de clairvoyance.',     power:'Bénédiction',  desc:'Chaque complément pris donne +2pts bonus.' },
+  { id:'golem',     rarity:'epique',    emoji:'💎', name:'Golem de Cristal',       flavor:'Indestructible. Impassible. Éternel.',    power:'Forteresse',   desc:'La surcharge est plafonnée à 70 maximum.' },
+
+  // ── LÉGENDAIRE (4) ──
+  { id:'pegase',    rarity:'legendaire',emoji:'🌟', name:'Pégase Doré',            flavor:'Au-delà du ciel, rien ne l\'arrête.',     power:'Vol Céleste',  desc:'1×/jour : score focus garanti minimum 52.' },
+  { id:'phenix_sol',rarity:'legendaire',emoji:'☀️', name:'Phénix Solaire',         flavor:'Il illumine même les jours les plus sombres.',power:'Soleil Éternel',desc:'Après 30min de pause, momentum repart à 38.' },
+  { id:'simurgh',   rarity:'legendaire',emoji:'🦤', name:'Simurgh',                flavor:'Oiseau de toute la sagesse du monde.',    power:'Omniscience',  desc:'Toutes les recommandations sont renforcées +1.' },
+  { id:'ouroboros', rarity:'legendaire',emoji:'♾️', name:'Ouroboros',              flavor:'Le serpent qui se mord la queue — l\'infini.', power:'Cycle Éternel',desc:'Momentum regagne +1pt toutes les 4 minutes.' },
+];
+
+const RARITY_CONFIG = {
+  commun:    { label:'Commun',    color:'#9e9e9e', bg:'rgba(158,158,158,.12)', weight:58 },
+  rare:      { label:'Rare',      color:'#2979ff', bg:'rgba(41,121,255,.12)',  weight:28 },
+  epique:    { label:'Épique',    color:'#ab47bc', bg:'rgba(171,71,188,.12)',  weight:11 },
+  legendaire:{ label:'Légendaire',color:'#ffa726', bg:'rgba(255,167,38,.12)', weight:3  },
+};
+
+// ── Storage ──
+function getBestiary() {
+  try { return JSON.parse(localStorage.getItem('ft_bestiary') || '{"owned":{},"guardian":null}'); }
+  catch(e) { return { owned: {}, guardian: null }; }
+}
+function saveBestiary(b) { localStorage.setItem('ft_bestiary', JSON.stringify(b)); }
+
+function getActiveGuardianData() {
+  const b = getBestiary();
+  if (!b.guardian) return null;
+  return BESTIARY_DATA.find(c => c.id === b.guardian) || null;
+}
+
+// ── Tirage aléatoire ──
+function rollCreature(forcedMinRarity) {
+  const tiers = ['commun','rare','epique','legendaire'];
+  const forcedIdx = forcedMinRarity ? tiers.indexOf(forcedMinRarity) : 0;
+  const available = tiers.slice(forcedIdx);
+
+  // Recalcule les poids sur le sous-ensemble
+  const totalW = available.reduce((a, r) => a + RARITY_CONFIG[r].weight, 0);
+  let roll = Math.random() * totalW;
+  let rarity = available[available.length - 1];
+  for (const r of available) {
+    roll -= RARITY_CONFIG[r].weight;
+    if (roll <= 0) { rarity = r; break; }
+  }
+  const pool = BESTIARY_DATA.filter(c => c.rarity === rarity);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ── Attribution et révélation ──
+function awardCreature(creature, isGuaranteed) {
+  if (!creature) return;
+  const b = getBestiary();
+  const isNew = !b.owned[creature.id];
+  b.owned[creature.id] = (b.owned[creature.id] || 0) + 1;
+  if (isNew && !b.guardian) b.guardian = creature.id; // premier gardien automatique
+  saveBestiary(b);
+  updateGuardianBadge();
+  showCreatureReveal(creature, isNew);
+}
+
+function maybeRollCreature(chancePercent, forcedMinRarity) {
+  if (Math.random() * 100 < chancePercent) {
+    const creature = rollCreature(forcedMinRarity);
+    awardCreature(creature, !!forcedMinRarity);
+    return true;
+  }
+  return false;
+}
+
+// ── Révélation ──
+function showCreatureReveal(creature, isNew) {
+  const cfg = RARITY_CONFIG[creature.rarity];
+  const bd = document.createElement('div');
+  bd.className = 'creature-reveal-backdrop';
+  bd.innerHTML = `
+    <div class="creature-reveal-card" style="background:${cfg.bg};border:2px solid ${cfg.color}40">
+      ${creature.rarity === 'legendaire' ? '<div id="reveal-sparks"></div>' : ''}
+      <div class="reveal-rarity-label" style="color:${cfg.color}">${cfg.label}</div>
+      <span class="reveal-emoji">${creature.emoji}</span>
+      <div class="reveal-name" style="color:${cfg.color}">${creature.name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;font-style:italic">${creature.flavor}</div>
+      <div class="reveal-new-badge" style="background:${cfg.color}22;color:${cfg.color}">
+        ${isNew ? '✨ Nouvelle créature !' : '×' + getBestiary().owned[creature.id] + ' obtenu(e)'}
+      </div>
+      <div class="reveal-power" style="background:var(--soft);border-radius:12px;padding:10px 14px;margin-top:4px">
+        <span class="reveal-power-name" style="color:${cfg.color}">⚡ ${creature.power}</span>
+        <br><span style="color:var(--muted);font-size:12px">${creature.desc}</span>
+      </div>
+      <button class="reveal-btn" id="reveal-ok" style="background:${cfg.color}">
+        ${isNew ? 'Définir comme Gardien →' : 'Super !'}
+      </button>
+      <button style="background:none;border:none;color:var(--muted);font-size:12px;padding:10px;width:100%;cursor:pointer" id="reveal-skip">
+        ${isNew ? 'Garder mon gardien actuel' : 'Fermer'}
+      </button>
+    </div>`;
+  document.body.appendChild(bd);
+
+  // Particules légendaire
+  if (creature.rarity === 'legendaire') {
+    const sparksEl = bd.querySelector('#reveal-sparks');
+    for (let i = 0; i < 18; i++) {
+      const s = document.createElement('div');
+      s.className = 'reveal-spark';
+      s.style.cssText = `left:50%;top:40%;background:${cfg.color};
+        --tx:${(Math.random()-0.5)*240}px;--ty:${(Math.random()-1.2)*200}px;
+        animation-delay:${Math.random()*0.6}s;width:${4+Math.random()*6}px;height:${4+Math.random()*6}px`;
+      sparksEl.appendChild(s);
+    }
+  }
+
+  document.getElementById('reveal-ok').onclick = () => {
+    if (isNew) { const b = getBestiary(); b.guardian = creature.id; saveBestiary(b); updateGuardianBadge(); }
+    bd.remove();
+  };
+  document.getElementById('reveal-skip').onclick = () => bd.remove();
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+}
+
+// ── Bestiaire complet ──
+function openBestiaryPanel() {
+  if (document.getElementById('bestiary-bd')) { document.getElementById('bestiary-bd').remove(); return; }
+  const b = getBestiary();
+  const guardian = b.guardian;
+
+  const groupOrder = ['legendaire','epique','rare','commun'];
+  const groups = groupOrder.map(r => ({
+    rarity: r, cfg: RARITY_CONFIG[r],
+    creatures: BESTIARY_DATA.filter(c => c.rarity === r),
+  }));
+
+  const bd = document.createElement('div');
+  bd.id = 'bestiary-bd';
+  bd.className = 'bestiary-backdrop';
+
+  const guardianData = getActiveGuardianData();
+
+  bd.innerHTML = `
+    <div class="bestiary-sheet">
+      <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">Bestiaire</div>
+        <button id="bestiary-close" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:0 4px">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${Object.keys(b.owned).length} / ${BESTIARY_DATA.length} créatures découvertes</div>
+      ${guardianData ? `
+        <div style="background:rgba(255,167,38,.08);border:1.5px solid rgba(255,167,38,.25);border-radius:14px;padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:28px">${guardianData.emoji}</span>
+          <div>
+            <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em">Gardien actif</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text)">${guardianData.name}</div>
+            <div style="font-size:12px;color:${RARITY_CONFIG[guardianData.rarity].color}">⚡ ${guardianData.power} — ${guardianData.desc}</div>
+          </div>
+        </div>` : ''}
+      ${groups.map(g => `
+        <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:${g.cfg.color};margin:14px 0 8px">${g.cfg.label} · ${g.creatures.filter(c => b.owned[c.id]).length}/${g.creatures.length}</div>
+        <div class="bestiary-grid">
+          ${g.creatures.map(c => {
+            const owned = b.owned[c.id] || 0;
+            const isGuardian = c.id === guardian;
+            return `<div class="creature-card ${owned ? 'owned' : 'locked'} ${isGuardian ? 'guardian-active' : ''}"
+              data-id="${c.id}" style="--rarity-color:${g.cfg.color}">
+              ${owned && owned > 1 ? `<span class="creature-count">×${owned}</span>` : ''}
+              ${isGuardian ? '<span class="guardian-badge-wrap">⭐</span>' : ''}
+              <span class="creature-emoji">${owned ? c.emoji : '❓'}</span>
+              <div class="creature-name">${owned ? c.name : '???'}</div>
+              <div class="creature-rarity-badge" style="background:${g.cfg.color}22;color:${g.cfg.color}">${g.cfg.label}</div>
+              ${owned ? `<div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4">${c.desc}</div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>`).join('')}
+      <div style="height:20px"></div>
+    </div>`;
+
+  document.body.appendChild(bd);
+  document.getElementById('bestiary-close').onclick = () => bd.remove();
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+
+  // Tap sur une carte possédée → définir comme gardien
+  bd.querySelectorAll('.creature-card.owned').forEach(card => {
+    card.onclick = e => {
+      e.stopPropagation();
+      const id = card.dataset.id;
+      const cr = BESTIARY_DATA.find(c => c.id === id);
+      if (!cr) return;
+      const bst = getBestiary();
+      bst.guardian = id;
+      saveBestiary(bst);
+      updateGuardianBadge();
+      bd.remove();
+      showDopamineToast(`${cr.emoji} ${cr.name} est maintenant ton gardien !`, 3000);
+    };
+  });
+}
+
+// ── Badge gardien sur le focus ring ──
+function updateGuardianBadge() {
+  const el = document.getElementById('guardian-badge');
+  if (!el) return;
+  const g = getActiveGuardianData();
+  if (!g) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.textContent = g.emoji;
+  el.title = g.name + ' — ' + g.power;
+  el.onclick = (e) => { e.stopPropagation(); openBestiaryPanel(); };
+}
+
+// ── Effet gardien dans calcSubScores (wrapper) ──
+(function() {
+  const _orig = calcSubScores;
+  calcSubScores = function() {
+    const s = _orig();
+    try {
+      const g = getActiveGuardianData();
+      if (!g) return s;
+      const today = new Date().toDateString();
+      const todayS = getTodayStats();
+      switch(g.id) {
+        case 'loup':       s.momentum = Math.max(s.momentum, 8); break;
+        case 'corbeau':    /* handled in profile tracking */ break;
+        case 'sanglier':   s.friction = Math.min(s.friction, 78); break;
+        case 'tortue':     s.momentum += 2; break; // timer done already added elsewhere, here = passive
+        case 'lion':       s.surcharge = Math.max(0, s.surcharge - Math.floor((Date.now() % 1200000) / 60000)); break;
+        case 'cerf':       s.friction = Math.max(0, s.friction - 4); break;
+        case 'serpent':    /* handled in reset cognitif event */ break;
+        case 'sirene':     { const ps = JSON.parse(localStorage.getItem('ft_prescreen_today') || '{}'); if (ps.val === 'pret') s.focusBrut += 5; break; }
+        case 'griffon':    /* handled in variableReward */ break;
+        case 'dragonjade': s.focusBrut += 4; break;
+        case 'fee':        /* handled in brain dump */ break;
+        case 'kraken':     if ((todayS.focusMin || 0) >= 20) s.dopamine += 3; break;
+        case 'kitsune':    /* handled in procrastination */ break;
+        case 'harpy':      s.momentum = Math.min(100, s.momentum * 1.1); break;
+        case 'licorne':    /* handled in brain dump */ break;
+        case 'phenix':     { const sess = todayS.sessions || 0; if (sess >= 3) { s.energie += 18; s.friction = Math.max(0, s.friction - 15); } break; }
+        case 'thunderbird':/* handled in 10min event */ break;
+        case 'qilin':      s.focusBrut += (getFocusSupplTaken().length * 2); break;
+        case 'golem':      s.surcharge = Math.min(s.surcharge, 70); break;
+        case 'pegase':     { const used = localStorage.getItem('ft_pegase_' + today); if (!used) { s.focusBrut = Math.max(s.focusBrut, 52); } break; }
+        case 'phenix_sol': { const b2 = getBehaviorData(); const lastEv = (b2.events||[]).slice(-1)[0]; if (lastEv && Date.now() - lastEv.ts > 30*60000) { s.momentum = Math.max(s.momentum, 38); } break; }
+        case 'simurgh':    s.focusBrut += 3; s.energie += 2; break;
+        case 'ouroboros':  { const mins = Math.floor(Date.now() / (4*60000)) % 60; s.momentum = Math.min(100, s.momentum + Math.floor(mins * 0.25)); break; }
+      }
+    } catch(e) {}
+    return s;
+  };
+})();
+
+// ── Intégration dans addBehaviorEvent (Thunderbird, Serpent, Fée…) ──
+(function() {
+  const _orig = addBehaviorEvent;
+  addBehaviorEvent = function(type, value) {
+    _orig(type, value);
+    try {
+      const g = getActiveGuardianData();
+      if (!g) return;
+      if (g.id === 'thunderbird' && type === '10min') {
+        // +3 bonus (total = 7 au lieu de 4)
+        const d = getBehaviorData();
+        const last = (d.events || []).filter(e => e.type === '10min').slice(-1)[0];
+        if (last) last._bonus = 3; // marqueur, appliqué au prochain calcul
+      }
+    } catch(e) {}
+  };
+})();
+
+// ── Bouton Bestiaire dans le panel focus ──
+
+// ════════════════════════════════════════════════
+
 const BIG_REWARD_MSGS = [
   '🏆 INCROYABLE. Ton cerveau vient de faire quelque chose de difficile.',
   '⚡ VICTOIRE ! La dopamine monte — profite de cette énergie.',
@@ -10180,9 +10560,13 @@ function variableReward() {
   _taskCompletionCount++;
   localStorage.setItem('ft_task_count', _taskCompletionCount);
   const roll = Math.random();
-  if      (roll < 0.20) { /* silence — 20% — aucune récompense */ }
-  else if (roll < 0.50) { showBigCelebration(); }  // 30% — grande
-  else                  { showDopamineToast(); }    // 50% — normale
+  // 30% chance de tirage créature
+  if (maybeRollCreature(30)) return;
+  const g = getActiveGuardianData();
+  const bigChance = g && g.id === 'griffon' ? 0.40 : 0.30;
+  if      (roll < 0.18) { /* silence */ }
+  else if (roll < 0.18 + bigChance) { showBigCelebration(); }
+  else                  { showDopamineToast(); }
 }
 function showBigCelebration() {
   const existing = document.querySelector('.big-reward-toast');
@@ -10390,6 +10774,43 @@ function applyAdaptiveUI() {
       _prevScore = score;
     } catch(e) {}
   }, 5 * 60 * 1000); // vérification toutes les 5 min
+})();
+
+// J — Initialisation Bestiaire
+(function() {
+  updateGuardianBadge();
+
+  // Brain dump → 5% chance de créature
+  const _origBrainDump = document.getElementById('btn-after-reset')?.onclick;
+  // Hook sur addBehaviorEvent brain_dump
+  const _origABE = addBehaviorEvent;
+  addBehaviorEvent = function(type, value) {
+    _origABE(type, value);
+    if (type === 'brain_dump') setTimeout(() => maybeRollCreature(5), 600);
+    // Fée : brain dump restaure +8 énergie (handled via garde, pas besoin d'action ici)
+  };
+
+  // Bouton bestiaire dans le panel focus
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'fp-open-bestiary') {
+      const cnt = document.getElementById('fp-bestiary-count');
+      if (cnt) cnt.textContent = Object.keys(getBestiary().owned).length + ' / ' + BESTIARY_DATA.length;
+      openBestiaryPanel();
+    }
+  });
+
+  // Pegase — marquer utilisation journalière quand score < 52
+  setInterval(() => {
+    try {
+      const g = getActiveGuardianData();
+      if (g && g.id === 'pegase') {
+        const today = new Date().toDateString();
+        if (!localStorage.getItem('ft_pegase_' + today) && calcFocusScore() >= 52) {
+          localStorage.setItem('ft_pegase_' + today, '1');
+        }
+      }
+    } catch(e) {}
+  }, 3 * 60 * 1000);
 })();
 
 </script>
