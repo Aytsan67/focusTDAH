@@ -2173,11 +2173,33 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     </button>
   </div>
 
+  <!-- Seconde rangée d'actions -->
+  <div class="landing-actions" style="margin-top:8px">
+    <button class="landing-action-btn" id="btn-agenda">
+      <span class="la-icon">📅</span>
+      <span>Agenda</span>
+    </button>
+    <button class="landing-action-btn" id="btn-sons">
+      <span class="la-icon">🎵</span>
+      <span>Sons</span>
+    </button>
+    <button class="landing-action-btn" id="btn-pick-task" style="flex:2">
+      <span class="la-icon">🎲</span>
+      <span>Choisis pour moi</span>
+    </button>
+  </div>
+
+  <!-- Carte "tâche suggérée" (affichée après "Choisis pour moi") -->
+  <div class="pick-task-card" id="pick-task-card"></div>
+
   <button id="btn-end-of-day" style="display:block;width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:16px 0 0;cursor:pointer;text-align:left">🌙 Fin de journée</button>
 
   </div><!-- /.landing-left -->
 
   <div class="landing-right">
+
+  <!-- Carte "Hier tu as fait ça" -->
+  <div class="yesterday-card" id="yesterday-card"></div>
 
   <!-- Bannière notifications -->
   <div id="notif-banner" class="notif-banner" style="display:none;margin-top:14px">
@@ -2233,6 +2255,21 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
       <span id="why-toggle-icon">＋</span> Pourquoi ça compte pour toi ? <em style="opacity:.6">(optionnel)</em>
     </button>
     <textarea id="c-why" placeholder="Ex : pour réussir mon exam, pour ma liberté financière…" rows="2" style="display:none"></textarea>
+  </div>
+  <div class="field" style="margin-top:4px">
+    <button id="deadline-toggle" type="button" style="background:none;border:none;color:var(--muted);font-size:13px;padding:0 0 6px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px">
+      <span id="deadline-toggle-icon">⏰</span> Deadline ? <em style="opacity:.6">(optionnel)</em>
+    </button>
+    <input id="c-deadline" type="datetime-local" style="display:none;width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1.5px solid var(--border);background:var(--soft);color:var(--text);font:500 14px 'DM Sans',sans-serif">
+  </div>
+  <div class="field" style="margin-top:4px">
+    <button id="ifthen-toggle" type="button" style="background:none;border:none;color:var(--muted);font-size:13px;padding:0 0 6px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px">
+      <span>🔗</span> Intention Si–Alors ? <em style="opacity:.6">(optionnel)</em>
+    </button>
+    <div id="ifthen-wrap" style="display:none">
+      <input id="c-ifthen-if" placeholder="Si… (contexte déclencheur)" style="display:block;width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1.5px solid var(--border);background:var(--soft);color:var(--text);font:500 14px 'DM Sans',sans-serif;margin-bottom:6px">
+      <input id="c-ifthen-then" placeholder="Alors je… (action concrète)" style="display:block;width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1.5px solid var(--border);background:var(--soft);color:var(--text);font:500 14px 'DM Sans',sans-serif">
+    </div>
   </div>
   <button class="btn" id="btn-create" disabled>Suivant →</button>
 </section>
@@ -2797,6 +2834,59 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <p class="celeb-sub" id="f-sub">Tu as accompli quelque chose d'important aujourd'hui.</p>
   <button class="btn" id="f-home">← Accueil</button>
 </section>
+
+<!-- AGENDA -->
+<section class="screen" id="agenda">
+  <button class="back" id="back-agenda">← Accueil</button>
+  <h1>📅 <em>Agenda</em></h1>
+  <p class="sub">Tes projets avec deadlines, triés par urgence.</p>
+  <div id="agenda-list"></div>
+  <div style="margin-top:20px">
+    <div class="section-label">Ajouter une deadline sur un projet</div>
+    <div id="agenda-no-deadlines" style="color:var(--muted);font-size:13px;padding:12px 0;display:none">Aucun projet actif. Crée un projet depuis l'accueil.</div>
+    <div id="agenda-proj-select" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<!-- SONS D'AMBIANCE -->
+<section class="screen" id="sons">
+  <button class="back" id="back-sons">← Accueil</button>
+  <h1>🎵 Sons <em>d'ambiance</em></h1>
+  <p class="sub">Filtre les distractions et entre dans ta zone de flow.</p>
+  <div class="section-label" style="margin-bottom:8px">Bruit de fond</div>
+  <div class="sound-grid">
+    <button class="sound-btn" id="snd-white" data-sound="white">🌬️<span>Bruit blanc</span></button>
+    <button class="sound-btn" id="snd-brown" data-sound="brown">🌊<span>Bruit brun</span></button>
+    <button class="sound-btn" id="snd-rain"  data-sound="rain" >🌧️<span>Pluie</span></button>
+    <button class="sound-btn" id="snd-cafe"  data-sound="cafe" >☕<span>Café</span></button>
+    <button class="sound-btn" id="snd-fire"  data-sound="fire" >🔥<span>Feu</span></button>
+    <button class="sound-btn" id="snd-off"   data-sound="off"  style="border-color:rgba(239,83,80,.4)">🔇<span>Silence</span></button>
+  </div>
+  <div class="sound-vol-wrap">
+    <span>🔉</span>
+    <input type="range" id="sound-vol" min="0" max="1" step="0.05" value="0.4">
+    <span>🔊</span>
+  </div>
+  <div class="section-label" style="margin-top:20px;margin-bottom:8px">Playlists Spotify (Body Double 👥)</div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Ouvre directement dans l'app Spotify ou le navigateur.</p>
+  <div style="display:grid;gap:8px">
+    <a href="spotify:playlist:37i9dQZF1DX8NTLI2TtZa6" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--soft);border:1.5px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text);font:600 13px 'DM Sans',sans-serif">
+      <span style="font-size:22px">🎓</span><div><div>Deep Focus</div><div style="font-size:11px;color:var(--muted);font-weight:400">Instrumental pour concentration intense</div></div>
+    </a>
+    <a href="spotify:playlist:37i9dQZF1DWZeKCadgRdKQ" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--soft);border:1.5px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text);font:600 13px 'DM Sans',sans-serif">
+      <span style="font-size:22px">🧘</span><div><div>Lo-Fi Beats</div><div style="font-size:11px;color:var(--muted);font-weight:400">Lo-fi calme pour les sessions longues</div></div>
+    </a>
+    <a href="spotify:playlist:37i9dQZF1DX4sWSpwq3LiO" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--soft);border:1.5px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text);font:600 13px 'DM Sans',sans-serif">
+      <span style="font-size:22px">⚡</span><div><div>Peaceful Piano</div><div style="font-size:11px;color:var(--muted);font-weight:400">Piano doux pour les moments créatifs</div></div>
+    </a>
+    <a href="spotify:playlist:37i9dQZF1DX6VdMW310YC7" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--soft);border:1.5px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text);font:600 13px 'DM Sans',sans-serif">
+      <span style="font-size:22px">🌙</span><div><div>Chill Vibes</div><div style="font-size:11px;color:var(--muted);font-weight:400">Ambiance relaxante anti-stress</div></div>
+    </a>
+  </div>
+</section>
+
+<!-- Parking à pensées (FAB flottant pendant le timer) -->
+<button class="parking-fab" id="parking-fab" title="Parking à pensées">🅿️</button>
 
 <!-- Colonne fixe top-droite : compte → paramètres → focus → stats -->
 <div class="top-right-stack" id="top-right-stack">
@@ -10576,7 +10666,879 @@ function showReentryModal() {
   document.getElementById('re-close').onclick = () => bd.remove();
 }
 
-// ─── SPACEBAR SHORTCUT ───
+// ══════════════════════════════════════════════
+// ── 11 NOUVELLES FEATURES ─────────────────────
+// ══════════════════════════════════════════════
+
+// ── 1. AGENDA / DEADLINES ─────────────────────
+
+function getDeadlines() {
+  try { return JSON.parse(localStorage.getItem('ft_deadlines') || '{}'); } catch(e) { return {}; }
+}
+function saveDeadlines(obj) { localStorage.setItem('ft_deadlines', JSON.stringify(obj)); }
+
+function setProjectDeadline(projId, isoDate) {
+  const d = getDeadlines();
+  d[projId] = isoDate;
+  saveDeadlines(d);
+}
+
+function getDeadlineLabel(isoDate) {
+  if (!isoDate) return null;
+  const diff = new Date(isoDate) - Date.now();
+  const days = Math.ceil(diff / 86400000);
+  if (diff < 0) return { text: 'En retard', cls: 'overdue' };
+  if (days === 0) return { text: "Aujourd'hui !", cls: 'due-today' };
+  if (days === 1) return { text: 'Demain', cls: 'due-today' };
+  if (days <= 3) return { text: 'Dans ' + days + 'j', cls: 'due-today' };
+  return { text: 'Dans ' + days + 'j', cls: '' };
+}
+
+function renderAgenda() {
+  const listEl = document.getElementById('agenda-list');
+  if (!listEl) return;
+  const projects = getProjects ? getProjects() : [];
+  const deadlines = getDeadlines();
+  const hasDl = projects.filter(p => deadlines[p.id]);
+  listEl.innerHTML = '';
+  if (!hasDl.length) {
+    listEl.innerHTML = '<p style="color:var(--muted);font-size:13px">Aucune deadline définie. Ajoute une deadline à tes projets ci-dessous.</p>';
+  } else {
+    hasDl.sort((a, b) => new Date(deadlines[a.id]) - new Date(deadlines[b.id]));
+    hasDl.forEach(p => {
+      const lbl = getDeadlineLabel(deadlines[p.id]);
+      const div = document.createElement('div');
+      div.className = 'agenda-item ' + (lbl ? lbl.cls : '');
+      div.innerHTML = `
+        <div style="flex:1">
+          <div class="agenda-item-name">${p.name || 'Sans nom'}</div>
+          <div class="agenda-item-meta">${new Date(deadlines[p.id]).toLocaleDateString('fr-FR', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}</div>
+        </div>
+        ${lbl ? `<span class="deadline-chip" style="background:${lbl.cls==='overdue'?'rgba(239,83,80,.15)':'rgba(255,167,38,.15)'};color:${lbl.cls==='overdue'?'#ef5350':'#ff9800'}">${lbl.text}</span>` : ''}
+      `;
+      div.onclick = () => { if (typeof openProject === 'function') openProject(p); };
+      listEl.appendChild(div);
+    });
+  }
+  // Project picker for adding deadlines
+  const sel = document.getElementById('agenda-proj-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  const noProj = document.getElementById('agenda-no-deadlines');
+  if (!projects.length) { if (noProj) noProj.style.display = 'block'; return; }
+  if (noProj) noProj.style.display = 'none';
+  projects.forEach(p => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--soft);border:1.5px solid var(--border);border-radius:12px;margin-bottom:8px';
+    const existing = deadlines[p.id];
+    row.innerHTML = `
+      <span style="font-size:13px;font-weight:600">${p.name||'Sans nom'}</span>
+      <input type="datetime-local" data-proj="${p.id}" value="${existing||''}"
+        style="font-size:12px;padding:4px 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text)">
+    `;
+    row.querySelector('input').onchange = function() {
+      setProjectDeadline(p.id, this.value);
+      renderAgenda();
+    };
+    sel.appendChild(row);
+  });
+}
+
+// Check deadlines on app load and send notifications
+function checkDeadlineNotifications() {
+  const projects = typeof getProjects === 'function' ? getProjects() : [];
+  const deadlines = getDeadlines();
+  projects.forEach(p => {
+    const dl = deadlines[p.id];
+    if (!dl) return;
+    const diff = new Date(dl) - Date.now();
+    if (diff < 0) return; // already past
+    const hours = diff / 3600000;
+    const notifKey = 'ft_dl_notif_' + p.id + '_' + new Date(dl).toDateString();
+    if (hours <= 24 && !localStorage.getItem(notifKey)) {
+      localStorage.setItem(notifKey, '1');
+      const label = hours <= 1 ? 'moins d\'1h' : Math.ceil(hours) + 'h';
+      showDopamineToast('⏰ ' + (p.name||'Projet') + ' — deadline dans ' + label, 7000);
+    }
+  });
+}
+
+document.getElementById('btn-agenda').onclick = () => { renderAgenda(); show('agenda'); };
+document.getElementById('back-agenda').onclick = () => show('landing');
+
+// Persist deadline from create form
+(function() {
+  const toggle = document.getElementById('deadline-toggle');
+  const field  = document.getElementById('c-deadline');
+  const icon   = document.getElementById('deadline-toggle-icon');
+  if (!toggle || !field) return;
+  toggle.onclick = () => {
+    const open = field.style.display !== 'none';
+    field.style.display = open ? 'none' : 'block';
+    if (icon) icon.textContent = open ? '⏰' : '📅';
+  };
+})();
+
+// Persist if-then from create form
+(function() {
+  const toggle = document.getElementById('ifthen-toggle');
+  const wrap   = document.getElementById('ifthen-wrap');
+  if (!toggle || !wrap) return;
+  toggle.onclick = () => {
+    wrap.style.display = wrap.style.display !== 'none' ? 'none' : 'block';
+  };
+})();
+
+// Save deadline + if-then when project is created
+(function() {
+  const origBtnCreate = document.getElementById('btn-create');
+  if (!origBtnCreate) return;
+  const _origClick = origBtnCreate.onclick;
+  origBtnCreate.addEventListener('click', function() {
+    // Deadline: store temporarily in sessionStorage, applied in create flow
+    const dl = document.getElementById('c-deadline');
+    if (dl && dl.value) sessionStorage.setItem('ft_pending_deadline', dl.value);
+    else sessionStorage.removeItem('ft_pending_deadline');
+    // If-then
+    const itIf   = document.getElementById('c-ifthen-if');
+    const itThen = document.getElementById('c-ifthen-then');
+    if (itIf && itThen && (itIf.value.trim() || itThen.value.trim())) {
+      sessionStorage.setItem('ft_pending_ifthen', JSON.stringify({ si: itIf.value.trim(), alors: itThen.value.trim() }));
+    } else sessionStorage.removeItem('ft_pending_ifthen');
+  }, true);
+})();
+
+// ── 2. PARKING À PENSÉES ──────────────────────
+
+function showParkingCapture() {
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;margin-bottom:6px">🅿️ Parking à pensées</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Note ta pensée parasite ici pour t'en libérer l'esprit — tu t'en occuperas après.</p>
+      <textarea id="parking-txt" placeholder="Ex : rappeler Maxime, acheter lait, idée article…"
+        style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--soft);color:var(--text);font:500 14px 'DM Sans',sans-serif;min-height:90px;resize:vertical"></textarea>
+      <button class="btn" id="parking-save" style="margin-top:12px">Garé ✓ Je reprends</button>
+      <button style="background:none;border:none;color:var(--muted);font:600 13px 'DM Sans',sans-serif;width:100%;padding:8px;cursor:pointer;margin-top:4px" id="parking-close">Fermer</button>
+    </div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.getElementById('parking-close').onclick = () => bd.remove();
+  document.getElementById('parking-save').onclick = () => {
+    const txt = document.getElementById('parking-txt').value.trim();
+    if (txt) {
+      const existing = localStorage.getItem('ft_parking') || '';
+      const now = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+      localStorage.setItem('ft_parking', (existing ? existing + '\n' : '') + '[' + now + '] ' + txt);
+      showDopamineToast('🅿️ Garé ! Retourne au travail 🔥', 2500);
+    }
+    bd.remove();
+  };
+  setTimeout(() => { const ta = bd.querySelector('textarea'); if (ta) ta.focus(); }, 100);
+}
+
+document.getElementById('parking-fab').onclick = showParkingCapture;
+
+// Show parking FAB during timer sessions
+(function() {
+  const origStartTimer = typeof startTimer === 'function' ? startTimer : null;
+  function toggleParkingFab(visible) {
+    const fab = document.getElementById('parking-fab');
+    if (fab) fab.classList.toggle('visible', visible);
+  }
+  // Hook into timer start/stop via mutation observer on session screen
+  const observer = new MutationObserver(() => {
+    const active = document.querySelector('.screen.active');
+    toggleParkingFab(active && (active.id === 'session' || active.id === 'timer-free'));
+  });
+  observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+})();
+
+// ── 3. CHOISIS POUR MOI ───────────────────────
+
+function pickTaskForMe() {
+  const projects = typeof getProjects === 'function' ? getProjects() : [];
+  const card = document.getElementById('pick-task-card');
+  if (!card) return;
+  if (!projects.length) {
+    card.style.display = 'block';
+    card.innerHTML = '<p style="color:var(--muted);font-size:13px">Aucun projet actif. Crée un projet d\'abord.</p>';
+    return;
+  }
+
+  let score = 0;
+  try { score = calcFocusScore(); } catch(e) {}
+
+  // Score-based filtering: if low focus, prioritize short/easy tasks
+  let candidates = projects.filter(p => !p.done);
+  if (!candidates.length) candidates = projects;
+
+  // Sort by priority heuristic
+  const deadlines = getDeadlines();
+  candidates.sort((a, b) => {
+    let scoreA = 0, scoreB = 0;
+    // Deadline urgency
+    if (deadlines[a.id]) { const d = new Date(deadlines[a.id]) - Date.now(); if (d < 86400000 * 3) scoreA += 30; }
+    if (deadlines[b.id]) { const d = new Date(deadlines[b.id]) - Date.now(); if (d < 86400000 * 3) scoreB += 30; }
+    // Low focus → prefer smaller/easier
+    if (score < 40) {
+      if (a.steps && a.steps.length < 3) scoreA += 10;
+      if (b.steps && b.steps.length < 3) scoreB += 10;
+    }
+    // Recently touched
+    if (a.updatedAt > b.updatedAt) scoreA += 5;
+    else scoreB += 5;
+    return scoreB - scoreA;
+  });
+
+  const pick = candidates[0];
+  const lbl = deadlines[pick.id] ? getDeadlineLabel(deadlines[pick.id]) : null;
+  const focusHint = score < 35 ? '🟡 Focus bas — tâche courte recommandée' :
+                    score < 60 ? '🟠 Focus moyen — commence par le plus urgent' :
+                                 '🟢 Bon focus — attaque la tâche principale';
+
+  card.style.display = 'block';
+  card.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">${focusHint}</div>
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">🎯 ${pick.name||'Projet'}</div>
+    ${lbl ? `<span class="deadline-chip" style="background:rgba(255,167,38,.15);color:#ff9800;margin-bottom:8px;display:inline-block">${lbl.text}</span>` : ''}
+    <p style="font-size:13px;color:var(--muted);margin:6px 0 12px;line-height:1.5">${pick.goal||'Lance-toi sur ce projet.'}</p>
+    <button class="btn" id="pick-start-btn" style="font-size:14px;padding:12px">→ Démarrer ce projet</button>
+    <button id="pick-other" style="background:none;border:none;color:var(--muted);font:600 12px 'DM Sans',sans-serif;padding:8px 0;cursor:pointer;display:block;width:100%;text-align:center;margin-top:6px">Autre choix</button>
+  `;
+  document.getElementById('pick-start-btn').onclick = () => {
+    card.style.display = 'none';
+    if (typeof openProject === 'function') openProject(pick);
+  };
+  document.getElementById('pick-other').onclick = () => {
+    // Remove first candidate and try again
+    candidates.shift();
+    if (candidates.length) {
+      const next = candidates[0];
+      card.querySelector('div:nth-child(2)').textContent = '🎯 ' + (next.name||'Projet');
+      document.getElementById('pick-start-btn').onclick = () => {
+        card.style.display = 'none';
+        if (typeof openProject === 'function') openProject(next);
+      };
+    } else {
+      card.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center">Tu as tout vu ! Choisis toi-même. 😄</p>';
+    }
+  };
+}
+
+document.getElementById('btn-pick-task').onclick = pickTaskForMe;
+
+// ── 4. SONS D'AMBIANCE ────────────────────────
+
+const _soundCtx = { ctx: null, nodes: [], current: null, vol: 0.4 };
+
+function _getSoundCtx() {
+  if (!_soundCtx.ctx) _soundCtx.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  return _soundCtx.ctx;
+}
+
+function _stopSound() {
+  _soundCtx.nodes.forEach(n => { try { n.stop(); } catch(e) {} });
+  _soundCtx.nodes = [];
+  _soundCtx.current = null;
+  document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active'));
+  const offBtn = document.getElementById('snd-off');
+  if (offBtn) offBtn.classList.add('active');
+}
+
+function _makeWhiteNoise(ctx, vol) {
+  const bufSize = ctx.sampleRate * 2;
+  const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1);
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.loop = true;
+  const gain = ctx.createGain();
+  gain.gain.value = vol;
+  src.connect(gain);
+  gain.connect(ctx.destination);
+  src.start();
+  return [src, gain];
+}
+
+function _makeBrownNoise(ctx, vol) {
+  const bufSize = ctx.sampleRate * 2;
+  const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < bufSize; i++) {
+    const white = Math.random() * 2 - 1;
+    data[i] = (last + (0.02 * white)) / 1.02;
+    last = data[i];
+    data[i] *= 3.5;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.loop = true;
+  const gain = ctx.createGain();
+  gain.gain.value = vol;
+  src.connect(gain);
+  gain.connect(ctx.destination);
+  src.start();
+  return [src, gain];
+}
+
+function _makeRain(ctx, vol) {
+  // Layer: white noise + low-pass filter
+  const bufSize = ctx.sampleRate * 2;
+  const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.loop = true;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 1800;
+  const gain = ctx.createGain();
+  gain.gain.value = vol * 1.2;
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  src.start();
+  return [src, filter, gain];
+}
+
+function _makeCafe(ctx, vol) {
+  // Layered: brown noise + subtle high shelf + murmur oscillator
+  const nodes = _makeBrownNoise(ctx, vol * 0.5);
+  // Murmur: multiple soft sine waves
+  [220, 340, 180, 260].forEach(freq => {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq + (Math.random() * 30);
+    const g = ctx.createGain();
+    g.gain.value = vol * 0.02;
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start();
+    nodes.push(osc, g);
+  });
+  return nodes;
+}
+
+function _makeFire(ctx, vol) {
+  // Brown noise + band-pass filter for crackling
+  const nodes = _makeBrownNoise(ctx, vol * 0.3);
+  const bufSize = ctx.sampleRate * 2;
+  const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = Math.random() < 0.001 ? (Math.random() * 2 - 1) * 3 : 0;
+  const crackle = ctx.createBufferSource();
+  crackle.buffer = buffer;
+  crackle.loop = true;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 800;
+  bp.Q.value = 0.5;
+  const g = ctx.createGain();
+  g.gain.value = vol;
+  crackle.connect(bp);
+  bp.connect(g);
+  g.connect(ctx.destination);
+  crackle.start();
+  nodes.push(crackle, bp, g);
+  return nodes;
+}
+
+function playAmbientSound(type) {
+  _stopSound();
+  if (type === 'off') return;
+  try {
+    const ctx = _getSoundCtx();
+    const vol = _soundCtx.vol;
+    let nodes = [];
+    if      (type === 'white') nodes = _makeWhiteNoise(ctx, vol);
+    else if (type === 'brown') nodes = _makeBrownNoise(ctx, vol);
+    else if (type === 'rain')  nodes = _makeRain(ctx, vol);
+    else if (type === 'cafe')  nodes = _makeCafe(ctx, vol);
+    else if (type === 'fire')  nodes = _makeFire(ctx, vol);
+    _soundCtx.nodes = nodes;
+    _soundCtx.current = type;
+    localStorage.setItem('ft_ambient_sound', type);
+    document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('snd-' + type);
+    if (btn) btn.classList.add('active');
+  } catch(e) { console.warn('Sound error:', e); }
+}
+
+// Wire up sound buttons
+document.querySelectorAll('.sound-btn[data-sound]').forEach(btn => {
+  btn.onclick = () => playAmbientSound(btn.dataset.sound);
+});
+
+// Volume control
+document.getElementById('sound-vol').oninput = function() {
+  _soundCtx.vol = parseFloat(this.value);
+  _soundCtx.nodes.forEach(n => {
+    if ((typeof GainNode !== 'undefined' && n instanceof GainNode) || (n.gain && n.gain.value !== undefined)) {
+      try { n.gain.value = _soundCtx.vol; } catch(e) {}
+    }
+  });
+};
+
+document.getElementById('btn-sons').onclick = () => show('sons');
+document.getElementById('back-sons').onclick = () => show('landing');
+
+// Restore sound if was playing
+(function() {
+  const last = localStorage.getItem('ft_ambient_sound');
+  if (last && last !== 'off') {
+    // Restore on first user interaction
+    document.body.addEventListener('click', function restoreSnd() {
+      playAmbientSound(last);
+      document.body.removeEventListener('click', restoreSnd);
+    }, { once: true });
+  }
+})();
+
+// ── 5. RITUEL DE TRANSITION ───────────────────
+
+function showOpeningRitual(callback) {
+  const key = 'ft_ritual_open_' + new Date().toDateString();
+  if (localStorage.getItem(key)) { if (callback) callback(); return; }
+  localStorage.setItem(key, '1');
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet" style="text-align:center">
+      <div class="cat-modal-handle"></div>
+      <div style="font-size:40px;margin-bottom:8px">🌅</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px">Rituel d'ouverture</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">Prends 30 secondes pour te centrer.<br>Ferme les yeux, respire profondément.<br>Tu es là. Tu es capable.</p>
+      <div id="ritual-countdown" style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--accent);margin-bottom:16px">30</div>
+      <button class="btn" id="ritual-skip">Commencer maintenant →</button>
+    </div>`;
+  document.body.appendChild(bd);
+  let count = 30;
+  const interval = setInterval(() => {
+    count--;
+    const el = document.getElementById('ritual-countdown');
+    if (el) el.textContent = count;
+    if (count <= 0) {
+      clearInterval(interval);
+      bd.remove();
+      if (callback) callback();
+    }
+  }, 1000);
+  document.getElementById('ritual-skip').onclick = () => {
+    clearInterval(interval);
+    bd.remove();
+    if (callback) callback();
+  };
+}
+
+function showClosingRitual() {
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  const parking = localStorage.getItem('ft_parking') || '';
+  const parkingItems = parking ? parking.split('\n').filter(Boolean) : [];
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-size:36px;text-align:center;margin-bottom:8px">🌙</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;text-align:center">Rituel de clôture</div>
+      <p style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:16px;line-height:1.5">Bonne session ! Avant de partir,<br>prends un moment pour clôturer.</p>
+      <div style="background:var(--soft);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px">J'ai avancé sur…</div>
+        <textarea id="closing-note" placeholder="Ce que j'ai accompli aujourd'hui…"
+          style="width:100%;box-sizing:border-box;background:none;border:none;color:var(--text);font:500 13px 'DM Sans',sans-serif;resize:none;outline:none;min-height:60px"></textarea>
+      </div>
+      ${parkingItems.length ? `
+        <div style="background:rgba(124,92,252,.06);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:8px">🅿️ Parking à vider</div>
+          ${parkingItems.map(i => `<div style="font-size:13px;color:var(--text);padding:4px 0;border-bottom:1px solid var(--border)">${i}</div>`).join('')}
+          <button id="clear-parking" style="background:none;border:none;color:var(--muted);font:600 12px 'DM Sans',sans-serif;margin-top:8px;cursor:pointer;padding:0">Effacer la liste</button>
+        </div>` : ''}
+      <button class="btn" id="closing-done">Terminer la journée ✓</button>
+    </div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  const clearBtn = document.getElementById('clear-parking');
+  if (clearBtn) clearBtn.onclick = () => { localStorage.removeItem('ft_parking'); clearBtn.closest('div').remove(); };
+  document.getElementById('closing-done').onclick = () => {
+    const note = document.getElementById('closing-note').value.trim();
+    if (note) {
+      const history = JSON.parse(localStorage.getItem('ft_closing_notes') || '[]');
+      history.unshift({ date: new Date().toDateString(), note });
+      localStorage.setItem('ft_closing_notes', JSON.stringify(history.slice(0, 30)));
+    }
+    bd.remove();
+    showDopamineToast('🌙 Bonne récupération ! À demain 👋', 3000);
+  };
+}
+
+// Hook end-of-day button
+(function() {
+  const eod = document.getElementById('btn-end-of-day');
+  if (!eod) return;
+  const _orig = eod.onclick;
+  eod.onclick = function() {
+    showClosingRitual();
+  };
+})();
+
+// Hook work button with opening ritual (once per day)
+(function() {
+  const btn = document.getElementById('btn-continue');
+  if (!btn) return;
+  btn.addEventListener('click', function ritualHook(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    showOpeningRitual(() => {
+      // trigger original action
+      btn.removeEventListener('click', ritualHook, true);
+      btn.click();
+      btn.addEventListener('click', ritualHook, true);
+    });
+  }, true);
+})();
+
+// ── 6. MODE ANTI-HONTE ────────────────────────
+
+function checkAntiShame() {
+  const last = localStorage.getItem('ft_last_activity');
+  if (!last) return;
+  const daysSince = (Date.now() - parseInt(last)) / 86400000;
+  if (daysSince < 1.5) return;
+  const shameKey = 'ft_shame_shown_' + new Date().toDateString();
+  if (localStorage.getItem(shameKey)) return;
+  localStorage.setItem(shameKey, '1');
+  const days = Math.floor(daysSince);
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet" style="text-align:center">
+      <div class="cat-modal-handle"></div>
+      <div style="font-size:40px;margin-bottom:8px">💚</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:10px">Bienvenue de retour !</div>
+      <p style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:8px">
+        Ça fait <strong>${days} jour${days>1?'s':''}</strong> — et c'est okay.
+      </p>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">
+        Avec le TDAH, revenir est déjà une victoire en soi.<br>
+        Pas de culpabilité. Juste le prochain pas.
+      </p>
+      <div style="background:rgba(92,252,160,.07);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--text);line-height:1.6">
+        💡 Commence par quelque chose de <strong>très petit</strong> —<br>
+        5 minutes suffisent pour relancer l'élan.
+      </div>
+      <button class="btn" id="shame-start">Je commence avec 5 min →</button>
+      <button style="background:none;border:none;color:var(--muted);font:600 13px 'DM Sans',sans-serif;width:100%;padding:8px;cursor:pointer;margin-top:4px" id="shame-close">Je regarde juste</button>
+    </div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.getElementById('shame-close').onclick = () => bd.remove();
+  document.getElementById('shame-start').onclick = () => {
+    bd.remove();
+    // Start a quick 5-min free timer
+    show('timer-free');
+    const inp = document.getElementById('ft-duration');
+    if (inp) { inp.value = 5; inp.dispatchEvent(new Event('input')); }
+    const toggle = document.getElementById('ft-toggle');
+    if (toggle) setTimeout(() => toggle.click(), 500);
+  };
+}
+
+// Track activity
+(function() {
+  function markActivity() { localStorage.setItem('ft_last_activity', Date.now().toString()); }
+  document.addEventListener('click', markActivity, { passive: true });
+  document.addEventListener('keydown', markActivity, { passive: true });
+})();
+
+// ── 7. RÉCOMPENSE PLANIFIÉE ───────────────────
+
+function askPlannedReward(callback) {
+  const key = 'ft_planned_reward_' + new Date().toDateString();
+  const existing = localStorage.getItem(key);
+  if (existing) {
+    showDopamineToast('🎁 Ta récompense du jour : ' + existing, 4000);
+    if (callback) callback();
+    return;
+  }
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  const options = [
+    { icon:'🍕', label:'Un repas que j\'aime' },
+    { icon:'📺', label:'Un épisode de série' },
+    { icon:'🎮', label:'30 min de jeux' },
+    { icon:'☕', label:'Un café / snack spécial' },
+    { icon:'🚶', label:'Une marche en liberté' },
+    { icon:'📱', label:'Scroll libre pendant 20 min' },
+  ];
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;margin-bottom:6px">🎁 Ta récompense du jour</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Choisis quelque chose qui te motive vraiment. Tu y auras droit après avoir travaillé.</p>
+      ${options.map(o => `<div class="reward-option" data-reward="${o.icon} ${o.label}"><span style="font-size:22px">${o.icon}</span>${o.label}</div>`).join('')}
+      <div style="margin-top:8px">
+        <input id="reward-custom" placeholder="Ou écris ta propre récompense…"
+          style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1.5px solid var(--border);background:var(--soft);color:var(--text);font:500 14px 'DM Sans',sans-serif">
+      </div>
+      <button class="btn" id="reward-save" style="margin-top:12px">C'est parti ! 🚀</button>
+    </div>`;
+  document.body.appendChild(bd);
+  let selected = '';
+  bd.querySelectorAll('.reward-option').forEach(opt => {
+    opt.onclick = () => {
+      bd.querySelectorAll('.reward-option').forEach(o => o.style.borderColor = '');
+      opt.style.borderColor = 'var(--accent)';
+      selected = opt.dataset.reward;
+    };
+  });
+  document.getElementById('reward-save').onclick = () => {
+    const custom = document.getElementById('reward-custom').value.trim();
+    const reward = custom || selected;
+    if (reward) {
+      localStorage.setItem(key, reward);
+      showDopamineToast('🎁 Super choix ! ' + reward + ' t\'attend.', 3500);
+    }
+    bd.remove();
+    if (callback) callback();
+  };
+}
+
+// Show reward reminder during timer if defined
+(function() {
+  const key = 'ft_planned_reward_' + new Date().toDateString();
+  const reward = localStorage.getItem(key);
+  if (!reward) return;
+  // Add reward display in session screen
+  const sessionEl = document.getElementById('session');
+  if (!sessionEl) return;
+  const rewardEl = document.createElement('div');
+  rewardEl.className = 'ifthen-display';
+  rewardEl.style.display = 'flex';
+  rewardEl.style.alignItems = 'center';
+  rewardEl.style.gap = '8px';
+  rewardEl.innerHTML = '🎁 <strong>Ta récompense :</strong> ' + reward;
+  rewardEl.style.marginTop = '10px';
+  sessionEl.appendChild(rewardEl);
+})();
+
+// ── 8. MINI BILAN HEBDOMADAIRE ────────────────
+
+function showWeeklyReview() {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon
+  if (dayOfWeek !== 0 && dayOfWeek !== 1) return;
+  const key = 'ft_weekly_shown_' + today.getFullYear() + '_' + getWeekNumber(today);
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, '1');
+  // Gather last 7 days stats
+  const stats = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toDateString();
+    const score = parseInt(localStorage.getItem('ft_score_' + dateStr) || '0');
+    const sessions = parseInt(localStorage.getItem('ft_sessions_' + dateStr) || '0');
+    stats.push({ date: d, score, sessions });
+  }
+  const totalSessions = stats.reduce((s, d) => s + d.sessions, 0);
+  const avgScore = stats.length ? Math.round(stats.reduce((s, d) => s + d.score, 0) / stats.filter(d => d.score > 0).length || 0) : 0;
+  const bestDay = stats.reduce((a, b) => a.score > b.score ? a : b, stats[0]);
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px">📊 Bilan de la semaine</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Voici comment tu t'en es sorti cette semaine.</p>
+      <div class="weekly-stat-row">
+        <span>Sessions complétées</span>
+        <span class="weekly-stat-val">${totalSessions}</span>
+      </div>
+      <div class="weekly-stat-row">
+        <span>Score focus moyen</span>
+        <span class="weekly-stat-val">${avgScore || '—'}</span>
+      </div>
+      <div class="weekly-stat-row" style="border:none">
+        <span>Meilleur jour</span>
+        <span class="weekly-stat-val" style="font-size:13px">${bestDay && bestDay.score ? bestDay.date.toLocaleDateString('fr-FR', { weekday:'long' }) : '—'}</span>
+      </div>
+      <div style="margin:16px 0;background:var(--soft);border-radius:12px;padding:14px">
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">Historique 7 jours</div>
+        <div style="display:flex;gap:6px;align-items:flex-end;height:50px">
+          ${stats.map(d => {
+            const h = d.score ? Math.max(4, Math.round(d.score / 2)) : 2;
+            return `<div style="flex:1;background:${d.score>60?'var(--accent)':d.score>30?'rgba(255,167,38,.6)':'var(--border)'};border-radius:3px 3px 0 0;height:${h}px;min-width:0" title="${d.date.toLocaleDateString('fr-FR',{weekday:'short'})} — ${d.score||0}"></div>`;
+          }).join('')}
+        </div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          ${stats.map(d => `<div style="flex:1;font-size:9px;color:var(--muted);text-align:center;min-width:0">${d.date.toLocaleDateString('fr-FR',{weekday:'narrow'})}</div>`).join('')}
+        </div>
+      </div>
+      ${totalSessions >= 5 ? `<div style="background:rgba(92,252,160,.08);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px">🏆 Excellente semaine ! ${totalSessions} sessions, c'est une vraie régularité.</div>` :
+        totalSessions >= 2 ? `<div style="background:rgba(255,167,38,.08);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px">💪 ${totalSessions} sessions cette semaine. Continue comme ça !</div>` :
+        `<div style="background:rgba(239,83,80,.07);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px">💚 Cette semaine a été difficile — c'est okay. L'important c'est de recommencer.</div>`}
+      <button class="btn" id="weekly-close">C'est parti pour cette semaine 🚀</button>
+    </div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.getElementById('weekly-close').onclick = () => bd.remove();
+}
+
+function getWeekNumber(d) {
+  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+// Track daily sessions count
+(function() {
+  // Hook onto btn-done (task done) and session-end modal confirms
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('#btn-done, .session-end-continue, .session-end-stop');
+    if (!btn) return;
+    const today = new Date().toDateString();
+    const count = parseInt(localStorage.getItem('ft_sessions_' + today) || '0');
+    localStorage.setItem('ft_sessions_' + today, count + 1);
+  });
+})();
+
+// ── 9. HIER TU AS FAIT ÇA ────────────────────
+
+function showYesterdayCard() {
+  const hour = new Date().getHours();
+  if (hour < 7 || hour >= 14) return; // only show 7am–2pm
+  const card = document.getElementById('yesterday-card');
+  if (!card) return;
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = yesterday.toDateString();
+  const shownKey = 'ft_yesterday_shown_' + new Date().toDateString();
+  if (localStorage.getItem(shownKey)) return;
+  const sessions = parseInt(localStorage.getItem('ft_sessions_' + yStr) || '0');
+  const score = parseInt(localStorage.getItem('ft_score_' + yStr) || '0');
+  const closingNotes = JSON.parse(localStorage.getItem('ft_closing_notes') || '[]');
+  const note = closingNotes.find(n => n.date === yStr);
+  if (!sessions && !score && !note) return;
+  localStorage.setItem(shownKey, '1');
+  card.style.display = 'block';
+  card.innerHTML = `
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(92,252,160,.8);margin-bottom:6px">✨ Hier tu as fait ça</div>
+    ${sessions ? `<div style="font-size:13px;color:var(--text);margin-bottom:4px">⏱️ <strong>${sessions}</strong> session${sessions>1?'s':''} de travail</div>` : ''}
+    ${score ? `<div style="font-size:13px;color:var(--text);margin-bottom:4px">🎯 Score focus : <strong>${score}</strong>/100</div>` : ''}
+    ${note ? `<div style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5;font-style:italic">"${note.note}"</div>` : ''}
+    <button id="yesterday-close" style="background:none;border:none;color:rgba(92,252,160,.6);font:600 11px 'DM Sans',sans-serif;padding:6px 0 0;cursor:pointer">✕ Fermer</button>
+  `;
+  document.getElementById('yesterday-close').onclick = () => { card.style.display = 'none'; };
+}
+
+// ── 10. INTENTION SI–ALORS ────────────────────
+
+function showIfThenBeforeTimer(projId, callback) {
+  const ifthen = JSON.parse(localStorage.getItem('ft_ifthen_' + projId) || 'null');
+  if (!ifthen || (!ifthen.si && !ifthen.alors)) { if (callback) callback(); return; }
+  const bd = document.createElement('div');
+  bd.className = 'cat-modal-backdrop';
+  bd.innerHTML = `
+    <div class="cat-modal-sheet">
+      <div class="cat-modal-handle"></div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:10px">🔗 Ton intention</div>
+      <div class="ifthen-display" style="display:block;margin-bottom:16px">
+        ${ifthen.si ? `<div style="margin-bottom:4px">📍 <strong>Si</strong> ${ifthen.si}</div>` : ''}
+        ${ifthen.alors ? `<div>➡️ <strong>Alors</strong> ${ifthen.alors}</div>` : ''}
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Rappelle-toi de ton intention avant de commencer. C'est ce qui t'aide à démarrer.</p>
+      <button class="btn" id="ifthen-go">C'est parti →</button>
+    </div>`;
+  document.body.appendChild(bd);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.getElementById('ifthen-go').onclick = () => { bd.remove(); if (callback) callback(); };
+}
+
+// Store if-then when project is saved
+(function() {
+  // Hook into finalizeProject or similar — apply pending data after project creation
+  const checkInterval = setInterval(() => {
+    const pending = sessionStorage.getItem('ft_pending_ifthen');
+    const pendingDl = sessionStorage.getItem('ft_pending_deadline');
+    if (!pending && !pendingDl) return;
+    const projects = typeof getProjects === 'function' ? getProjects() : [];
+    if (!projects.length) return;
+    const newest = projects[projects.length - 1];
+    if (!newest || !newest.id) return;
+    if (pending) {
+      localStorage.setItem('ft_ifthen_' + newest.id, pending);
+      sessionStorage.removeItem('ft_pending_ifthen');
+    }
+    if (pendingDl) {
+      setProjectDeadline(newest.id, pendingDl);
+      sessionStorage.removeItem('ft_pending_deadline');
+    }
+  }, 2000);
+  setTimeout(() => clearInterval(checkInterval), 60000);
+})();
+
+// ── 11. INITIALISATION DES NOUVELLES FEATURES ─
+
+function initNewFeatures() {
+  // Check anti-shame on load
+  checkAntiShame();
+  // Show yesterday card on first morning open
+  showYesterdayCard();
+  // Check deadline notifications
+  checkDeadlineNotifications();
+  // Show weekly review on Sunday/Monday morning
+  const hour = new Date().getHours();
+  const dayOfWeek = new Date().getDay();
+  if ((dayOfWeek === 0 || dayOfWeek === 1) && hour >= 8 && hour < 12) {
+    setTimeout(showWeeklyReview, 3000);
+  }
+  // Ask planned reward on first open of the day if not set
+  const rewardKey = 'ft_planned_reward_' + new Date().toDateString();
+  const rewardAsked = 'ft_reward_asked_' + new Date().toDateString();
+  if (!localStorage.getItem(rewardKey) && !localStorage.getItem(rewardAsked)) {
+    if (hour >= 7 && hour < 10) {
+      localStorage.setItem(rewardAsked, '1');
+      setTimeout(() => askPlannedReward(), 5000);
+    }
+  }
+  // Track daily score
+  try {
+    const today = new Date().toDateString();
+    const score = calcFocusScore();
+    if (score > 0) localStorage.setItem('ft_score_' + today, score);
+  } catch(e) {}
+}
+
+// Run after auth loads
+(function() {
+  const _origInitAuth = typeof initAuth === 'function' ? initAuth : null;
+  if (_origInitAuth) {
+    const __orig = initAuth;
+    initAuth = function() {
+      __orig();
+      setTimeout(initNewFeatures, 2000);
+    };
+  } else {
+    setTimeout(initNewFeatures, 2000);
+  }
+})();
+
+// Update score tracking every 5 minutes
+setInterval(() => {
+  try {
+    const today = new Date().toDateString();
+    const score = calcFocusScore();
+    if (score > 0) localStorage.setItem('ft_score_' + today, score);
+  } catch(e) {}
+}, 5 * 60 * 1000);
+
+// ── SPACEBAR SHORTCUT ───
 document.addEventListener('keydown', function(e) {
   if (e.code !== 'Space' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   const active = document.querySelector('.screen.active');
