@@ -2900,10 +2900,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <section class="screen" id="planning-view">
   <button class="back" id="back-planning">← Agenda</button>
   <h1>📆 <em>Planning</em></h1>
-  <div class="planning-tab-row">
-    <button class="planning-tab active" id="ptab-auto">Auto-distribué</button>
-    <button class="planning-tab" id="ptab-manual">Par projet</button>
-  </div>
   <div id="planning-list"></div>
 </section>
 
@@ -11026,13 +11022,6 @@ document.getElementById('back-agenda').onclick    = () => show('landing');
 document.getElementById('btn-show-planning').onclick = () => { renderPlanningView('auto'); show('planning-view'); };
 document.getElementById('back-planning').onclick  = () => { renderAgenda(); show('agenda'); };
 
-// ── Onglets planning ──
-document.getElementById('ptab-auto').onclick   = () => { _setPlanningTab('auto');   renderPlanningView('auto'); };
-document.getElementById('ptab-manual').onclick = () => { _setPlanningTab('manual'); renderPlanningView('manual'); };
-function _setPlanningTab(tab) {
-  document.getElementById('ptab-auto').classList.toggle('active',   tab === 'auto');
-  document.getElementById('ptab-manual').classList.toggle('active', tab === 'manual');
-}
 
 // ══════════════════════════════════════════════
 // ─── PLANNING PAR JOUR ───────────────────────
@@ -11248,7 +11237,7 @@ function _renderPlanningTask(container, proj, step, color, badge, isDone) {
       setTimeout(() => variableReward(), 300);
     }
     // Re-render la vue active
-    const tab = document.getElementById('ptab-manual').classList.contains('active') ? 'manual' : 'auto';
+    const tab = 'auto';
     renderPlanningView(tab);
   };
   container.appendChild(row);
