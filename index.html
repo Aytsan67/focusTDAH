@@ -665,14 +665,12 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
 /* ── Focus level ring ── */
 .focus-level-ring {
-  position: fixed;
-  top: calc(env(safe-area-inset-top) + 10px);
-  left: 10px;
   width: 44px;
   height: 44px;
   cursor: pointer;
-  z-index: 450;
+  flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
 }
 .focus-level-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
 .focus-level-ring__num {
@@ -683,7 +681,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .focus-level-ring:active { opacity: .7; }
 /* Push back buttons past the ring */
-.back { margin-left: 48px; }
+.back { margin-left: 8px; }
 
 .focus-toast {
   position: fixed;
@@ -2138,7 +2136,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <div class="landing-left">
 
   <!-- Barre du haut — décalée à droite pour ne pas couvrir l'anneau de focus -->
-  <div class="landing-logo-row" style="align-items:center;padding-left:54px;padding-right:62px">
+  <div class="landing-logo-row" style="align-items:center;padding-left:8px;padding-right:62px">
     <span class="logo" style="font-size:24px">✦ focusTDAH</span>
     <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 10px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer;margin-left:auto">🔍</button>
   </div>
@@ -2898,27 +2896,26 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- Parking à pensées (FAB flottant pendant le timer) -->
 <button class="parking-fab" id="parking-fab" title="Parking à pensées">🅿️</button>
 
-<!-- Colonne fixe top-droite : compte → paramètres → focus → stats -->
+<!-- Colonne fixe top-droite : anneau focus → compte → paramètres → mode focus → stats -->
 <div class="top-right-stack" id="top-right-stack">
+  <!-- Anneau niveau de focus -->
+  <div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus">
+    <svg viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="3.5"/>
+      <circle id="flr-bar" cx="18" cy="18" r="15.9" fill="none" stroke="#ef5350"
+        stroke-width="3.5" stroke-dasharray="100" stroke-dashoffset="100"
+        stroke-linecap="round" style="transition:stroke-dashoffset .6s ease,stroke .4s"/>
+    </svg>
+    <span class="focus-level-ring__num" id="flr-num" style="color:#ef5350">--</span>
+    <span class="guardian-active-badge" id="guardian-badge" style="display:none" title="Gardien actif — appuie pour voir"></span>
+  </div>
   <div id="landing-user" style="display:none"></div>
   <button class="settings-fab" id="settings-fab" title="Paramètres">⚙️</button>
   <button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
   <button class="stats-fab" id="stats-fab" title="Stats du jour">📊</button>
 </div>
 <div class="stats-panel" id="stats-panel" style="display:none"></div>
-
-<!-- Anneau niveau de focus + badges gamification -->
-<div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus" style="position:relative">
-  <svg viewBox="0 0 36 36">
-    <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="3.5"/>
-    <circle id="flr-bar" cx="18" cy="18" r="15.9" fill="none" stroke="#ef5350"
-      stroke-width="3.5" stroke-dasharray="100" stroke-dashoffset="100"
-      stroke-linecap="round" style="transition:stroke-dashoffset .6s ease,stroke .4s"/>
-  </svg>
-  <span class="focus-level-ring__num" id="flr-num" style="color:#ef5350">--</span>
-  <span class="guardian-active-badge" id="guardian-badge" style="display:none" title="Gardien actif — appuie pour voir"></span>
-</div>
-<div id="focus-ring-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;max-width:340px"></div>
+<div id="focus-ring-badges" style="display:none"></div>
 </main>
 <script>
 // ─── FIREBASE CONFIG ───────────────────────────────────────────────
