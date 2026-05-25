@@ -12308,8 +12308,8 @@ function variableReward() {
   _taskCompletionCount++;
   localStorage.setItem('ft_task_count', _taskCompletionCount);
   const roll = Math.random();
-  // 30% chance de tirage créature
-  if (maybeRollCreature(30)) return;
+  // 100% chance de tirage créature à chaque tâche cochée
+  if (maybeRollCreature(100)) return;
   const g = getActiveGuardianData();
   const bigChance = g && g.id === 'griffon' ? 0.40 : 0.30;
   if      (roll < 0.18) { /* silence */ }
