@@ -5309,14 +5309,19 @@ function renderStepsList(steps, container, saveFn, seanceMode, _openNames) {
     (function(st, circ) {
       circ.onclick = function(e) {
         e.stopPropagation();
+        const wasDone = stComplete(st);
         if (st.micros.length === 0) {
           st.done = (st.done || 0) > 0 ? 0 : 1;
-          if (saveFn) saveFn();
-          rerenderList();
         } else {
           st.done = (st.done || 0) >= st.micros.length ? 0 : st.micros.length;
-          if (saveFn) saveFn();
-          rerenderList();
+        }
+        if (saveFn) saveFn();
+        rerenderList();
+        // Déclenche la créature si on vient de cocher (pas de décocher)
+        if (!wasDone && stComplete(st)) {
+          addTodayStats({ tasks: 1 });
+          navTrackTaskDone();
+          setTimeout(() => variableReward(), 300);
         }
       };
     })(step, circle);
