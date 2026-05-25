@@ -2993,14 +2993,15 @@ async function loadFromFirestore(uid) {
       }
 
       // ── Projets : fusion sans ressusciter les supprimés ──
+      // Local prime sur cloud (évite qu'un refresh écrase les décoches locales)
       const cloudProjs = (d.projects || []).filter(p => !allDeletedIds.has(p.id));
-      const merged = [...cloudProjs];
-      localProjs.forEach(lp => {
-        if (!allDeletedIds.has(lp.id) && !merged.find(cp => cp.id === lp.id)) merged.push(lp);
+      const merged = [...localProjs.filter(lp => !allDeletedIds.has(lp.id))];
+      cloudProjs.forEach(cp => {
+        if (!allDeletedIds.has(cp.id) && !merged.find(lp => lp.id === cp.id)) merged.push(cp);
       });
       localStorage.setItem('tache_v3', JSON.stringify(merged));
-      if (d.activeId) localStorage.setItem('tache_active', d.activeId);
-      if (merged.length > cloudProjs.length) uploadNow(uid, merged);
+      if (d.activeId && !localStorage.getItem('tache_active')) localStorage.setItem('tache_active', d.activeId);
+      if (merged.length > 0) uploadNow(uid, merged);
 
       // ── QuickTodo : cloud autoritaire — pas de fusion locale ──
       // (évite la résurrection d'items supprimés sur un autre appareil)
