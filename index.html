@@ -4706,6 +4706,7 @@ function stComplete(st) { return stD(st) >= stT(st); }
 function openProject(p) {
   currentProject = p;
   setActiveId(p.id);
+  navTrackTaskOpen(p.id); // tracking comportemental
   renderPlanPreview(p);
   show('plan-preview');
 }
@@ -7011,6 +7012,7 @@ let _sessionOverrideTaskName = null; // nom de tâche confirmé/saisi par l'util
 function _doStartSession() {
   addTodayStats({ sessions: 1 });
   _sessionFocusStart = Date.now();
+  navTrackSessionStart(); // tracking comportemental
   renderSession();
   show('session');
 }
@@ -7620,6 +7622,7 @@ function onSessionTimerEnd() {
   // Calcule les minutes réelles de cette session (depuis le dernier démarrage)
   const _elapsedMins = _sessionStartTs ? Math.round((Date.now() - _sessionStartTs) / 60000) : Math.round(tTotal / 60);
   _sessionStartTs = null;
+  navTrackSessionShort(_elapsedMins); // tracking sessions courtes
   setTimeout(() => showSessionEndChoice(Math.max(1, _elapsedMins || Math.round(tTotal / 60))), 600);
 }
 function onFtTimerEnd() {
@@ -7722,6 +7725,227 @@ function addBehaviorEvent(type, value) {
   if (data.events.length > 20) data.events = data.events.slice(-20);
   localStorage.setItem('ft_focus_behavior', JSON.stringify(data));
   updateFocusRing();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ─── SYSTÈME COGNITIF ADAPTATIF v2 ─────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+
+// ── 1. NAV LOG — tracking comportemental étendu (7 jours) ──
+const FT_NAV_KEY = 'ft_nav_log';
+function getNavLog() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FT_NAV_KEY) || '[]');
+    const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+    return raw.filter(e => e.ts > cutoff);
+  } catch(e) { return []; }
+}
+function addNavEvent(type, meta) {
+  try {
+    const log = getNavLog();
+    log.push({ ts: Date.now(), type, ...(meta || {}) });
+    if (log.length > 300) log.splice(0, log.length - 300);
+    localStorage.setItem(FT_NAV_KEY, JSON.stringify(log));
+  } catch(e) {}
+}
+// Raccourcis utilisés dans les hooks
+function navTrackTaskOpen(projId)   { addNavEvent('task_open',    { projId }); }
+function navTrackSessionStart()     { addNavEvent('task_start',   {}); }
+function navTrackSessionShort(mins) { if (mins < 3) addNavEvent('session_short', { mins }); }
+function navTrackProjSwitch()       { addNavEvent('proj_switch',  {}); }
+function navTrackTaskDone()         { addNavEvent('task_done',    {}); }
+function navTrackBrainDump()        { addNavEvent('brain_dump',   {}); }
+
+// ── 2. DÉTECTION D'ÉTAT COGNITIF (probabilités 0-100) ──
+function detectCognitiveState() {
+  const now   = Date.now();
+  const log   = getNavLog();
+  const r20   = log.filter(e => now - e.ts < 20 * 60 * 1000);   // 20 min
+  const r60   = log.filter(e => now - e.ts < 60 * 60 * 1000);   // 1h
+  const r8h   = log.filter(e => now - e.ts <  8 * 3600 * 1000); // 8h
+  const ss    = calcSubScores();
+  const score = calcFocusScore();
+  const stats = getTodayStats();
+
+  const st = { fatigue: 0, anxiete: 0, ennui: 0, surcharge: 0, hyperfocus: 0, survie: 0, creatif: 0 };
+
+  // FATIGUE — sessions courtes, abandons, énergie faible
+  st.fatigue += Math.min(40, r60.filter(e => e.type === 'session_short').length * 18);
+  if (ss.energie < 30) st.fatigue += 35;
+  if (ss.energie < 20) st.fatigue += 20;
+  if (stats.focusMin > 0 && stats.sessions > 0 && stats.focusMin / stats.sessions < 5) st.fatigue += 15;
+
+  // ANXIÉTÉ — rouvre la même tâche plusieurs fois sans démarrer
+  const opensByProj = {};
+  r20.filter(e => e.type === 'task_open').forEach(e => { opensByProj[e.projId || 'x'] = (opensByProj[e.projId || 'x'] || 0) + 1; });
+  const maxReopen = Math.max(0, ...Object.values(opensByProj));
+  st.anxiete += Math.min(50, maxReopen * 15);
+  if (ss.friction > 55) st.anxiete += 25;
+
+  // ENNUI / dopamine-seeking — saute entre projets, peu de focus
+  st.ennui += Math.min(45, r20.filter(e => e.type === 'proj_switch').length * 12);
+  if (ss.dopamine < 25) st.ennui += 28;
+
+  // SURCHARGE — beaucoup de retours accueil, chaos nav
+  st.surcharge += Math.min(40, r20.filter(e => e.type === 'nav_home').length * 9);
+  if (ss.surcharge > 60) st.surcharge += 35;
+  const openProjs = getProjects().filter(p => !stComplete({ micros: p.steps || [], done: 0 }) || true).length;
+  if (openProjs > 8) st.surcharge += 15;
+
+  // HYPERFOCUS — longues sessions, tâches terminées
+  const started = r60.filter(e => e.type === 'task_start').length;
+  const done    = r8h.filter(e => e.type === 'task_done').length;
+  if (started >= 2 && done >= 1 && ss.energie > 40) st.hyperfocus += 35;
+  if (stats.focusMin > 90) st.hyperfocus += 25;
+  if (score > 65) st.hyperfocus += 15;
+
+  // SURVIE — score très bas + surcharge extrême
+  if (score < 22 && ss.surcharge > 68) st.survie += 60;
+  if (ss.energie < 15) st.survie += 30;
+
+  // CRÉATIF — brain dumps récents + dopamine correcte
+  if (r8h.filter(e => e.type === 'brain_dump').length >= 1 && ss.dopamine > 45) st.creatif += 45;
+
+  // Clamp 0-100
+  Object.keys(st).forEach(k => { st[k] = Math.min(100, Math.max(0, Math.round(st[k]))); });
+  return st;
+}
+
+// ── 3. MODE COGNITIF DOMINANT ──
+const COG_MODES = {
+  survie:    { emoji:'🆘', label:'Mode Survie',    cls:'survie',    color:'#fc5c7d', desc:'Une seule chose. Tout doux.' },
+  hyperfocus:{ emoji:'🎯', label:'Hyperfocus',     cls:'hyperfocus',color:'#7c5cfc', desc:'Fenêtre de concentration rare. Protège-la.' },
+  surcharge: { emoji:'🌊', label:'Surcharge',       cls:'surcharge', color:'#ff9800', desc:'Cerveau saturé. Un truc à la fois.' },
+  fatigue:   { emoji:'😴', label:'Fatigue',         cls:'fatigue',   color:'#78909c', desc:'Tâches légères seulement.' },
+  anxiete:   { emoji:'😤', label:'Friction',        cls:'anxiete',   color:'#ff7043', desc:'Commence par la plus petite action.' },
+  ennui:     { emoji:'⚡', label:'Besoin dopamine', cls:'ennui',     color:'#ffd54f', desc:'Stimulation légère. Timer court.' },
+  creatif:   { emoji:'🎨', label:'Mode Créatif',   cls:'creatif',   color:'#4db6ac', desc:'Bonne fenêtre pour brainstormer.' },
+  normal:    { emoji:'✦',  label:'Mode Standard',  cls:'normal',    color:'var(--accent)', desc:'' },
+};
+
+let _lastDetectedMode = 'normal';
+let _lastModeCheck    = 0;
+
+function getDominantCognitiveMode() {
+  const now = Date.now();
+  // Re-calcule max toutes les 3 min
+  if (now - _lastModeCheck < 3 * 60 * 1000) return _lastDetectedMode;
+  _lastModeCheck = now;
+
+  const st    = detectCognitiveState();
+  const ss    = calcSubScores();
+  const score = calcFocusScore();
+
+  let mode = 'normal';
+  if (st.survie    > 50)                       mode = 'survie';
+  else if (st.hyperfocus > 50 && score > 55)   mode = 'hyperfocus';
+  else if (st.surcharge  > 55 || ss.surcharge > 70) mode = 'surcharge';
+  else if (st.fatigue    > 50 || ss.energie < 28)   mode = 'fatigue';
+  else if (st.anxiete    > 45)                 mode = 'anxiete';
+  else if (st.ennui      > 45 || ss.dopamine < 20)  mode = 'ennui';
+  else if (st.creatif    > 40)                 mode = 'creatif';
+
+  _lastDetectedMode = mode;
+  return mode;
+}
+
+// ── 4. SCORE DE FAISABILITÉ PAR TÂCHE ──
+function taskFeasibilityScore(step, projId) {
+  const mode = getDominantCognitiveMode();
+  const ss   = calcSubScores();
+  let score  = 50;
+
+  // Correspondance énergie ↔ état cognitif
+  const energyMap = { survie:'low', fatigue:'low', ennui:'low', anxiete:'low', normal:'medium', creatif:'medium', hyperfocus:'high', surcharge:'low' };
+  const idealEnergy = energyMap[mode] || 'medium';
+  if (step.energy === idealEnergy)            score += 25;
+  if (step.energy === 'low' && ss.energie < 35) score += 20;
+  if (step.energy === 'high' && ss.energie > 65) score += 20;
+
+  // Tâche déjà commencée = momentum
+  const tp = getTaskProgress(projId, step.name);
+  if (tp.mins > 0)    score += 12;
+  if (tp.pct !== null && tp.pct < 100) score += 8;
+
+  // Micros courtes = meilleure pour fatigue/surcharge
+  if (step.micros && step.micros.length <= 2 && ['fatigue','surcharge','survie'].includes(mode)) score += 15;
+
+  return Math.min(100, Math.max(0, score));
+}
+
+// ── 5. COPILOTE COGNITIF ──
+let _lastCopilotTs = 0;
+const COPILOT_MSGS = {
+  survie:    ["Pas besoin de tout faire. Une seule chose suffit.", "Tu n'as rien à prouver là. Une micro-action, c'est bien."],
+  fatigue:   ["Tu as moins d'énergie là — c'est normal. Une tâche simple ?", "Mode économie d'énergie activé. Commence doucement."],
+  anxiete:   ["Tu tourne autour de cette tâche ? On la découpe en 2 min ?", "Pas besoin que ce soit parfait. Juste commencer compte."],
+  ennui:     ["Ton cerveau cherche de la stimulation. Timer 10min sur quelque chose de nouveau ?", "Change de tâche ou change de format — ton cerveau a besoin de nouveauté."],
+  surcharge: ["Trop d'infos en même temps. On cache tout sauf une chose ?", "Ferme ce qui n'est pas urgent. Une seule fenêtre, un seul truc."],
+  hyperfocus:["Tu es dans une bonne session. Pas d'interruption — continue.", "Fenêtre de focus rare. Protège-la, coupe les notifs."],
+  creatif:   ["Bonne énergie créative. Brain dump d'abord pour capturer tout ça ?", "Mode créatif — laisse les idées venir avant de structurer."],
+};
+
+function maybeTriggerCopilot() {
+  const now = Date.now();
+  if (now - _lastCopilotTs < 20 * 60 * 1000) return; // max 1 fois/20 min
+  if (document.querySelector('.copilot-toast')) return;
+  const mode = getDominantCognitiveMode();
+  if (mode === 'normal') return;
+  const msgs = COPILOT_MSGS[mode];
+  if (!msgs) return;
+  _lastCopilotTs = now;
+
+  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  const el  = document.createElement('div');
+  el.className = 'copilot-toast';
+  el.style.cssText = `position:fixed;bottom:calc(env(safe-area-inset-bottom)+80px);left:14px;right:14px;
+    background:var(--card);border:1.5px solid ${COG_MODES[mode].color}44;border-radius:18px;
+    padding:14px 16px;z-index:601;animation:up .25s ease;box-shadow:0 4px 24px rgba(0,0,0,.4);
+    display:flex;align-items:center;gap:12px`;
+  el.innerHTML = `
+    <span style="font-size:22px">${COG_MODES[mode].emoji}</span>
+    <div style="flex:1;font-size:13px;font-weight:600;color:var(--text);line-height:1.4">${msg}</div>
+    <button style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px" id="cp-close">✕</button>`;
+  document.body.appendChild(el);
+  document.getElementById('cp-close').onclick = () => el.remove();
+  setTimeout(() => { if (el.parentNode) { el.style.opacity='0'; el.style.transition='opacity .4s'; setTimeout(()=>el.remove(),400); } }, 12000);
+}
+
+// ── 6. PROFIL LONG TERME — patterns comportementaux ──
+function updateBehavioralProfile() {
+  try {
+    const profile = JSON.parse(localStorage.getItem('ft_beh_profile') || '{"days":{},"patterns":{}}');
+    const today   = new Date().toDateString();
+    const mode    = getDominantCognitiveMode();
+    const score   = calcFocusScore();
+    const h       = new Date().getHours();
+    if (!profile.days[today]) profile.days[today] = { modes: {}, peakScore: 0, peakHour: h };
+    profile.days[today].modes[mode] = (profile.days[today].modes[mode] || 0) + 1;
+    if (score > (profile.days[today].peakScore || 0)) { profile.days[today].peakScore = score; profile.days[today].peakHour = h; }
+    // Garder 30 jours
+    const keys = Object.keys(profile.days);
+    if (keys.length > 30) delete profile.days[keys[0]];
+    // Patterns : mode le plus fréquent par heure
+    if (!profile.patterns[h]) profile.patterns[h] = {};
+    profile.patterns[h][mode] = (profile.patterns[h][mode] || 0) + 1;
+    localStorage.setItem('ft_beh_profile', JSON.stringify(profile));
+  } catch(e) {}
+}
+
+function getBehavioralProfile() {
+  try { return JSON.parse(localStorage.getItem('ft_beh_profile') || '{"days":{},"patterns":{}}'); }
+  catch(e) { return { days: {}, patterns: {} }; }
+}
+
+// ─ Heure habituelle de mode donné
+function getTypicalModeHour(targetMode) {
+  const profile = getBehavioralProfile();
+  let bestH = null, bestCount = 0;
+  Object.entries(profile.patterns).forEach(([h, modes]) => {
+    const c = modes[targetMode] || 0;
+    if (c > bestCount) { bestCount = c; bestH = +h; }
+  });
+  return bestCount >= 3 ? bestH : null;
 }
 
 const FOCUS_CHECKIN_QUESTIONS = [
@@ -10306,6 +10530,7 @@ document.getElementById('back-brain-dump').onclick      = () => { hideDumpGuide(
 document.getElementById('btn-brain-dump-done').onclick  = () => {
   localStorage.setItem('focustdah_brain_dump', document.getElementById('brain-dump-text').value);
   addBehaviorEvent('brain_dump');
+  navTrackBrainDump(); // tracking long terme
   showCheckIn('home', 'dump', 'Après avoir vidé ton cerveau 🧠');
 };
 document.getElementById('btn-brain-dump-clear').onclick = () => {
@@ -12332,39 +12557,83 @@ function showBigCelebration() {
 // ─── 7. UI ADAPTATIVE (selon score cognitif) ───
 // ════════════════════════════════════════════════
 let _lastAdaptiveScore = -1;
+let _lastAdaptiveMode  = '';
 function applyAdaptiveUI() {
-  const ss = calcSubScores();
+  const ss    = calcSubScores();
   const score = calcFocusScore();
-  if (Math.abs(score - _lastAdaptiveScore) < 3) return; // évite les re-renders inutiles
+  const mode  = getDominantCognitiveMode();
+
+  // Throttle : re-render seulement si score change de >3 ou mode change
+  if (Math.abs(score - _lastAdaptiveScore) < 3 && mode === _lastAdaptiveMode) return;
   _lastAdaptiveScore = score;
+  _lastAdaptiveMode  = mode;
 
   const landing = document.getElementById('landing');
   if (!landing) return;
   const existing = document.getElementById('adaptive-banner');
   if (existing) existing.remove();
-  landing.classList.remove('cognitive-overload');
+  landing.classList.remove('cognitive-overload','cognitive-hyperfocus','cognitive-survie');
 
-  const isOverloaded = ss.surcharge > 65 || (score < 25 && ss.friction > 50);
-  const isLow = score < 38 && !isOverloaded;
+  const cfg = COG_MODES[mode] || COG_MODES.normal;
 
-  if (isOverloaded) {
-    landing.classList.add('cognitive-overload');
-    const b = document.createElement('div');
-    b.id = 'adaptive-banner';
-    b.className = 'adaptive-banner adaptive-overload';
-    b.innerHTML = `<span>🌊 Ton cerveau est surchargé.</span><span style="font-size:12px;font-weight:400;color:var(--muted);margin-top:2px">Une seule chose visible. Rien d'autre. C'est fait exprès.</span>`;
-    const wmbEl = document.getElementById('wmb-card');
-    const ref = wmbEl?.nextSibling || document.getElementById('rebound-banner-slot');
-    if (ref) ref.parentNode.insertBefore(b, ref);
-  } else if (isLow) {
-    const b = document.createElement('div');
-    b.id = 'adaptive-banner';
-    b.className = 'adaptive-banner adaptive-low';
-    b.innerHTML = `<span>⚡ Énergie basse — commence par quelque chose de petit.</span>`;
-    const wmbEl = document.getElementById('wmb-card');
-    const ref = wmbEl?.nextSibling || document.getElementById('rebound-banner-slot');
-    if (ref) ref.parentNode.insertBefore(b, ref);
+  // Adaptations selon mode
+  switch(mode) {
+    case 'survie':
+      landing.classList.add('cognitive-overload', 'cognitive-survie');
+      _showAdaptiveBanner('🆘', 'Mode Survie', "Une seule chose. Pas de pression, pas de jugement.", cfg.color, true);
+      break;
+    case 'surcharge':
+      landing.classList.add('cognitive-overload');
+      _showAdaptiveBanner('🌊', 'Surcharge détectée', "Cerveau saturé — une seule chose visible. C'est fait exprès.", cfg.color, true);
+      break;
+    case 'fatigue':
+      _showAdaptiveBanner('😴', 'Énergie basse', "Commence par quelque chose de court. Le mouvement viendra.", cfg.color, false);
+      break;
+    case 'anxiete':
+      _showAdaptiveBanner('😤', 'Friction mentale', "Pas besoin que ce soit parfait. Juste la plus petite action.", cfg.color, false);
+      break;
+    case 'ennui':
+      _showAdaptiveBanner('⚡', 'Besoin de stimulation', "Timer 10 min sur quelque chose de nouveau. Ton cerveau en a besoin.", cfg.color, false);
+      break;
+    case 'hyperfocus':
+      _showAdaptiveBanner('🎯', 'Fenêtre de focus', "Rare et précieuse. Attaque ta tâche la plus importante maintenant.", cfg.color, false);
+      break;
+    case 'creatif':
+      _showAdaptiveBanner('🎨', 'Mode Créatif', "Bonne fenêtre pour brainstormer ou avancer sur un projet créatif.", cfg.color, false);
+      break;
   }
+
+  // Met à jour le mode pill avec le mode détecté (si pas de mode manuel)
+  _updateCogModePill(mode, cfg);
+
+  // Copilote cognitif — déclenché après 3 visites accueil
+  const navLog = getNavLog();
+  const homeVisits = navLog.filter(e => Date.now() - e.ts < 5 * 60 * 1000 && e.type === 'nav_home').length;
+  if (homeVisits >= 3) maybeTriggerCopilot();
+
+  // Profil long terme
+  updateBehavioralProfile();
+}
+
+function _showAdaptiveBanner(emoji, title, desc, color, isOverload) {
+  const b = document.createElement('div');
+  b.id = 'adaptive-banner';
+  b.className = 'adaptive-banner' + (isOverload ? ' adaptive-overload' : ' adaptive-low');
+  b.style.borderColor = color + '44';
+  b.innerHTML = `<span style="font-size:18px">${emoji}</span><div><span style="font-weight:700;color:${color}">${title}</span><br><span style="font-size:12px;font-weight:400;color:var(--muted)">${desc}</span></div>`;
+  const wmbEl = document.getElementById('wmb-card');
+  const ref   = wmbEl?.nextSibling || document.getElementById('rebound-banner-slot');
+  if (ref) ref.parentNode.insertBefore(b, ref);
+}
+
+function _updateCogModePill(mode, cfg) {
+  const slot = document.getElementById('day-mode-slot');
+  if (!slot) return;
+  // Ne pas écraser si un mode manuel est défini
+  const manualMode = getDayMode();
+  if (manualMode && mode === 'normal') return; // manual wins
+  slot.style.display = 'block';
+  slot.innerHTML = `<div class="day-mode-pill ${cfg.cls}" style="border-color:${cfg.color}33;color:${cfg.color}">${cfg.emoji} ${cfg.label}${cfg.desc ? ' · ' + cfg.desc : ''}</div>`;
 }
 
 // ════════════════════════════════════════════════
@@ -12393,7 +12662,7 @@ function applyAdaptiveUI() {
   };
 })();
 
-// B — Modifier renderHome pour tracker + adapter UI + WMB
+// B — Modifier renderHome pour tracker + adapter UI + WMB + priorisation intelligente
 (function() {
   const _origRH = renderHome;
   renderHome = function() {
@@ -12402,8 +12671,44 @@ function applyAdaptiveUI() {
     applyAdaptiveUI();
     trackLandingVisit();
     trackCognitiveProfile();
+    addNavEvent('nav_home', {});
+    // Réordonner les cartes projet par faisabilité
+    _reorderProjectCards();
   };
 })();
+
+function _reorderProjectCards() {
+  try {
+    const listEl = document.getElementById('home-proj-list');
+    if (!listEl) return;
+    const cards  = Array.from(listEl.querySelectorAll('.proj-card'));
+    if (cards.length < 2) return;
+    const projs  = getProjects().slice(0, 5);
+    // Calcule un score de faisabilité pour chaque projet
+    const scored = projs.map((p, i) => {
+      const step = getCurrentStep(p);
+      const fs   = step ? taskFeasibilityScore(step, p.id) : 0;
+      return { idx: i, fs };
+    }).sort((a, b) => b.fs - a.fs);
+    // Réordonne les cartes DOM sans re-render complet
+    const mode = getDominantCognitiveMode();
+    if (mode === 'normal') return; // en mode normal, garder l'ordre naturel
+    const ordered = scored.map(s => cards[s.idx]).filter(Boolean);
+    ordered.forEach(card => listEl.appendChild(card));
+    // Badge discret sur la première carte recommandée
+    if (ordered[0] && mode !== 'normal') {
+      const existing = ordered[0].querySelector('.feasibility-badge');
+      if (!existing) {
+        const badge = document.createElement('div');
+        badge.className = 'feasibility-badge';
+        badge.style.cssText = 'font-size:10px;color:var(--accent);font-weight:700;margin-top:4px;opacity:.8';
+        badge.textContent = '✦ Adapté à toi maintenant';
+        const info = ordered[0].querySelector('.proj-info');
+        if (info) info.appendChild(badge);
+      }
+    }
+  } catch(e) {}
+}
 
 // C — Modifier updateFocusRing pour adapter UI et profil
 (function() {
@@ -12465,7 +12770,7 @@ function applyAdaptiveUI() {
   };
 })();
 
-// G — btn-done utilise variableReward + clear WMB
+// G — btn-done utilise variableReward + clear WMB + nav tracking
 (function() {
   const doneBtn = document.getElementById('btn-done');
   const origOnclick = doneBtn.onclick;
@@ -12475,6 +12780,7 @@ function applyAdaptiveUI() {
     renderLandingStats();
     variableReward(); // remplace showDopamineToast()
     addBehaviorEvent('complete');
+    navTrackTaskDone(); // tracking long terme
     advanceMicro();
     // Actualise le WMB avec la nouvelle micro-action
     try {
