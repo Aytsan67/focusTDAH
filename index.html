@@ -210,7 +210,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .mode-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 3px; }
 .mode-desc { color: var(--muted); font-size: 12px; line-height: 1.45; }
 
-#session { padding: calc(env(safe-area-inset-top) + 24px) 22px calc(env(safe-area-inset-bottom) + 32px); }
+#session { padding: calc(env(safe-area-inset-top) + 24px) 22px calc(env(safe-area-inset-bottom) + 32px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .step-pill {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 14px; border-radius: 999px;
@@ -637,6 +637,20 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .stats-fab:active { transform: scale(.9); }
 .stats-fab.active { border-color: var(--accent); background: rgba(124,92,252,.15); }
+
+.bestiary-fab {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 14px rgba(0,0,0,.4);
+  transition: border-color .2s, background .2s, transform .15s;
+  padding: 0; flex-shrink: 0;
+}
+.bestiary-fab:active { transform: scale(.9); border-color: var(--accent); }
 
 /* Stats panel */
 .stats-panel {
@@ -1615,7 +1629,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .day-mode-pill.boost  { background:rgba(252,92,125,.1); color:#fc5c7d; border:1px solid rgba(252,92,125,.25); }
 
 /* ── SESSION END CHOICE ── */
-.session-end-sheet { background:var(--card); border-radius:24px 24px 0 0; padding:28px 20px 36px; width:100%; max-width:600px; animation:slideUp .3s ease; }
+.session-end-sheet { background:var(--card); border-radius:24px 24px 0 0; padding:28px 20px 36px; width:100%; max-width:600px; animation:slideUp .3s ease; max-height:90vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 @keyframes slideUp { from { transform:translateY(60px); opacity:0; } to { transform:translateY(0); opacity:1; } }
 .session-end-mins { font-family:'Syne',sans-serif; font-size:56px; font-weight:900; line-height:1; color:var(--accent); }
 .session-end-choice { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px; }
@@ -2896,8 +2910,9 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- Parking à pensées (FAB flottant pendant le timer) -->
 <button class="parking-fab" id="parking-fab" title="Parking à pensées">🅿️</button>
 
-<!-- Colonne fixe top-droite : anneau focus → compte → paramètres → mode focus → stats -->
+<!-- Colonne fixe top-droite : compte → anneau focus → paramètres → mode focus → stats → bestiaire -->
 <div class="top-right-stack" id="top-right-stack">
+  <div id="landing-user" style="display:none"></div>
   <!-- Anneau niveau de focus -->
   <div class="focus-level-ring" id="focus-level-ring" title="Niveau de focus">
     <svg viewBox="0 0 36 36">
@@ -2909,10 +2924,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <span class="focus-level-ring__num" id="flr-num" style="color:#ef5350">--</span>
     <span class="guardian-active-badge" id="guardian-badge" style="display:none" title="Gardien actif — appuie pour voir"></span>
   </div>
-  <div id="landing-user" style="display:none"></div>
   <button class="settings-fab" id="settings-fab" title="Paramètres">⚙️</button>
   <button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
   <button class="stats-fab" id="stats-fab" title="Stats du jour">📊</button>
+  <button class="bestiary-fab" id="bestiary-fab" title="Bestiaire">🐉</button>
 </div>
 <div class="stats-panel" id="stats-panel" style="display:none"></div>
 <div id="focus-ring-badges" style="display:none"></div>
@@ -3781,12 +3796,14 @@ function renderHome() {
       const pct = globalPct(p);
       const step = getCurrentStep(p);
       const energyDot = step && step.energy ? { low:'🟢', medium:'🟡', high:'🔴' }[step.energy] : '';
+      const pillsHtml = step ? _taskPillsHtml(p.id, step.name) : '';
       const btn = document.createElement('button');
       btn.className = 'proj-card';
       btn.innerHTML =
         '<div class="proj-info">' +
           '<div class="proj-name">' + p.name + '</div>' +
           '<div class="proj-meta">' + energyDot + (energyDot ? ' ' : '') + (step ? step.name : 'Terminé ✓') + '</div>' +
+          (pillsHtml ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">' + pillsHtml + '</div>' : '') +
           '<div class="mini-bar"><div class="mini-fill" style="width:' + pct + '%"></div></div>' +
         '</div>' +
         '<div class="ring" style="background:conic-gradient(var(--accent) ' + (pct * 3.6) + 'deg,var(--soft) 0)">' +
@@ -6988,12 +7005,67 @@ let tRemain = 120, tTotal = 120, tRunning = false, tInterval = null;
 let tEndTimestamp = null, ftEndTimestamp = null;
 
 let _sessionFocusStart = null;
+let _sessionOverrideTaskName = null; // nom de tâche confirmé/saisi par l'utilisateur
 
-function startSession() {
+function _doStartSession() {
   addTodayStats({ sessions: 1 });
   _sessionFocusStart = Date.now();
   renderSession();
   show('session');
+}
+
+function askSessionTask(callback) {
+  // Détermine la tâche en cours (si projet sélectionné)
+  const step = currentProject ? getCurrentStep(currentProject) : null;
+  const defaultName = step ? step.name : null;
+
+  const bd = document.createElement('div');
+  bd.style.cssText = 'position:fixed;inset:0;background:rgba(10,10,15,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9100';
+  bd.innerHTML = `
+    <div style="background:var(--card);border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:520px;animation:slideUp .25s ease">
+      <div style="width:40px;height:4px;border-radius:4px;background:var(--border);margin:0 auto 20px"></div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px">Sur quelle tâche ?</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Le temps sera associé à cette tâche</div>
+      ${defaultName ? `
+        <button id="ast-confirm" style="width:100%;padding:16px;border-radius:16px;background:rgba(124,92,252,.12);border:1.5px solid var(--accent);color:var(--text);font:700 14px 'DM Sans',sans-serif;cursor:pointer;text-align:left;margin-bottom:10px">
+          ✅ ${defaultName}
+        </button>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:center">— ou —</div>
+      ` : ''}
+      <input id="ast-input" type="text" placeholder="Autre tâche libre…" style="width:100%;padding:14px 16px;border-radius:14px;border:1.5px solid var(--border);background:var(--soft);color:var(--text);font:500 14px 'DM Sans',sans-serif;box-sizing:border-box;margin-bottom:10px;outline:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button id="ast-free" style="padding:14px;border-radius:14px;border:1.5px solid var(--border);background:var(--soft);color:var(--muted);font:600 13px 'DM Sans',sans-serif;cursor:pointer">Session libre</button>
+        <button id="ast-go" style="padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font:700 13px 'Syne',sans-serif;cursor:pointer">C'est parti →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bd);
+
+  const input = bd.querySelector('#ast-input');
+  const go = () => {
+    const val = input.value.trim();
+    _sessionOverrideTaskName = val || (defaultName || null);
+    bd.remove();
+    callback(_sessionOverrideTaskName);
+  };
+
+  if (bd.querySelector('#ast-confirm')) {
+    bd.querySelector('#ast-confirm').onclick = () => {
+      _sessionOverrideTaskName = defaultName;
+      bd.remove();
+      callback(_sessionOverrideTaskName);
+    };
+  }
+  bd.querySelector('#ast-go').onclick = go;
+  bd.querySelector('#ast-free').onclick = () => {
+    _sessionOverrideTaskName = null;
+    bd.remove();
+    callback(null);
+  };
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+}
+
+function startSession() {
+  askSessionTask(() => _doStartSession());
 }
 
 function _flushSessionFocusMin() {
@@ -8967,6 +9039,9 @@ function renderShortcutStep() {
   };
 })();
 
+// ── Bestiary FAB ──
+document.getElementById('bestiary-fab').onclick = () => openBestiaryPanel();
+
 // ── Toast Focus quand un timer démarre ──
 let focusToastTimer = null;
 function maybeAskFocus() {
@@ -10457,6 +10532,10 @@ function showEndOfDay() {
     bd.remove();
     setDayMode(null); // reset mode for tomorrow
     localStorage.removeItem(DAY_MODE_TS); // allow morning greeting tomorrow
+    // Réinitialise sommeil + boissons pour le lendemain
+    localStorage.setItem('ft_sleep', '{}');
+    localStorage.setItem('ft_drinks', '[]');
+    localStorage.removeItem('ft_drink_taken');
   };
   bd.querySelector('#eod-dump').onclick = () => {
     bd.remove();
@@ -11478,9 +11557,37 @@ function resetTaskProgress(projId, stepName) {
   localStorage.removeItem(_taskKey(projId, stepName));
 }
 
-// ── Affiche les pills de temps et % dans la session ──
+// ── Pills de temps/% : affichées dans la liste projets, pas dans la session ──
+
+function _taskPillsHtml(projId, stepName) {
+  const tp = getTaskProgress(projId, stepName);
+  if (!tp.mins && tp.pct === null) return '';
+  let html = '';
+  if (tp.mins > 0) {
+    const h = Math.floor(tp.mins / 60);
+    const m = tp.mins % 60;
+    const label = h > 0 ? h + 'h' + (m > 0 ? m + 'min' : '') : m + ' min';
+    html += `<span class="task-time-pill">⏱️ ${label}</span>`;
+  }
+  if (tp.pct !== null) {
+    html += `<span class="task-pct-pill">✅ ${tp.pct}%</span>`;
+  }
+  return html;
+}
 
 function renderTaskProgressPills() {
+  // Les pills s'affichent uniquement dans la liste de projets (via renderHome),
+  // pas dans l'écran session — on cache systématiquement.
+  const el = document.getElementById('s-task-progress');
+  if (el) el.style.display = 'none';
+  // Rafraîchit aussi la liste de projets si visible
+  const listEl = document.getElementById('home-proj-list');
+  if (listEl && document.getElementById('landing') && document.getElementById('landing').classList.contains('active')) {
+    renderHome();
+  }
+}
+
+function _renderTaskProgressPills_UNUSED() {
   const el = document.getElementById('s-task-progress');
   if (!el) return;
   if (!currentProject) { el.style.display = 'none'; return; }
@@ -11575,14 +11682,21 @@ function _fmtMins(totalMins) {
   const _orig = showSessionEndChoice;
   showSessionEndChoice = function(mins) {
     _orig(mins);
-    // After the modal is rendered, inject % question if in a task session
+    // After the modal is rendered, inject % question
     setTimeout(() => {
       const bd = document.getElementById('session-end-bd');
       if (!bd) return;
-      if (!currentProject) return;
-      const step = getCurrentStep(currentProject);
-      if (!step) return;
-      _injectPctQuestion(bd, currentProject.id, step.name, mins);
+      // Utilise la tâche confirmée/saisie par l'utilisateur au démarrage
+      if (_sessionOverrideTaskName && !currentProject) {
+        // Session libre avec tâche nommée
+        _injectPctQuestion(bd, 'free', _sessionOverrideTaskName, mins);
+      } else if (currentProject) {
+        const step = getCurrentStep(currentProject);
+        if (!step) return;
+        // Tâche = override si saisi, sinon l'étape en cours
+        const taskName = _sessionOverrideTaskName || step.name;
+        _injectPctQuestion(bd, currentProject.id, taskName, mins);
+      }
     }, 0);
   };
 })();
