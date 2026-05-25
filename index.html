@@ -1918,8 +1918,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .week-bar-lbl { font-size: 9px; color: var(--muted); font-weight: 600; margin-top: 3px; text-transform: uppercase; }
 
 /* ── BADGES ── */
-.badge-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 10px; }
-.badge-chip { padding: 4px 10px; border-radius: 20px; background: rgba(124,92,252,.12); border: 1px solid rgba(124,92,252,.3); font-size: 11px; color: var(--accent); font-weight: 600; }
 
 /* ── RECENT EVENTS ── */
 .recent-events { margin: 8px 0; }
@@ -4093,7 +4091,6 @@ function addTodayStats(delta) {
     if (delta.sessions) lt.totalSessions = (lt.totalSessions || 0) + delta.sessions;
     localStorage.setItem('ft_lifetime_stats', JSON.stringify(lt));
   } catch(e) {}
-  checkAndAwardBadges();
   renderLandingStats();
 }
 
@@ -4133,19 +4130,6 @@ function renderLandingStats() {
     }).join('')}</div>`;
   } catch(e) {}
 
-  // Badges
-  let badgesHtml = '';
-  try {
-    const badges = JSON.parse(localStorage.getItem('ft_badges') || '[]');
-    if (badges.length > 0) {
-      const allDefs = typeof BADGES_DEF !== 'undefined' ? BADGES_DEF : [];
-      const chips = badges.map(id => {
-        const def = allDefs.find(b => b.id === id);
-        return def ? `<span class="badge-chip">${def.label}</span>` : '';
-      }).join('');
-      badgesHtml = `<div class="badge-chips">${chips}</div>`;
-    }
-  } catch(e) {}
 
   // Recent events
   let eventsHtml = '';
@@ -4174,49 +4158,6 @@ function renderLandingStats() {
   `;
 }
 
-// ══════════════════════════════════════════════════
-// GAMIFICATION — BADGES
-// ══════════════════════════════════════════════════
-const BADGES_DEF = [
-  { id: 'first_session',  label: '🌱 Premier pas',      cond: s => s.totalSessions >= 1 },
-  { id: 'focus_30',       label: '⏱ 30 min de focus',   cond: s => s.totalMin >= 30 },
-  { id: 'focus_60',       label: '🔥 1h de focus',      cond: s => s.totalMin >= 60 },
-  { id: 'focus_120',      label: '⚡ 2h de focus',      cond: s => s.totalMin >= 120 },
-  { id: 'tasks_5',        label: '✅ 5 tâches',         cond: s => s.totalTasks >= 5 },
-  { id: 'tasks_10',       label: '🎯 10 tâches',        cond: s => s.totalTasks >= 10 },
-  { id: 'sessions_10',    label: '🏆 10 sessions',      cond: s => s.totalSessions >= 10 },
-  { id: 'sessions_25',    label: '👑 25 sessions',      cond: s => s.totalSessions >= 25 },
-];
-
-function checkAndAwardBadges() {
-  try {
-    const lt = JSON.parse(localStorage.getItem('ft_lifetime_stats') || '{"totalMin":0,"totalTasks":0,"totalSessions":0}');
-    const earned = JSON.parse(localStorage.getItem('ft_badges') || '[]');
-    let changed = false;
-    BADGES_DEF.forEach(def => {
-      if (!earned.includes(def.id) && def.cond(lt)) {
-        earned.push(def.id);
-        changed = true;
-        setTimeout(() => showDopamineToast('🏅 Badge débloqué : ' + def.label, 3500), 500);
-      }
-    });
-    if (changed) { localStorage.setItem('ft_badges', JSON.stringify(earned)); renderFocusRingBadges(); }
-  } catch(e) {}
-}
-
-function renderFocusRingBadges() {
-  const el = document.getElementById('focus-ring-badges');
-  if (!el) return;
-  try {
-    const earned = JSON.parse(localStorage.getItem('ft_badges') || '[]');
-    if (!earned.length) { el.style.display = 'none'; return; }
-    el.style.display = 'flex';
-    el.innerHTML = earned.map(id => {
-      const def = BADGES_DEF.find(d => d.id === id);
-      return def ? `<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(124,92,252,.1);border:1px solid rgba(124,92,252,.25);color:var(--accent);font-weight:600;white-space:nowrap">${def.label}</span>` : '';
-    }).join('');
-  } catch(e) {}
-}
 
 // ══════════════════════════════════════════════════
 // WORK MODE SHEET (🚀 Démarrer)
@@ -8461,7 +8402,6 @@ function updateFocusRing() {
   numEl.style.color = color;
   barEl.style.strokeDashoffset = 100 - score;
   barEl.style.stroke = color;
-  renderFocusRingBadges();
 }
 
 function refreshFocusPanelScore() {
