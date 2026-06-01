@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="focusTDAH">
 <meta name="theme-color" content="#0d0d14">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<!-- Three.js for brain background -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- Firebase -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -17,6 +19,25 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Brain canvas — fixed full-screen background */
+#brain-bg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.8s ease;
+}
+#brain-bg.visible { opacity: 0.35; }
+
+/* Ensure app UI stays on top of brain canvas */
+main {
+  position: relative;
+  z-index: 1;
+}
+
 :root {
   --bg: #0d0d14;
   --card: #16161f;
@@ -2098,6 +2119,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 </style>
 </head>
 <body>
+<!-- Brain 3D background — z-index 0, always behind app UI -->
+<canvas id="brain-bg"></canvas>
 <main>
 
 <!-- SPLASH -->
@@ -12447,6 +12470,23 @@ function applyAdaptiveUI() {
   }, 3 * 60 * 1000);
 })();
 
+</script>
+<script src="brain-engine.js"></script>
+<script>
+// ══ BRAIN ENGINE INIT ══
+(function initBrainBackground() {
+  const canvas = document.getElementById('brain-bg');
+  if (!canvas || !window.THREE || !window.BrainEngine) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+  BrainEngine.init(canvas);
+  canvas.classList.add('visible');
+  BrainEngine.setMode('idle');
+})();
 </script>
 </body>
 </html>
