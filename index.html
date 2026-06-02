@@ -30,7 +30,7 @@
   opacity: 0;
   transition: opacity 1.8s ease;
 }
-#brain-bg.visible { opacity: 0.35; }
+#brain-bg.visible { opacity: 0.65; }
 
 /* Ensure app UI stays on top of brain canvas */
 main {
@@ -13322,15 +13322,24 @@ function _reorderProjectCards() {
 (function initBrainBackground() {
   const canvas = document.getElementById('brain-bg');
   if (!canvas || !window.THREE || !window.BrainEngine) return;
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  });
-  BrainEngine.init(canvas);
-  canvas.classList.add('visible');
-  BrainEngine.setMode('idle');
+  function doInit() {
+    const w = window.innerWidth || screen.width;
+    const h = window.innerHeight || screen.height;
+    canvas.width = w;
+    canvas.height = h;
+    BrainEngine.init(canvas);
+    // Fade in after first frame renders
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { canvas.classList.add('visible'); });
+    });
+    BrainEngine.setMode('idle');
+  }
+  // Use rAF to ensure layout is complete on iPhone
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(doInit));
+  } else {
+    requestAnimationFrame(doInit);
+  }
 })();
 </script>
 </body>

@@ -257,15 +257,18 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
     const THREE = window.THREE;
     if (!THREE) { console.error('BrainEngine: Three.js not loaded'); return; }
 
-    const isMobile = canvas.offsetWidth < 600;
+    // Use canvas buffer size (set by caller) or fall back to window dimensions
+    const W = canvas.width || window.innerWidth;
+    const H = canvas.height || window.innerHeight;
+    const isMobile = W < 600;
 
     renderer = new THREE.WebGLRenderer({canvas, antialias: !isMobile, alpha: true});
     renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+    renderer.setSize(W, H, false); // false = don't override canvas CSS
     renderer.setClearColor(0x000000, 0);
 
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(45, canvas.offsetWidth/canvas.offsetHeight, 1, 2000);
+    camera = new THREE.PerspectiveCamera(45, W/H, 1, 2000);
     camera.position.z = 280;
 
     brain = new THREE.Group();
@@ -293,9 +296,11 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
     });
 
     window.addEventListener('resize', () => {
-      camera.aspect = canvas.offsetWidth/canvas.offsetHeight;
+      const rW = window.innerWidth, rH = window.innerHeight;
+      canvas.width = rW; canvas.height = rH;
+      camera.aspect = rW/rH;
       camera.updateProjectionMatrix();
-      renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+      renderer.setSize(rW, rH, false);
     });
 
     _buildNeurons(isMobile);
