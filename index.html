@@ -32,6 +32,16 @@
 }
 #brain-bg.visible { opacity: 0.85; }
 
+#brain-tooltip {
+  position: fixed; pointer-events: none; z-index: 50;
+  background: rgba(0,200,255,0.12); backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0,200,255,0.35);
+  color: #00f5ff; font: 700 11px 'Syne', sans-serif; letter-spacing: 2px;
+  padding: 5px 14px; border-radius: 20px; text-transform: uppercase;
+  opacity: 0; transition: opacity .2s; transform: translateX(-50%);
+}
+
 /* Ensure app UI stays on top of brain canvas */
 main {
   position: relative;
@@ -2176,6 +2186,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <body>
 <!-- Brain 3D background — z-index 0, always behind app UI -->
 <canvas id="brain-bg"></canvas>
+<div id="brain-tooltip"></div>
 <main>
 
 <!-- SPLASH -->
@@ -3549,6 +3560,9 @@ function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
+  const brainBg = document.getElementById('brain-bg');
+  if (brainBg) brainBg.style.pointerEvents = (id === 'landing') ? 'auto' : 'none';
+  if (window.BrainEngine) BrainEngine.onNavigate(id);
 }
 
 // ─── QUICK TODO ───
@@ -6992,6 +7006,7 @@ function resumeSessionTimer() {
       tRemain = Math.max(0, Math.ceil((tEndTimestamp - Date.now()) / 1000));
       document.getElementById('s-timer').textContent = Math.floor(tRemain/60)+':'+String(tRemain%60).padStart(2,'0');
       document.getElementById('s-timer-bar').style.width = (tRemain / tTotal * 100) + '%';
+      if (window.BrainEngine) BrainEngine.pulseTimer((tTotal - tRemain) / tTotal);
       if (tRemain <= 0) onSessionTimerEnd();
     }, 1000);
     document.getElementById('t-toggle').textContent = '⏸ Pause';
@@ -7043,6 +7058,7 @@ function _doStartSession() {
   navTrackSessionStart(); // tracking comportemental
   renderSession();
   show('session');
+  if (window.BrainEngine) BrainEngine.setMode('focus');
 }
 
 function askSessionTask(callback) {
@@ -7640,6 +7656,7 @@ function onSessionTimerEnd() {
   clearInterval(tInterval);
   tRunning = false;
   tEndTimestamp = null;
+  if (window.BrainEngine) { BrainEngine.celebratePulse(); BrainEngine.setMode('idle'); }
   document.getElementById('t-toggle').textContent = '▶ Rejouer';
   document.getElementById('s-timer').textContent = '✓';
   if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
@@ -9527,6 +9544,7 @@ const PANIC_MICRO_MANTRAS = [
 ];
 
 function showModePanique() {
+  if (window.BrainEngine) BrainEngine.setMode('panic');
   // Reset all sub-sections
   ['panic-setup','panic-docs-step','panic-file-area','panic-active','panic-guided','panic-loading'].forEach(id => {
     const el = document.getElementById(id);
@@ -9757,6 +9775,7 @@ let resetCurrentStep = 0;
 const RESET_STEPS = ['breath','stretch','water','victory'];
 
 function showResetCognitif() {
+  if (window.BrainEngine) BrainEngine.setMode('rest');
   resetCurrentStep = 0;
   RESET_STEPS.forEach(s => {
     const el = document.getElementById('rs-' + s);
@@ -12475,6 +12494,9 @@ let currentDumpZone = 0;
     document.getElementById('brain-dump-text').value = localStorage.getItem('ft_dump_' + currentDumpZone) || '';
   });
 
+  document.getElementById('brain-dump-text').addEventListener('focus', function() {
+    if (window.BrainEngine) BrainEngine.highlightLobe('corpus', 1.8, 3000);
+  });
   document.getElementById('brain-dump-text').addEventListener('input', function() {
     localStorage.setItem('ft_dump_' + currentDumpZone, this.value);
     localStorage.setItem('focustdah_brain_dump', this.value);
@@ -13346,6 +13368,64 @@ function _reorderProjectCards() {
       requestAnimationFrame(() => { canvas.classList.add('visible'); });
     });
     BrainEngine.setMode('idle');
+
+    // Level 2 — cognitive mirror (update every 60s / 120s)
+    setInterval(() => {
+      if (typeof calcFocusScore === 'function') BrainEngine.setEnergyLevel(calcFocusScore() / 100);
+    }, 60000);
+    setInterval(() => {
+      if (typeof detectCognitiveState === 'function') BrainEngine.setCognitiveState(detectCognitiveState());
+    }, 120000);
+
+    // Level 3 — tappable lobes on landing screen
+    const LOBE_LABEL = {
+      frontal:    'Focus',      frontal_r:   'Focus',
+      parietal:   'Planning',   parietal_r:  'Planning',
+      temporal:   'Sons',       temporal_r:  'Sons',
+      occipital:  'Projets',
+      cerebellum: 'Reset',
+      brainstem:  'SOS Panique',
+      insula_l:   'Aide',       insula_r:    'Aide',
+      corpus:     'Brain Dump',
+    };
+    const LOBE_NAV = {
+      frontal:    () => show('session'),     frontal_r:   () => show('session'),
+      parietal:   () => show('planning-view'), parietal_r: () => show('planning-view'),
+      temporal:   () => show('sons'),        temporal_r:  () => show('sons'),
+      occipital:  () => show('create'),
+      cerebellum: () => showResetCognitif(),
+      brainstem:  () => showModePanique(),
+      insula_l:   () => show('aide-menu'),   insula_r:    () => show('aide-menu'),
+      corpus:     () => show('brain-dump'),
+    };
+    const tooltip = document.getElementById('brain-tooltip');
+
+    BrainEngine.onLobeClick(lobe => {
+      const nav = LOBE_NAV[lobe.id];
+      if (!nav) return;
+      BrainEngine.highlightLobe(lobe.id, 2.5, 400);
+      setTimeout(nav, 350);
+    });
+
+    BrainEngine.onLobeHover(lobe => {
+      if (!tooltip) return;
+      if (!lobe) { tooltip.style.opacity = '0'; return; }
+      const label = LOBE_LABEL[lobe.id];
+      if (!label) { tooltip.style.opacity = '0'; return; }
+      tooltip.textContent = label;
+      // Position near cursor — use stored mouse position
+      const mx = BrainEngine._lastMX || window.innerWidth/2;
+      const my = BrainEngine._lastMY || window.innerHeight/2;
+      tooltip.style.left = mx + 'px';
+      tooltip.style.top  = (my - 36) + 'px';
+      tooltip.style.opacity = '1';
+    });
+
+    // Track mouse position for tooltip placement
+    canvas.addEventListener('mousemove', e => {
+      if (window.BrainEngine) { BrainEngine._lastMX = e.clientX; BrainEngine._lastMY = e.clientY; }
+    });
+    canvas.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.opacity = '0'; });
   }
   // Use rAF to ensure layout is complete on iPhone
   if (document.readyState === 'loading') {
