@@ -1045,6 +1045,93 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 /* Panneau droit (tâches, projets, hier) : caché sur la landing */
 #landing .landing-right { display: none !important; }
 
+/* ═══ BRAIN-CENTRIC LANDING ═══ */
+/* La barre de boutons disparaît — les labels flottants sur le cerveau font la navigation */
+#landing .landing-left { display: none !important; }
+
+#brain-ui {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 8;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#brain-logo-float {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 20px);
+  left: 20px;
+  font: 800 17px 'Syne', sans-serif;
+  color: rgba(240, 239, 248, 0.65);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+.bzl {
+  position: absolute;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  background: rgba(13, 13, 20, 0.58);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 200, 255, 0.28);
+  border-radius: 20px;
+  padding: 7px 13px 7px 10px;
+  color: rgba(0, 245, 255, 0.88);
+  font: 700 11px 'Syne', sans-serif;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  animation: bzlPulse 3.5s ease-in-out infinite;
+  transition: background 0.2s, border-color 0.2s;
+  /* cachés jusqu'à ce que JS les positionne */
+  left: -9999px; top: -9999px;
+}
+.bzl:active { opacity: 0.7; }
+
+.bzl[data-zone="frontal"]    { color: rgba(0, 245, 255, 0.9);  border-color: rgba(0, 245, 255, 0.38); animation-delay: 0s; }
+.bzl[data-zone="parietal"]   { color: rgba(80, 160, 255, 0.9); border-color: rgba(68, 140, 255, 0.38); animation-delay: 0.7s; }
+.bzl[data-zone="temporal"]   { color: rgba(0, 210, 210, 0.9);  border-color: rgba(0, 200, 200, 0.38); animation-delay: 1.4s; }
+.bzl[data-zone="occipital"]  { color: rgba(160, 215, 255, 0.9);border-color: rgba(136, 200, 255, 0.38); animation-delay: 2.1s; }
+.bzl[data-zone="cerebellum"] { color: rgba(80, 130, 255, 0.9); border-color: rgba(34, 102, 255, 0.38); animation-delay: 2.8s; }
+.bzl[data-zone="brainstem"]  { color: rgba(210, 210, 235, 0.9);border-color: rgba(180, 180, 210, 0.32); animation-delay: 3.5s; }
+.bzl[data-zone="insula_r"]   { color: rgba(0, 235, 255, 0.9);  border-color: rgba(0, 220, 255, 0.35); animation-delay: 0.35s; }
+
+@keyframes bzlPulse {
+  0%, 100% { opacity: 0.5; box-shadow: none; }
+  50%       { opacity: 1.0; box-shadow: 0 0 18px rgba(0, 200, 255, 0.22); }
+}
+
+.bzl-icon { font-size: 13px; line-height: 1; flex-shrink: 0; }
+
+#brain-cta-btn {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 26px);
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  background: linear-gradient(135deg, #7c5cfc, #b05cfc);
+  border: none;
+  border-radius: 22px;
+  padding: 16px 40px;
+  color: #fff;
+  font: 800 17px 'Syne', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(124, 92, 252, 0.45);
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+#brain-cta-btn:active {
+  transform: translateX(-50%) scale(0.97);
+  box-shadow: 0 4px 18px rgba(124, 92, 252, 0.3);
+}
+
 .landing-logo-row { display: flex; align-items: center; gap: 0; margin-bottom: 0; }
 .landing-tagline { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
 
@@ -1795,7 +1882,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   }
   .cat-modal-handle { display: none; }
 
-  /* ── Landing desktop : barre fixe en bas, cerveau entièrement visible ── */
+  /* ── Landing desktop : cerveau plein écran, overlay flottant ── */
   #landing {
     max-width: none;
     margin: 0;
@@ -1805,17 +1892,17 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   }
   #landing.active { display: block !important; }
 
-  /* Barre de contrôle desktop : plus large, explicitement fixée en bas */
-  .landing-left {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 18px 36px calc(env(safe-area-inset-bottom) + 18px);
-    border-radius: 32px 32px 0 0;
+  /* Desktop : labels plus grands, CTA plus large */
+  .bzl { font-size: 12px; padding: 8px 16px 8px 12px; }
+  .bzl-icon { font-size: 15px; }
+
+  #brain-cta-btn {
+    padding: 18px 52px;
+    font-size: 18px;
+    border-radius: 24px;
   }
+
+  #brain-logo-float { font-size: 20px; left: 32px; }
 
   .landing-logo-row { padding-left: 0 !important; margin-bottom: 6px !important; }
 
@@ -2203,6 +2290,39 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <canvas id="brain-bg"></canvas>
 <div id="brain-tooltip"></div>
 <div id="brain-hint">✦ Tape le cerveau pour naviguer</div>
+
+<!-- ══ BRAIN-CENTRIC LANDING OVERLAY ══ -->
+<div id="brain-ui">
+  <div id="brain-logo-float">✦ focusTDAH</div>
+
+  <button class="bzl" id="bzl-focus"    data-zone="frontal"    onclick="brainNav('frontal')">
+    <span class="bzl-icon">⚡</span>Focus
+  </button>
+  <button class="bzl" id="bzl-planning" data-zone="parietal"   onclick="brainNav('parietal')">
+    <span class="bzl-icon">📋</span>Planning
+  </button>
+  <button class="bzl" id="bzl-sons-l"   data-zone="temporal"   onclick="brainNav('temporal')">
+    <span class="bzl-icon">🎵</span>Sons
+  </button>
+  <button class="bzl" id="bzl-sons-r"   data-zone="temporal"   onclick="brainNav('temporal')">
+    <span class="bzl-icon">🎵</span>Sons
+  </button>
+  <button class="bzl" id="bzl-projets"  data-zone="occipital"  onclick="brainNav('occipital')">
+    <span class="bzl-icon">🗂</span>Projets
+  </button>
+  <button class="bzl" id="bzl-reset"    data-zone="cerebellum" onclick="brainNav('cerebellum')">
+    <span class="bzl-icon">♻</span>Reset
+  </button>
+  <button class="bzl" id="bzl-sos"      data-zone="brainstem"  onclick="brainNav('brainstem')">
+    <span class="bzl-icon">🆘</span>SOS
+  </button>
+  <button class="bzl" id="bzl-liste"    data-zone="insula_r"   onclick="brainNav('insula_r')">
+    <span class="bzl-icon">📝</span>Ma liste
+  </button>
+
+  <button id="brain-cta-btn">Je veux travailler →</button>
+</div>
+
 <main>
 
 <!-- SPLASH -->
@@ -3585,12 +3705,85 @@ function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
-  if (window.BrainEngine) BrainEngine.onNavigate(id);
+  if (window.BrainEngine) {
+    BrainEngine.onNavigate(id);
+    if (id === 'landing') BrainEngine.zoomOut();
+  }
   if (id === 'quicktodo-screen' && typeof renderQT === 'function') renderQT();
   // Brain hint: show on landing if not yet tapped, hide on other screens
   const hint = document.getElementById('brain-hint');
   if (hint) hint.style.animationPlayState = (id === 'landing' && !localStorage.getItem('ft_brain_tapped')) ? 'running' : 'paused';
   if (hint) hint.style.opacity = (id === 'landing' && !localStorage.getItem('ft_brain_tapped')) ? '' : '0';
+  // Brain-centric landing overlay
+  const brainUI = document.getElementById('brain-ui');
+  if (brainUI) brainUI.style.display = (id === 'landing') ? 'block' : 'none';
+}
+
+// ─── BRAIN NAVIGATION ───
+function brainNav(lobeId) {
+  const navMap = {
+    frontal:    () => show('session'),
+    parietal:   () => show('planning-view'),
+    temporal:   () => show('sons'),
+    occipital:  () => show('create'),
+    cerebellum: () => (typeof showResetCognitif === 'function' ? showResetCognitif() : show('landing')),
+    brainstem:  () => (typeof showModePanique   === 'function' ? showModePanique()   : show('landing')),
+    insula_r:   () => show('quicktodo-screen'),
+  };
+  if (window.BrainEngine) {
+    BrainEngine.highlightLobe(lobeId, 2.5, 700);
+    BrainEngine.zoomToLobe(lobeId);
+  }
+  localStorage.setItem('ft_brain_tapped', '1');
+  const nav = navMap[lobeId];
+  if (nav) setTimeout(() => { if (window.BrainEngine) BrainEngine.zoomOut(); nav(); }, 680);
+}
+
+// ─── BRAIN LABEL POSITIONING ───
+function positionBrainLabels() {
+  const W = window.innerWidth, H = window.innerHeight;
+  const cosZ = Math.cos(0.2), sinZ = Math.sin(0.2);
+  const tan25 = Math.tan(25 * Math.PI / 180);
+  const camZ  = 280;
+  const brainCX = W / 2, brainCY = H / 2;
+
+  function project(cx, cy, cz) {
+    // Rotation: X=-PI/2 puis Z=0.2 (même que brain-engine.js)
+    const wx = cx * cosZ - cz * sinZ;
+    const wy = cx * sinZ + cz * cosZ;
+    const wz = -cy;
+    const depth  = camZ - wz; // = 280 + cy
+    const aspect = W / H;
+    const px = ((wx / (depth * tan25 * aspect)) + 1) * 0.5 * W;
+    const py = (1 - wy / (depth * tan25))         * 0.5 * H;
+    return { x: px, y: py };
+  }
+
+  function placeLabel(id, cx, cy, cz, push) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const pos = project(cx, cy, cz);
+    const dx = pos.x - brainCX, dy = pos.y - brainCY;
+    const dist = Math.hypot(dx, dy) || 1;
+    let x = pos.x + (dx / dist) * (push || 62);
+    let y = pos.y + (dy / dist) * (push || 62);
+    x = Math.max(58, Math.min(W - 58, x));
+    y = Math.max(50, Math.min(H - 72, y));
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+  }
+
+  placeLabel('bzl-focus',    0,   28,  15, 62);  // frontal (milieu L+R)
+  placeLabel('bzl-planning', 0,   38,  -8, 62);  // pariétal
+  placeLabel('bzl-sons-l',  -52,   0,   8, 58);  // temporal_L
+  placeLabel('bzl-sons-r',   52,   0,   8, 58);  // temporal_R
+  placeLabel('bzl-projets',  0,   12, -44, 68);  // occipital
+  placeLabel('bzl-reset',    0,  -40, -22, 62);  // cervelet
+  placeLabel('bzl-liste',    42,   5,   5, 58);  // insula_r
+
+  // Brainstem projette au centre écran → placement manuel en bas
+  const sos = document.getElementById('bzl-sos');
+  if (sos) { sos.style.left = brainCX + 'px'; sos.style.top = (H * 0.80) + 'px'; }
 }
 
 // ─── QUICK TODO ───
@@ -13460,6 +13653,26 @@ function _reorderProjectCards() {
 
     // Hide tooltip when leaving hover without a lobe
     document.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.opacity = '0'; });
+
+    // ── Labels flottants : positionnement initial + resize
+    if (typeof positionBrainLabels === 'function') {
+      positionBrainLabels();
+      window.addEventListener('resize', positionBrainLabels);
+    }
+
+    // ── Bouton CTA → délègue au bouton "continuer" existant
+    const ctaBtn = document.getElementById('brain-cta-btn');
+    if (ctaBtn) ctaBtn.onclick = () => {
+      const wb = document.getElementById('btn-continue');
+      if (wb) wb.click(); else show('session');
+    };
+
+    // ── Afficher l'overlay si on est déjà sur landing au moment de l'init
+    const landingEl = document.getElementById('landing');
+    const brainUIEl = document.getElementById('brain-ui');
+    if (brainUIEl && landingEl && landingEl.classList.contains('active')) {
+      brainUIEl.style.display = 'block';
+    }
   }
   // Use rAF to ensure layout is complete on iPhone
   if (document.readyState === 'loading') {
