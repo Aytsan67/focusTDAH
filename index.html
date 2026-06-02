@@ -28,9 +28,29 @@
   z-index: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 1.8s ease;
+  transition: opacity 1.8s ease, filter 4s ease;
 }
 #brain-bg.visible { opacity: 0.85; }
+
+/* Cognitive state tints */
+#brain-bg.cog-fatigue    { filter: saturate(0.18) brightness(0.62) contrast(0.88); }
+#brain-bg.cog-hyperfocus { filter: brightness(1.35) saturate(2.2) hue-rotate(-12deg); }
+#brain-bg.cog-surcharge  { filter: brightness(1.25) saturate(1.9) hue-rotate(-35deg); }
+#brain-bg.cog-survie     { filter: grayscale(0.75) brightness(0.72); }
+#brain-bg.cog-creatif    { filter: hue-rotate(22deg) saturate(1.8) brightness(1.12); }
+#brain-bg.cog-anxiete    { filter: brightness(1.18) saturate(1.6) hue-rotate(-6deg);
+                           animation: brainAnxietyFlicker 4s ease-in-out infinite; }
+#brain-bg.cog-ennui      { filter: saturate(0.28) brightness(0.75); }
+#brain-bg.mode-focus     { filter: brightness(1.06) saturate(1.3); }
+#brain-bg.mode-panic     { filter: brightness(1.3) saturate(2.2) hue-rotate(-28deg); }
+#brain-bg.mode-rest      { filter: saturate(0.45) brightness(0.78); }
+
+@keyframes brainAnxietyFlicker {
+  0%,100% { opacity: 0.85; }
+  20%     { opacity: 0.72; }
+  45%     { opacity: 0.90; }
+  70%     { opacity: 0.68; }
+}
 
 #brain-tooltip {
   position: fixed; pointer-events: none; z-index: 50;
@@ -13387,13 +13407,18 @@ function _reorderProjectCards() {
     });
     BrainEngine.setMode('idle');
 
-    // Level 2 — cognitive mirror (update every 60s / 120s)
-    setInterval(() => {
+    // Level 2 — cognitive mirror : update immediately + every 60s / 120s
+    function _updateBrainEnergy() {
       if (typeof calcFocusScore === 'function') BrainEngine.setEnergyLevel(calcFocusScore() / 100);
-    }, 60000);
-    setInterval(() => {
+    }
+    function _updateBrainState() {
       if (typeof detectCognitiveState === 'function') BrainEngine.setCognitiveState(detectCognitiveState());
-    }, 120000);
+    }
+    // First run after a short delay (data may not be ready at init)
+    setTimeout(_updateBrainEnergy, 2000);
+    setTimeout(_updateBrainState,  3000);
+    setInterval(_updateBrainEnergy, 60000);
+    setInterval(_updateBrainState, 120000);
 
     // Level 3 — tappable lobes on landing screen
     const LOBE_LABEL = {
