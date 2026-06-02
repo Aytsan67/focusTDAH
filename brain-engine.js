@@ -374,3 +374,5 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
 
   return { init, setMode, zoomToLobe, zoomOut, setEnergyLevel, pulseTimer, destroy };
 })();
+// Expose on window so index.html can check window.BrainEngine
+window.BrainEngine = BrainEngine;
