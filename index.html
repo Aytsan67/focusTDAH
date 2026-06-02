@@ -42,6 +42,21 @@
   opacity: 0; transition: opacity .2s; transform: translateX(-50%);
 }
 
+#brain-hint {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  pointer-events: none; z-index: 50;
+  background: rgba(0,200,255,0.08); backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0,200,255,0.25);
+  color: rgba(0,245,255,0.75); font: 600 11px 'Syne', sans-serif; letter-spacing: 1.5px;
+  padding: 7px 18px; border-radius: 20px; text-transform: uppercase;
+  opacity: 0; transition: opacity .6s;
+  animation: brainHintPulse 3s ease-in-out infinite;
+}
+@keyframes brainHintPulse {
+  0%,100% { opacity: 0.4; } 50% { opacity: 0.85; }
+}
+
 /* Ensure app UI stays on top of brain canvas */
 main {
   position: relative;
@@ -2187,6 +2202,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- Brain 3D background — z-index 0, always behind app UI -->
 <canvas id="brain-bg"></canvas>
 <div id="brain-tooltip"></div>
+<div id="brain-hint">✦ Tape le cerveau pour naviguer</div>
 <main>
 
 <!-- SPLASH -->
@@ -3560,9 +3576,11 @@ function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
-  const brainBg = document.getElementById('brain-bg');
-  if (brainBg) brainBg.style.pointerEvents = (id === 'landing') ? 'auto' : 'none';
   if (window.BrainEngine) BrainEngine.onNavigate(id);
+  // Brain hint: show on landing if not yet tapped, hide on other screens
+  const hint = document.getElementById('brain-hint');
+  if (hint) hint.style.animationPlayState = (id === 'landing' && !localStorage.getItem('ft_brain_tapped')) ? 'running' : 'paused';
+  if (hint) hint.style.opacity = (id === 'landing' && !localStorage.getItem('ft_brain_tapped')) ? '' : '0';
 }
 
 // ─── QUICK TODO ───
@@ -13403,6 +13421,10 @@ function _reorderProjectCards() {
     BrainEngine.onLobeClick(lobe => {
       const nav = LOBE_NAV[lobe.id];
       if (!nav) return;
+      // Hide the hint permanently after first tap
+      localStorage.setItem('ft_brain_tapped', '1');
+      const hint = document.getElementById('brain-hint');
+      if (hint) { hint.style.opacity = '0'; hint.style.animationPlayState = 'paused'; }
       BrainEngine.highlightLobe(lobe.id, 2.5, 400);
       setTimeout(nav, 350);
     });
@@ -13421,11 +13443,8 @@ function _reorderProjectCards() {
       tooltip.style.opacity = '1';
     });
 
-    // Track mouse position for tooltip placement
-    canvas.addEventListener('mousemove', e => {
-      if (window.BrainEngine) { BrainEngine._lastMX = e.clientX; BrainEngine._lastMY = e.clientY; }
-    });
-    canvas.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.opacity = '0'; });
+    // Hide tooltip when leaving hover without a lobe
+    document.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.opacity = '0'; });
   }
   // Use rAF to ensure layout is complete on iPhone
   if (document.readyState === 'loading') {

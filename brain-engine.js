@@ -485,15 +485,35 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
     return best;
   }
 
+  function _isLandingActive() {
+    const l = document.getElementById('landing');
+    return l && l.classList.contains('active');
+  }
+
+  function _isInteractive(el) {
+    return el && el.closest('button, input, a, select, textarea, [role="button"]');
+  }
+
   function onLobeClick(cb) {
     _lobeClickCb = cb;
-    if (!_canvas) return;
-    _canvas.addEventListener('click', e => {
+    // Listen on document so events reach us even when canvas is behind main (z-index)
+    document.addEventListener('click', e => {
+      if (!_isLandingActive()) return;
+      if (_isInteractive(e.target)) return;
       const lobe = _getLobeAtScreen(e.clientX, e.clientY);
       if (lobe && _lobeClickCb) _lobeClickCb(lobe);
     });
-    _canvas.addEventListener('touchend', e => {
+    document.addEventListener('touchstart', e => {
+      _touchMoved = false;
+      if (e.touches.length === 1) {
+        _prev = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }, { passive: true });
+    document.addEventListener('touchmove', () => { _touchMoved = true; }, { passive: true });
+    document.addEventListener('touchend', e => {
       if (_touchMoved) return;
+      if (!_isLandingActive()) return;
+      if (_isInteractive(e.target)) return;
       const touch = e.changedTouches[0];
       const lobe = _getLobeAtScreen(touch.clientX, touch.clientY);
       if (lobe && _lobeClickCb) _lobeClickCb(lobe);
@@ -502,9 +522,11 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
 
   function onLobeHover(cb) {
     _lobeHoverCb = cb;
-    if (!_canvas) return;
-    _canvas.addEventListener('mousemove', e => {
+    document.addEventListener('mousemove', e => {
+      if (!_isLandingActive()) { if (_lobeHoverCb) _lobeHoverCb(null); return; }
       if (_drag) return;
+      BrainEngine._lastMX = e.clientX;
+      BrainEngine._lastMY = e.clientY;
       const lobe = _getLobeAtScreen(e.clientX, e.clientY);
       if (_lobeHoverCb) _lobeHoverCb(lobe);
     });
