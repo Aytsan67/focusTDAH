@@ -85,20 +85,27 @@ const BrainEngine = (() => {
   function _buildMeshes(THREE) {
     // — Brain anatomy wireframes from baked mesh data —
     PARTS.forEach((part, pi) => {
-      const verts = new Float32Array(part.v);
       const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-      geo.setIndex(part.f);
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(part.v), 3));
+      geo.setIndex(new THREE.BufferAttribute(new Uint32Array(part.f), 1));
+      geo.computeVertexNormals();
+      const col = new THREE.Color(part.c[0], part.c[1], part.c[2]);
+
+      // Wireframe — colored per part (like original)
       const wire = new THREE.MeshBasicMaterial({
-        color: 0x003355, wireframe: true, transparent: true, opacity: .18,
-        blending: THREE.AdditiveBlending, depthWrite: false
-      });
-      const cyan = new THREE.MeshBasicMaterial({
-        color: 0x001133, wireframe: true, transparent: true, opacity: .06,
-        blending: THREE.AdditiveBlending, depthWrite: false
+        color: col, wireframe: true, transparent: true, opacity: 0.22, depthWrite: false
       });
       const wm = new THREE.Mesh(geo, wire);
-      const cm = new THREE.Mesh(geo, cyan);
+
+      // Cyan glow pass — separate geometry instance required
+      const geoCY = new THREE.BufferGeometry();
+      geoCY.setAttribute('position', new THREE.BufferAttribute(new Float32Array(part.v), 3));
+      geoCY.setIndex(new THREE.BufferAttribute(new Uint32Array(part.f), 1));
+      const cyan = new THREE.MeshBasicMaterial({
+        color: 0x00eeff, wireframe: true, transparent: true, opacity: 0.08, depthWrite: false
+      });
+      const cm = new THREE.Mesh(geoCY, cyan);
+
       brain.add(wm); brain.add(cm);
       partMeshes.push({wire, cyan});
     });
@@ -264,11 +271,11 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
 
     renderer = new THREE.WebGLRenderer({canvas, antialias: !isMobile, alpha: true});
     renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(W, H, false); // false = don't override canvas CSS
+    renderer.setSize(W, H, false);
     renderer.setClearColor(0x000000, 0);
 
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(45, W/H, 1, 2000);
+    camera = new THREE.PerspectiveCamera(50, W/H, 0.1, 2000);
     camera.position.z = 280;
 
     brain = new THREE.Group();
