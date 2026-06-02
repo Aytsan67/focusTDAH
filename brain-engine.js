@@ -355,13 +355,20 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
     _startLoop(THREE, pulses);
   }
 
+  function _setCogClass(cls) {
+    if (!_canvas) return;
+    _canvas.className = _canvas.className.replace(/\bcog-\S+|\bmode-\S+/g, '').trim();
+    if (cls) _canvas.classList.add(cls);
+    if (!_canvas.classList.contains('visible')) _canvas.classList.add('visible');
+  }
+
   function setMode(mode) {
     _mode = mode;
     switch(mode) {
-      case 'idle':   _energyLevel = 0.7; _pulseSpeedMult = 1.0; break;
-      case 'focus':  _energyLevel = 1.0; _pulseSpeedMult = 1.8; break;
-      case 'rest':   _energyLevel = 0.3; _pulseSpeedMult = 0.4; break;
-      case 'panic':  _energyLevel = 1.2; _pulseSpeedMult = 2.5; break;
+      case 'idle':   _energyLevel = 0.7; _pulseSpeedMult = 1.0; _setCogClass(''); break;
+      case 'focus':  _energyLevel = 1.0; _pulseSpeedMult = 1.8; _setCogClass('mode-focus'); break;
+      case 'rest':   _energyLevel = 0.3; _pulseSpeedMult = 0.4; _setCogClass('mode-rest'); break;
+      case 'panic':  _energyLevel = 1.2; _pulseSpeedMult = 2.5; _setCogClass('mode-panic'); break;
     }
   }
 
@@ -431,8 +438,9 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
   function setCognitiveState(scores) {
     if (!scores) return;
     const dominant = Object.entries(scores).sort((a,b) => b[1]-a[1])[0];
-    if (!dominant || dominant[1] < 10) return;
+    if (!dominant || dominant[1] < 10) { _setCogClass(''); return; }
     const state = dominant[0];
+    _setCogClass('cog-' + state);
     switch(state) {
       case 'hyperfocus':
         setEnergyLevel(1.4); _pulseSpeedMult = 2.5;
@@ -444,12 +452,12 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
       case 'surcharge':
         setEnergyLevel(1.1); _pulseSpeedMult = 1.8;
         ['frontal','parietal','temporal','occipital'].forEach(id => {
-          setTimeout(() => highlightLobe(id, 1.8, 800), Math.random()*2000);
+          setTimeout(() => highlightLobe(id, 1.8, 900), Math.random()*2500);
         });
         break;
       case 'survie':
-        setEnergyLevel(0.5); _pulseSpeedMult = 0.8;
-        highlightLobe('brainstem', 2.0, 120000);
+        setEnergyLevel(0.4); _pulseSpeedMult = 0.6;
+        highlightLobe('brainstem', 2.5, 120000);
         break;
       case 'creatif':
         setEnergyLevel(1.0); _pulseSpeedMult = 1.4;
@@ -457,10 +465,10 @@ gl_FragColor=vec4(.95,1.,1.,smoothstep(.5,0.,d)*1.5);}`
         break;
       case 'anxiete':
         setEnergyLevel(0.9); _pulseSpeedMult = 1.6;
-        highlightLobe('insula_l', 2.0, 120000); highlightLobe('insula_r', 2.0, 120000);
+        highlightLobe('insula_l', 2.2, 120000); highlightLobe('insula_r', 2.2, 120000);
         break;
       case 'ennui':
-        setEnergyLevel(0.4); _pulseSpeedMult = 0.5;
+        setEnergyLevel(0.35); _pulseSpeedMult = 0.4;
         break;
     }
   }
