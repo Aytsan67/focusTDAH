@@ -2330,9 +2330,13 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
       <span class="la-icon">🎵</span>
       <span>Sons</span>
     </button>
-    <button class="landing-action-btn" id="btn-pick-task" style="flex:2">
+    <button class="landing-action-btn" id="btn-quicktodo" onclick="show('quicktodo-screen')">
+      <span class="la-icon">📝</span>
+      <span>Ma<br>liste</span>
+    </button>
+    <button class="landing-action-btn" id="btn-pick-task">
       <span class="la-icon">🎲</span>
-      <span>Choisis pour moi</span>
+      <span>Choisis<br>pour moi</span>
     </button>
   </div>
 
@@ -2367,10 +2371,19 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div id="home-proj-list" class="proj-list"></div>
   </div>
 
-  <!-- Liste rapide -->
-  <div class="quicktodo" style="margin-top:16px">
+
+  </div><!-- /.landing-right -->
+
+</section>
+
+<!-- LISTE RAPIDE -->
+<section class="screen" id="quicktodo-screen">
+  <button class="back" onclick="show('landing')">← Accueil</button>
+  <h1>📋 Ma liste <em>rapide</em></h1>
+  <p class="sub">Capture rapide — coché = disparu en 60 s.</p>
+  <div class="quicktodo" style="margin-top:8px">
     <div class="qt-header">
-      <span class="qt-title">📋 Ma liste rapide</span>
+      <span class="qt-title">Ma liste</span>
       <button class="qt-add-btn" id="qt-add">+ Ajouter</button>
     </div>
     <div id="qt-input-wrap" class="qt-input-wrap" style="display:none">
@@ -2378,10 +2391,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     </div>
     <div id="qt-list" class="qt-list"></div>
   </div>
-
-
-  </div><!-- /.landing-right -->
-
 </section>
 
 <!-- CREATE -->
@@ -3613,6 +3622,7 @@ function show(id) {
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
   if (window.BrainEngine) BrainEngine.onNavigate(id);
+  if (id === 'quicktodo-screen' && typeof renderQT === 'function') renderQT();
   // Brain hint: show on landing if not yet tapped, hide on other screens
   const hint = document.getElementById('brain-hint');
   if (hint) hint.style.animationPlayState = (id === 'landing' && !localStorage.getItem('ft_brain_tapped')) ? 'running' : 'paused';
@@ -13444,7 +13454,7 @@ function _reorderProjectCards() {
       occipital:  'Projets',
       cerebellum: 'Reset',
       brainstem:  'SOS Panique',
-      insula_l:   'Aide',       insula_r:    'Aide',
+      insula_l:   'Aide',       insula_r:    'Ma liste',
       corpus:     'Brain Dump',
     };
     const LOBE_NAV = {
@@ -13454,7 +13464,7 @@ function _reorderProjectCards() {
       occipital:  () => show('create'),
       cerebellum: () => showResetCognitif(),
       brainstem:  () => showModePanique(),
-      insula_l:   () => show('aide-menu'),   insula_r:    () => show('aide-menu'),
+      insula_l:   () => show('aide-menu'),   insula_r:    () => show('quicktodo-screen'),
       corpus:     () => show('brain-dump'),
     };
     const tooltip = document.getElementById('brain-tooltip');
