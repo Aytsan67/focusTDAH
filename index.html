@@ -1005,23 +1005,44 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .user-popover-logout:hover { border-color: #fc5c7d; color: #fc5c7d; }
 
-/* ══ LANDING — écran transparent (cerveau visible derrière) ══ */
+/* ══ LANDING — deux sections empilées (contenu → cerveau) ══ */
 #landing {
   display: none;
-  min-height: 100vh;
-  background: transparent;
-  padding: 0;
+  background: var(--bg);
 }
 #landing.active { display: block; }
 
-/* Cerveau = plein écran (100svh exclut la barre d'adresse Safari) */
+/* Section contenu (haut) */
+.landing-left {
+  min-height: 100svh;
+  padding: 18px 14px calc(env(safe-area-inset-bottom) + 24px);
+  background: var(--bg);
+  position: relative;
+}
+
+/* Hint de scroll vers le cerveau */
+.brain-scroll-hint {
+  text-align: center;
+  color: rgba(0, 245, 255, .45);
+  font-size: 13px;
+  letter-spacing: 2px;
+  padding: 20px 0 6px;
+  pointer-events: none;
+  animation: hintBounce 2s ease-in-out infinite;
+}
+@keyframes hintBounce {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(5px); }
+}
+
+/* Cerveau = plein écran (section en bas) */
 #brain-section {
-  position: fixed;
-  inset: 0;
+  height: 100svh;
+  width: 100%;
+  position: relative;
   background: #000008;
   overflow: hidden;
   cursor: grab;
-  pointer-events: auto;
 }
 #brain-section:active { cursor: grabbing; }
 #brain-canvas {
@@ -1041,27 +1062,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   position: absolute; top: calc(env(safe-area-inset-top) + 16px); left: 50%; transform: translateX(-50%);
   font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 6px;
   color: #00f5ff; opacity: .45; pointer-events: none; white-space: nowrap; z-index: 2;
-}
-
-/* Barre de contrôle fixée en bas (bottom sheet) */
-.landing-left {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 10;
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 16px 20px calc(env(safe-area-inset-bottom) + 16px);
-  background: rgba(13, 13, 20, 0.78);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1.5px solid rgba(40, 40, 56, 0.55);
-  border-radius: 28px 28px 0 0;
-  border-bottom: none;
-  box-sizing: border-box;
-  pointer-events: auto;
-  max-height: 70svh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Hide right panel */
@@ -1940,7 +1940,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
   /* ── Landing desktop ── */
   #landing { max-width: none; margin: 0; padding: 0; }
-  .landing-left { max-width: 560px; }
+  .landing-left { max-width: 600px; margin: 0 auto; }
+  #brain-section { height: 100vh; }
   .landing-actions { grid-template-columns: repeat(4,1fr) !important; gap: 12px !important; }
   .landing-action-btn { padding: 14px 8px !important; font-size: 12px !important; }
   .work-btn { font-size: 18px; padding: 16px 20px; }
@@ -2365,14 +2366,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- ACCUEIL -->
 <section class="screen" id="landing">
 
-  <!-- ── Cerveau plein écran ── -->
-  <div id="brain-section">
-    <canvas id="brain-canvas"></canvas>
-    <div id="brain-hotspots"></div>
-    <div class="brain-section-logo">✦ focusTDAH</div>
-  </div>
-
-  <!-- ── Barre de contrôle (bottom sheet) ── -->
+  <!-- ── Contenu (en haut, première vue) ── -->
   <div class="landing-left">
 
     <!-- Logo row + halt btn -->
@@ -2454,7 +2448,17 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
     <button id="btn-end-of-day" style="width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:12px 0 2px;cursor:pointer;text-align:left">🌙 Fin de journée</button>
 
+    <!-- Scroll hint vers le cerveau -->
+    <div class="brain-scroll-hint">↓ &nbsp; cerveau &nbsp; ↓</div>
+
   </div><!-- /.landing-left -->
+
+  <!-- ── Cerveau plein écran (en bas, scroll ↓) ── -->
+  <div id="brain-section">
+    <canvas id="brain-canvas"></canvas>
+    <div id="brain-hotspots"></div>
+    <div class="brain-section-logo">✦ focusTDAH</div>
+  </div>
 
   <!-- Panneau droit masqué (backward compat) -->
   <div class="landing-right" style="display:none!important"></div>
@@ -13610,6 +13614,14 @@ function _reorderProjectCards() {
         setTimeout(() => btn.classList.remove('zone-glow'), 700);
       }, {capture: true});
     });
+
+    // Pause quand le cerveau n'est pas à l'écran (économie batterie)
+    const brainSection = document.getElementById('brain-section');
+    if (brainSection && 'IntersectionObserver' in window) {
+      new IntersectionObserver(entries => {
+        entries[0].isIntersecting ? BrainEngine.resume() : BrainEngine.pause();
+      }, { threshold: 0.05 }).observe(brainSection);
+    }
   }
 
   if (document.readyState === 'loading') {
