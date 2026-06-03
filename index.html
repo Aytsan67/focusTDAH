@@ -1005,48 +1005,91 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .user-popover-logout:hover { border-color: #fc5c7d; color: #fc5c7d; }
 
-/* ── LANDING ── */
+/* ══ LANDING — layout 42vh brain + scrollable grid ══ */
 #landing {
   display: none;
-  min-height: 100vh; min-height: -webkit-fill-available;
-  padding: 0;
-  background: transparent;
+  background: var(--bg);
 }
-#landing.active { display: block; }
+#landing.active { display: flex; flex-direction: column; height: 100vh; height: -webkit-fill-available; overflow: hidden; }
 
-/* Barre de contrôle fixée en bas — cerveau entièrement visible au-dessus */
+/* Brain 42vh section */
+#brain-section {
+  height: 42vh;
+  flex-shrink: 0;
+  position: relative;
+  background: #000008;
+  overflow: hidden;
+  cursor: grab;
+}
+#brain-section:active { cursor: grabbing; }
+#brain-canvas {
+  width: 100%; height: 100%;
+  display: block;
+  pointer-events: none;
+}
+#brain-hotspots { position: absolute; inset: 0; pointer-events: none; }
+.brain-dot {
+  position: absolute; width: 10px; height: 10px; border-radius: 50%;
+  transform: translate(-50%,-50%); cursor: pointer; pointer-events: auto;
+  box-shadow: 0 0 10px currentColor; animation: dotPulse 2s ease-in-out infinite;
+  transition: transform .15s;
+}
+.brain-dot:hover { transform: translate(-50%,-50%) scale(1.7); }
+.brain-section-logo {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 6px;
+  color: #00f5ff; opacity: .45; pointer-events: none; white-space: nowrap; z-index: 2;
+}
+
+/* Scrollable landing content */
 .landing-left {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 10;
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 14px 20px calc(env(safe-area-inset-bottom) + 14px);
-  background: rgba(13, 13, 20, 0.82);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border: 1.5px solid rgba(40, 40, 56, 0.55);
-  border-bottom: none;
-  border-radius: 28px 28px 0 0;
-  box-sizing: border-box;
+  flex: 1;
+  position: relative;
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding: 12px 14px calc(env(safe-area-inset-bottom) + 12px);
+  background: var(--bg);
 }
 
-/* Panneau droit (tâches, projets, hier) : caché sur la landing */
+/* Hide right panel (unused) */
 #landing .landing-right { display: none !important; }
 
-/* Sur la landing brain : masquer les blocs lourds qui couvrent le cerveau */
-/* Ne garder que logo + work-btn + actions row 1 */
-#landing .wmb-card,
-#landing #rebound-banner-slot,
-#landing #home-plan-preview,
-#landing #day-mode-slot,
-#landing .pick-task-card,
-#landing #btn-end-of-day,
-#landing .landing-actions + .landing-actions { display: none !important; }
-
-/* ═══ BRAIN-CENTRIC LANDING ═══ */
-/* La barre de boutons disparaît — les labels flottants sur le cerveau font la navigation */
-#landing .landing-left { display: none !important; }
+/* Button grid — 4 cols, zone-colored borders */
+.landing-actions {
+  display: grid !important;
+  grid-template-columns: repeat(4,1fr) !important;
+  gap: 9px;
+  margin-top: 12px !important;
+}
+.landing-action-btn {
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 11px 5px !important;
+  border-radius: 15px !important;
+  border: 1.5px solid rgba(255,255,255,.12) !important;
+  background: rgba(22,22,31,.6) !important;
+  color: var(--text) !important;
+  font-size: 10px !important;
+  text-align: center !important;
+  line-height: 1.3 !important;
+  transition: transform .12s, border-color .2s, box-shadow .2s !important;
+}
+.landing-action-btn:active { transform: scale(.93) !important; }
+.landing-action-btn .la-icon { font-size: 20px !important; }
+/* Zone glow borders */
+.landing-action-btn[data-zone="frontal"]    { border-color: rgba(0,245,255,.3) !important; }
+.landing-action-btn[data-zone="frontal"].zone-glow    { border-color: #00f5ff !important; box-shadow: 0 0 14px rgba(0,245,255,.45) !important; }
+.landing-action-btn[data-zone="parietal"]   { border-color: rgba(68,136,255,.3) !important; }
+.landing-action-btn[data-zone="parietal"].zone-glow   { border-color: #4488ff !important; box-shadow: 0 0 14px rgba(68,136,255,.45) !important; }
+.landing-action-btn[data-zone="temporal"]   { border-color: rgba(0,204,187,.3) !important; }
+.landing-action-btn[data-zone="temporal"].zone-glow   { border-color: #00ccbb !important; box-shadow: 0 0 14px rgba(0,204,187,.45) !important; }
+.landing-action-btn[data-zone="occipital"]  { border-color: rgba(136,204,255,.3) !important; }
+.landing-action-btn[data-zone="occipital"].zone-glow  { border-color: #88ccff !important; box-shadow: 0 0 14px rgba(136,204,255,.45) !important; }
+.landing-action-btn[data-zone="cerebellum"] { border-color: rgba(34,102,255,.3) !important; }
+.landing-action-btn[data-zone="cerebellum"].zone-glow { border-color: #2266ff !important; box-shadow: 0 0 14px rgba(34,102,255,.45) !important; }
+.landing-action-btn[data-zone="brainstem"]  { border-color: rgba(255,68,85,.3) !important; }
+.landing-action-btn[data-zone="brainstem"].zone-glow  { border-color: #ff4455 !important; box-shadow: 0 0 14px rgba(255,68,85,.45) !important; }
 
 #brain-ui {
   display: none;
@@ -1881,25 +1924,14 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   }
   .cat-modal-handle { display: none; }
 
-  /* ── Landing desktop : cerveau plein écran, overlay flottant ── */
-  #landing {
-    max-width: none;
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background: transparent;
-  }
-  #landing.active { display: block !important; }
-
-  /* Desktop : labels plus grands, CTA plus large */
-  .bzl { font-size: 12px; padding: 8px 16px 8px 12px; }
-  .bzl-icon { font-size: 15px; }
-
-  #brain-cta-btn {
-    padding: 18px 52px;
-    font-size: 18px;
-    border-radius: 24px;
-  }
+  /* ── Landing desktop ── */
+  #landing { max-width: none; margin: 0; padding: 0; }
+  #landing.active { display: flex !important; }
+  #brain-section { height: 45vh; }
+  .landing-left { max-width: 600px; margin: 0 auto; width: 100%; }
+  .landing-actions { grid-template-columns: repeat(4,1fr) !important; gap: 12px !important; }
+  .landing-action-btn { padding: 14px 8px !important; font-size: 12px !important; }
+  .work-btn { font-size: 18px; padding: 16px 20px; }
 
   #brain-logo-float { font-size: 20px; left: 32px; }
 
@@ -2285,42 +2317,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 </style>
 </head>
 <body>
-<!-- Brain 3D background — z-index 0, always behind app UI -->
-<canvas id="brain-bg"></canvas>
-<div id="brain-tooltip"></div>
-<div id="brain-hint">✦ Tape le cerveau pour naviguer</div>
-
-<!-- ══ BRAIN-CENTRIC LANDING OVERLAY ══ -->
-<div id="brain-ui">
-  <div id="brain-logo-float">✦ focusTDAH</div>
-
-  <button class="bzl" id="bzl-focus"    data-zone="frontal"    onclick="brainNav('frontal')">
-    <span class="bzl-icon">⚡</span>Focus
-  </button>
-  <button class="bzl" id="bzl-planning" data-zone="parietal"   onclick="brainNav('parietal')">
-    <span class="bzl-icon">📋</span>Planning
-  </button>
-  <button class="bzl" id="bzl-sons-l"   data-zone="temporal"   onclick="brainNav('temporal')">
-    <span class="bzl-icon">🎵</span>Sons
-  </button>
-  <button class="bzl" id="bzl-sons-r"   data-zone="temporal"   onclick="brainNav('temporal')">
-    <span class="bzl-icon">🎵</span>Sons
-  </button>
-  <button class="bzl" id="bzl-projets"  data-zone="occipital"  onclick="brainNav('occipital')">
-    <span class="bzl-icon">🗂</span>Projets
-  </button>
-  <button class="bzl" id="bzl-reset"    data-zone="cerebellum" onclick="brainNav('cerebellum')">
-    <span class="bzl-icon">♻</span>Reset
-  </button>
-  <button class="bzl" id="bzl-sos"      data-zone="brainstem"  onclick="brainNav('brainstem')">
-    <span class="bzl-icon">🆘</span>SOS
-  </button>
-  <button class="bzl" id="bzl-liste"    data-zone="insula_r"   onclick="brainNav('insula_r')">
-    <span class="bzl-icon">📝</span>Ma liste
-  </button>
-
-  <button id="brain-cta-btn">Je veux travailler →</button>
-</div>
 
 <main>
 
@@ -2357,105 +2353,99 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- ACCUEIL -->
 <section class="screen" id="landing">
 
+  <!-- ── Cerveau 42vh ── -->
+  <div id="brain-section">
+    <canvas id="brain-canvas"></canvas>
+    <div id="brain-hotspots"></div>
+    <div class="brain-section-logo">✦ focusTDAH</div>
+  </div>
+
+  <!-- ── Contenu scrollable ── -->
   <div class="landing-left">
 
-  <!-- Barre du haut — décalée à droite pour ne pas couvrir l'anneau de focus -->
-  <div class="landing-logo-row" style="align-items:center;padding-left:8px;padding-right:62px">
-    <span class="logo" style="font-size:24px">✦ focusTDAH</span>
-    <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 10px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer;margin-left:auto">🔍</button>
-  </div>
+    <!-- Logo row + halt btn -->
+    <div class="landing-logo-row" style="align-items:center;margin-bottom:8px">
+      <span class="logo" style="font-size:18px">✦ focusTDAH</span>
+      <button id="landing-halt-btn" style="display:none;background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 10px;color:var(--muted);font:600 12px 'DM Sans',sans-serif;cursor:pointer;margin-left:auto">🔍</button>
+    </div>
 
-  <!-- Mode du jour pill -->
-  <div id="day-mode-slot" style="display:none;margin-bottom:4px"></div>
+    <!-- Mode du jour -->
+    <div id="day-mode-slot" style="display:none;margin-bottom:6px"></div>
 
-  <!-- Mémoire de travail externe (Working Memory Buffer) -->
-  <div class="wmb-card" id="wmb-card"></div>
+    <!-- WMB card -->
+    <div class="wmb-card" id="wmb-card"></div>
 
-  <!-- Bannière rebound Ritaline (si active) -->
-  <div id="rebound-banner-slot"></div>
+    <!-- Rebound banner -->
+    <div id="rebound-banner-slot"></div>
 
-  <!-- Plan du jour compact (visible si défini) -->
-  <div id="home-plan-preview" style="display:none;margin-bottom:12px"></div>
+    <!-- Plan du jour -->
+    <div id="home-plan-preview" style="display:none;margin-bottom:10px"></div>
 
-  <!-- CTA principale — grande, contextuelle -->
-  <button class="work-btn" id="btn-continue">
-    <span id="continue-title">Je veux travailler →</span>
-    <span class="work-btn-sub" id="continue-meta">Reprendre ou créer un projet</span>
-  </button>
-
-  <!-- Barre d'actions rapides -->
-  <div class="landing-actions">
-    <button class="landing-action-btn" id="btn-timers">
-      <span class="la-icon">🚀</span>
-      <span>Démarrer</span>
+    <!-- CTA principale -->
+    <button class="work-btn" id="btn-continue" style="margin-bottom:12px">
+      <span id="continue-title">Je veux travailler →</span>
+      <span class="work-btn-sub" id="continue-meta">Reprendre ou créer un projet</span>
     </button>
-    <button class="landing-action-btn landing-action-aide" id="btn-aide-menu">
-      <span class="la-icon">🧠</span>
-      <span>Besoin<br>d'aide</span>
-    </button>
-    <button class="landing-action-btn" id="btn-new">
-      <span class="la-icon">➕</span>
-      <span>Nouveau<br>projet</span>
-    </button>
-    <button class="landing-action-btn" id="btn-daily-plan">
-      <span class="la-icon">📋</span>
-      <span>Plan<br>du jour</span>
-    </button>
-  </div>
 
-  <!-- Seconde rangée d'actions -->
-  <div class="landing-actions" style="margin-top:8px">
-    <button class="landing-action-btn" id="btn-agenda">
-      <span class="la-icon">📅</span>
-      <span>Agenda</span>
-    </button>
-    <button class="landing-action-btn" id="btn-sons">
-      <span class="la-icon">🎵</span>
-      <span>Sons</span>
-    </button>
-    <button class="landing-action-btn" id="btn-quicktodo" onclick="show('quicktodo-screen')">
-      <span class="la-icon">📝</span>
-      <span>Ma<br>liste</span>
-    </button>
-    <button class="landing-action-btn" id="btn-pick-task">
-      <span class="la-icon">🎲</span>
-      <span>Choisis<br>pour moi</span>
-    </button>
-  </div>
+    <!-- Grille 4×2 — 8 boutons avec bordures zone -->
+    <div class="landing-actions">
+      <button class="landing-action-btn" data-zone="frontal" id="btn-timers">
+        <span class="la-icon">🚀</span><span>Démarrer</span>
+      </button>
+      <button class="landing-action-btn" data-zone="frontal" id="btn-aide-menu">
+        <span class="la-icon">🧠</span><span>Aide</span>
+      </button>
+      <button class="landing-action-btn" data-zone="parietal" id="btn-new">
+        <span class="la-icon">➕</span><span>Projet</span>
+      </button>
+      <button class="landing-action-btn" data-zone="parietal" id="btn-daily-plan">
+        <span class="la-icon">📋</span><span>Plan</span>
+      </button>
+      <button class="landing-action-btn" data-zone="parietal" id="btn-agenda">
+        <span class="la-icon">📅</span><span>Agenda</span>
+      </button>
+      <button class="landing-action-btn" data-zone="temporal" id="btn-sons">
+        <span class="la-icon">🎵</span><span>Sons</span>
+      </button>
+      <button class="landing-action-btn" data-zone="occipital" id="btn-quicktodo" onclick="show('quicktodo-screen')">
+        <span class="la-icon">📝</span><span>Liste</span>
+      </button>
+      <button class="landing-action-btn" data-zone="cerebellum" id="btn-pick-task">
+        <span class="la-icon">🎲</span><span>Choix</span>
+      </button>
+    </div>
 
-  <!-- Carte "tâche suggérée" (affichée après "Choisis pour moi") -->
-  <div class="pick-task-card" id="pick-task-card"></div>
+    <!-- Carte tâche suggérée -->
+    <div class="pick-task-card" id="pick-task-card"></div>
 
-  <button id="btn-end-of-day" style="display:block;width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:16px 0 0;cursor:pointer;text-align:left">🌙 Fin de journée</button>
+    <!-- Hier -->
+    <div class="yesterday-card" id="yesterday-card"></div>
+
+    <!-- Notifs -->
+    <div id="notif-banner" class="notif-banner" style="display:none;margin-top:8px">
+      <span class="notif-icon">🔔</span>
+      <div class="notif-body">
+        <strong>Activer les notifications ?</strong>
+        <p>Reçois une alerte quand ton timer se termine, même si l'écran est verrouillé.</p>
+        <div class="notif-btns">
+          <button class="notif-yes" id="notif-yes">Activer</button>
+          <button class="notif-no" id="notif-no">Plus tard</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Projets -->
+    <div id="home-proj-wrap" style="margin-top:14px;display:none">
+      <div class="section-label" style="margin-bottom:8px">Mes projets</div>
+      <div id="home-proj-list" class="proj-list"></div>
+    </div>
+
+    <button id="btn-end-of-day" style="width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:12px 0 2px;cursor:pointer;text-align:left">🌙 Fin de journée</button>
 
   </div><!-- /.landing-left -->
 
-  <div class="landing-right">
-
-  <!-- Carte "Hier tu as fait ça" -->
-  <div class="yesterday-card" id="yesterday-card"></div>
-
-  <!-- Bannière notifications -->
-  <div id="notif-banner" class="notif-banner" style="display:none;margin-top:14px">
-    <span class="notif-icon">🔔</span>
-    <div class="notif-body">
-      <strong>Activer les notifications ?</strong>
-      <p>Reçois une alerte quand ton timer se termine, même si l'écran est verrouillé.</p>
-      <div class="notif-btns">
-        <button class="notif-yes" id="notif-yes">Activer</button>
-        <button class="notif-no" id="notif-no">Plus tard</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mes projets -->
-  <div id="home-proj-wrap" style="margin-top:20px;display:none">
-    <div class="section-label" style="margin-bottom:10px">Mes projets</div>
-    <div id="home-proj-list" class="proj-list"></div>
-  </div>
-
-
-  </div><!-- /.landing-right -->
+  <!-- Panneau droit masqué (backward compat) -->
+  <div class="landing-right" style="display:none!important"></div>
 
 </section>
 
@@ -3705,17 +3695,9 @@ function show(id) {
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
   if (window.BrainEngine) {
-    BrainEngine.onNavigate(id);
     if (id === 'landing') BrainEngine.zoomOut();
   }
   if (id === 'quicktodo-screen' && typeof renderQT === 'function') renderQT();
-  // Brain hint: show on landing if not yet tapped, hide on other screens
-  const hint = document.getElementById('brain-hint');
-  if (hint) hint.style.animationPlayState = (id === 'landing' && !localStorage.getItem('ft_brain_tapped')) ? 'running' : 'paused';
-  if (hint) hint.style.opacity = (id === 'landing' && !localStorage.getItem('ft_brain_tapped')) ? '' : '0';
-  // Brain-centric landing overlay
-  const brainUI = document.getElementById('brain-ui');
-  if (brainUI) brainUI.style.display = (id === 'landing') ? 'block' : 'none';
 }
 
 // ─── BRAIN NAVIGATION ───
@@ -13573,107 +13555,70 @@ function _reorderProjectCards() {
 </script>
 <script src="brain-engine.js"></script>
 <script>
-// ══ BRAIN ENGINE INIT ══
-(function initBrainBackground() {
-  const canvas = document.getElementById('brain-bg');
-  if (!canvas || !window.THREE || !window.BrainEngine) return;
+// ══ BRAIN ENGINE INIT — Étapes 1 & 2 ══
+(function initBrain() {
+  if (!window.THREE || !window.BrainEngine) return;
+
   function doInit() {
-    const w = window.innerWidth || screen.width;
-    const h = window.innerHeight || screen.height;
-    canvas.width = w;
-    canvas.height = h;
+    const canvas = document.getElementById('brain-canvas');
+    if (!canvas) return;
+
+    // Size canvas to its container (42vh section)
+    const section = document.getElementById('brain-section');
+    if (section) { canvas.width = section.clientWidth; canvas.height = section.clientHeight; }
+
     BrainEngine.init(canvas);
-    // Fade in after first frame renders
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => { canvas.classList.add('visible'); });
-    });
     BrainEngine.setMode('idle');
 
-    // Level 2 — cognitive mirror : update immediately + every 60s / 120s
-    function _updateBrainEnergy() {
-      if (typeof calcFocusScore === 'function') BrainEngine.setEnergyLevel(calcFocusScore() / 100);
+    // Energy mirror (every 60s)
+    function _updateEnergy() {
+      if (typeof calcFocusScore === 'function') BrainEngine.setEnergy(calcFocusScore() / 100);
     }
-    function _updateBrainState() {
-      if (typeof detectCognitiveState === 'function') BrainEngine.setCognitiveState(detectCognitiveState());
-    }
-    // First run after a short delay (data may not be ready at init)
-    setTimeout(_updateBrainEnergy, 2000);
-    setTimeout(_updateBrainState,  3000);
-    setInterval(_updateBrainEnergy, 60000);
-    setInterval(_updateBrainState, 120000);
+    setTimeout(_updateEnergy, 2000);
+    setInterval(_updateEnergy, 60000);
 
-    // Level 3 — tappable lobes on landing screen
-    const LOBE_LABEL = {
-      frontal:    'Focus',      frontal_r:   'Focus',
-      parietal:   'Planning',   parietal_r:  'Planning',
-      temporal:   'Sons',       temporal_r:  'Sons',
-      occipital:  'Projets',
-      cerebellum: 'Reset',
-      brainstem:  'SOS Panique',
-      insula_l:   'Aide',       insula_r:    'Ma liste',
-      corpus:     'Brain Dump',
-    };
-    const LOBE_NAV = {
-      frontal:    () => show('session'),     frontal_r:   () => show('session'),
-      parietal:   () => show('planning-view'), parietal_r: () => show('planning-view'),
-      temporal:   () => show('sons'),        temporal_r:  () => show('sons'),
+    // Zone navigation (brain tap → navigate)
+    const ZONE_NAV = {
+      frontal:    () => show('session'),
+      parietal:   () => show('planning-view'),
+      temporal:   () => show('sons'),
       occipital:  () => show('create'),
-      cerebellum: () => showResetCognitif(),
-      brainstem:  () => showModePanique(),
-      insula_l:   () => show('aide-menu'),   insula_r:    () => show('quicktodo-screen'),
-      corpus:     () => show('brain-dump'),
+      cerebellum: () => (typeof showResetCognitif === 'function' ? showResetCognitif() : show('landing')),
+      brainstem:  () => (typeof showModePanique   === 'function' ? showModePanique()   : show('landing')),
     };
-    const tooltip = document.getElementById('brain-tooltip');
-
-    BrainEngine.onLobeClick(lobe => {
-      const nav = LOBE_NAV[lobe.id];
+    BrainEngine.onLobeClick(zoneId => {
+      const nav = ZONE_NAV[zoneId];
       if (!nav) return;
-      // Hide the hint permanently after first tap
-      localStorage.setItem('ft_brain_tapped', '1');
-      const hint = document.getElementById('brain-hint');
-      if (hint) { hint.style.opacity = '0'; hint.style.animationPlayState = 'paused'; }
-      BrainEngine.highlightLobe(lobe.id, 2.5, 400);
+      BrainEngine.highlightLobe(zoneId, 1.5, 500);
       setTimeout(nav, 350);
     });
 
-    BrainEngine.onLobeHover(lobe => {
-      if (!tooltip) return;
-      if (!lobe) { tooltip.style.opacity = '0'; return; }
-      const label = LOBE_LABEL[lobe.id];
-      if (!label) { tooltip.style.opacity = '0'; return; }
-      tooltip.textContent = label;
-      // Position near cursor — use stored mouse position
-      const mx = BrainEngine._lastMX || window.innerWidth/2;
-      const my = BrainEngine._lastMY || window.innerHeight/2;
-      tooltip.style.left = mx + 'px';
-      tooltip.style.top  = (my - 36) + 'px';
-      tooltip.style.opacity = '1';
+    // Button grid → highlight corresponding brain zone
+    document.querySelectorAll('.landing-action-btn[data-zone]').forEach(btn => {
+      const zone = btn.dataset.zone;
+      btn.addEventListener('click', () => {
+        if (window.BrainEngine) BrainEngine.highlightLobe(zone, 1.0, 600);
+        // Zone glow class for 600ms
+        btn.classList.add('zone-glow');
+        setTimeout(() => btn.classList.remove('zone-glow'), 700);
+      }, {capture: true});
     });
 
-    // Hide tooltip when leaving hover without a lobe
-    document.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.opacity = '0'; });
-
-    // ── Labels flottants : positionnement initial + resize
-    if (typeof positionBrainLabels === 'function') {
-      positionBrainLabels();
-      window.addEventListener('resize', positionBrainLabels);
+    // IntersectionObserver — pause brain when section off-screen (battery)
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver(entries => {
+        entries[0].isIntersecting ? BrainEngine.resume() : BrainEngine.pause();
+      }, {threshold: 0.1});
+      obs.observe(canvas);
     }
 
-    // ── Bouton CTA → délègue au bouton "continuer" existant
-    const ctaBtn = document.getElementById('brain-cta-btn');
-    if (ctaBtn) ctaBtn.onclick = () => {
-      const wb = document.getElementById('btn-continue');
-      if (wb) wb.click(); else show('session');
-    };
-
-    // ── Afficher l'overlay si on est déjà sur landing au moment de l'init
-    const landingEl = document.getElementById('landing');
-    const brainUIEl = document.getElementById('brain-ui');
-    if (brainUIEl && landingEl && landingEl.classList.contains('active')) {
-      brainUIEl.style.display = 'block';
-    }
+    // Resize: re-size canvas when section resizes
+    window.addEventListener('resize', () => {
+      const s = document.getElementById('brain-section');
+      if (s && canvas) { canvas.width = s.clientWidth; canvas.height = s.clientHeight; }
+    });
   }
-  // Use rAF to ensure layout is complete on iPhone
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(doInit));
   } else {
