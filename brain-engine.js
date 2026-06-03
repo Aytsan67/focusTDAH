@@ -285,8 +285,9 @@ function loop() {
 // ── INIT ──
 function init(canvasEl, minimapCanvas) {
   canvas = canvasEl;
-  const W = canvas.clientWidth  || window.innerWidth;
-  const H = canvas.clientHeight || window.innerHeight;
+  // Canvas is position:fixed fullscreen — window dimensions are always reliable
+  const W = window.innerWidth;
+  const H = window.innerHeight;
 
   renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
   renderer.setSize(W, H, false);
@@ -338,10 +339,10 @@ function init(canvasEl, minimapCanvas) {
     if(!isZoomed){ zoom+=e.deltaY*.12; zoom=Math.max(150,Math.min(500,zoom)); camTarget.z=zoom; }
   });
 
-  // Resize
+  // Resize — window dimensions always match fixed fullscreen canvas
   window.addEventListener('resize', ()=>{
-    const W2 = canvas.clientWidth  || window.innerWidth;
-    const H2 = canvas.clientHeight || window.innerHeight;
+    const W2 = window.innerWidth;
+    const H2 = window.innerHeight;
     camera.aspect = W2/H2;
     camera.updateProjectionMatrix();
     renderer.setSize(W2, H2, false);
