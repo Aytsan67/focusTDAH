@@ -1005,14 +1005,24 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .user-popover-logout:hover { border-color: #fc5c7d; color: #fc5c7d; }
 
-/* ══ CERVEAU — fond fixe plein écran (hors #landing) ══ */
+/* ══ LANDING — écran transparent (cerveau visible derrière) ══ */
+#landing {
+  display: none;
+  min-height: 100vh;
+  background: transparent;
+  padding: 0;
+}
+#landing.active { display: block; }
+
+/* Cerveau = plein écran (100svh exclut la barre d'adresse Safari) */
 #brain-section {
-  position: fixed; inset: 0; z-index: 0;
-  background: #000008; overflow: hidden;
-  cursor: grab; display: none;
+  position: fixed;
+  inset: 0;
+  background: #000008;
+  overflow: hidden;
+  cursor: grab;
   pointer-events: auto;
 }
-#brain-section.brain-active { display: block; }
 #brain-section:active { cursor: grabbing; }
 #brain-canvas {
   width: 100%; height: 100%;
@@ -1033,32 +1043,23 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   color: #00f5ff; opacity: .45; pointer-events: none; white-space: nowrap; z-index: 2;
 }
 
-/* ══ LANDING — overlay transparent au-dessus du cerveau ══ */
-#landing {
-  display: none;
-  position: fixed; inset: 0; z-index: 5;
-  pointer-events: none;
-  background: transparent;
-}
-#landing.active { display: block; }
-
-/* Barre de contrôle fixée en bas */
+/* Barre de contrôle fixée en bas (bottom sheet) */
 .landing-left {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   z-index: 10;
   max-width: 520px;
   margin: 0 auto;
-  padding: 14px 18px calc(env(safe-area-inset-bottom) + 14px);
-  background: rgba(10, 10, 18, 0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1.5px solid rgba(40, 40, 60, 0.6);
-  border-radius: 24px 24px 0 0;
+  padding: 16px 20px calc(env(safe-area-inset-bottom) + 16px);
+  background: rgba(13, 13, 20, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(40, 40, 56, 0.55);
+  border-radius: 28px 28px 0 0;
   border-bottom: none;
   box-sizing: border-box;
   pointer-events: auto;
-  max-height: 72svh;
+  max-height: 70svh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -1938,9 +1939,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   .cat-modal-handle { display: none; }
 
   /* ── Landing desktop ── */
-  #landing { position: fixed; inset: 0; background: transparent; }
-  #landing.active { display: block; }
-  .landing-left { max-width: 580px; padding: 16px 24px calc(env(safe-area-inset-bottom) + 16px); }
+  #landing { max-width: none; margin: 0; padding: 0; }
+  .landing-left { max-width: 560px; }
   .landing-actions { grid-template-columns: repeat(4,1fr) !important; gap: 12px !important; }
   .landing-action-btn { padding: 14px 8px !important; font-size: 12px !important; }
   .work-btn { font-size: 18px; padding: 16px 20px; }
@@ -2330,13 +2330,6 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 </head>
 <body>
 
-<!-- Cerveau 3D — fond fixe plein écran, z-index:0, contrôlé via show() -->
-<div id="brain-section">
-  <canvas id="brain-canvas"></canvas>
-  <div id="brain-hotspots"></div>
-  <div class="brain-section-logo">✦ focusTDAH</div>
-</div>
-
 <main>
 
 <!-- SPLASH -->
@@ -2371,6 +2364,13 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
 <!-- ACCUEIL -->
 <section class="screen" id="landing">
+
+  <!-- ── Cerveau plein écran ── -->
+  <div id="brain-section">
+    <canvas id="brain-canvas"></canvas>
+    <div id="brain-hotspots"></div>
+    <div class="brain-section-logo">✦ focusTDAH</div>
+  </div>
 
   <!-- ── Barre de contrôle (bottom sheet) ── -->
   <div class="landing-left">
@@ -3706,12 +3706,8 @@ function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
-  // Cerveau : visible seulement sur landing
-  const bs = document.getElementById('brain-section');
-  if (bs) bs.classList.toggle('brain-active', id === 'landing');
   if (window.BrainEngine) {
-    if (id === 'landing') { BrainEngine.resume(); BrainEngine.zoomOut(); }
-    else BrainEngine.pause();
+    if (id === 'landing') BrainEngine.zoomOut();
   }
   if (id === 'quicktodo-screen' && typeof renderQT === 'function') renderQT();
 }
@@ -13579,10 +13575,8 @@ function _reorderProjectCards() {
     const canvas = document.getElementById('brain-canvas');
     if (!canvas) return;
 
-    // Canvas is position:fixed fullscreen — window dimensions are always correct
     BrainEngine.init(canvas);
     BrainEngine.setMode('idle');
-    BrainEngine.pause(); // Show() will resume when landing becomes active
 
     // Energy mirror (every 60s)
     function _updateEnergy() {
