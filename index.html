@@ -2951,13 +2951,18 @@ function scheduleSync() {
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(async () => {
     try {
-      await _db.collection('users').doc(_fbUser.uid).set({
-        projects:          getProjectsRaw(),
+      const projects = getProjectsRaw();
+      const payload = {
         deletedProjectIds: getDeletedIds(),
         activeId:          localStorage.getItem('tache_active') || null,
         quicktodo:         getQTRaw(),
         updatedAt:         firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      // Garde-fou : ne jamais écraser les projets du cloud par un tableau vide
+      // (état local tronqué / corrompu retombé sur le fallback []). merge:true
+      // pour ne pas effacer les autres champs si l'un d'eux manque ici.
+      if (projects.length > 0) payload.projects = projects;
+      await _db.collection('users').doc(_fbUser.uid).set(payload, { merge: true });
     } catch(e) { console.warn('Firestore sync:', e); }
   }, 2000);
 }
@@ -2976,24 +2981,50 @@ async function loadFromFirestore(uid) {
       const allDeletedIds   = new Set([...cloudDeletedIds, ...localDeletedIds]);
       // Sauvegarder localement la liste fusionnée
       if (cloudDeletedIds.length > 0) {
-        localStorage.setItem('tache_deleted_ids',
-          JSON.stringify([...new Set([...localDeletedIds, ...cloudDeletedIds])]));
+        saveJSON('tache_deleted_ids', [...new Set([...localDeletedIds, ...cloudDeletedIds])]);
       }
 
-      // ── Projets : fusion sans ressusciter les supprimés ──
+      // ── Projets : fusion par projet, « le plus récemment édité gagne » ──
+      // Avant : le cloud gagnait toujours pour un projet présent des deux côtés,
+      // ce qui effaçait une édition locale hors-ligne. Désormais on compare
+      // updatedAt (posé par _stampProjects à chaque save) et on garde le plus récent.
       const cloudProjs = (d.projects || []).filter(p => !allDeletedIds.has(p.id));
-      const merged = [...cloudProjs];
+      const projById   = new Map();
+      cloudProjs.forEach(p => projById.set(p.id, p));
       localProjs.forEach(lp => {
-        if (!allDeletedIds.has(lp.id) && !merged.find(cp => cp.id === lp.id)) merged.push(lp);
+        if (allDeletedIds.has(lp.id)) return;
+        const cp = projById.get(lp.id);
+        if (!cp) { projById.set(lp.id, lp); return; }       // projet créé hors-ligne
+        if ((lp.updatedAt || 0) > (cp.updatedAt || 0)) projById.set(lp.id, lp);
       });
-      localStorage.setItem('tache_v3', JSON.stringify(merged));
+      const merged = [...projById.values()];
+      saveJSON('tache_v3', merged);
       if (d.activeId) localStorage.setItem('tache_active', d.activeId);
-      if (merged.length > cloudProjs.length) uploadNow(uid, merged);
+      // Renvoyer au cloud si la fusion locale diffère de ce qu'il avait
+      // (nouveaux projets locaux OU une version locale plus récente a gagné).
+      const sigOf = arr => JSON.stringify(arr.map(p => [p.id, p.updatedAt || 0]).sort());
+      if (sigOf(merged) !== sigOf(cloudProjs)) uploadNow(uid, merged);
 
-      // ── QuickTodo : cloud autoritaire — pas de fusion locale ──
-      // (évite la résurrection d'items supprimés sur un autre appareil)
-      const cloudQT = d.quicktodo || [];
-      localStorage.setItem('ft_quicktodo', JSON.stringify(cloudQT));
+      // ── QuickTodo : fusion cloud + local par id, le plus récent gagne ──
+      // Une note capturée hors-ligne ne doit JAMAIS disparaître à la reconnexion.
+      // On évite la résurrection des items cochés déjà expirés (> QT_UNDO_SECS).
+      const cloudQT  = d.quicktodo || [];
+      const localQT  = getQTRaw();
+      const qtNow    = Date.now();
+      const qtExpired = it => it && it.checkedAt && (qtNow - it.checkedAt) >= QT_UNDO_SECS * 1000;
+      const qtById   = new Map();
+      const qtConsider = it => {
+        if (!it || it.id == null) return;
+        const prev = qtById.get(it.id);
+        if (!prev) { qtById.set(it.id, it); return; }
+        const tNew = it.updatedAt   || it.checkedAt   || 0;
+        const tOld = prev.updatedAt || prev.checkedAt || 0;
+        if (tNew >= tOld) qtById.set(it.id, it);           // le plus récent gagne
+      };
+      cloudQT.forEach(qtConsider);
+      localQT.forEach(qtConsider);
+      const mergedQT = [...qtById.values()].filter(it => !qtExpired(it));
+      saveJSON('ft_quicktodo', mergedQT);
 
     } else if (localProjs.length > 0) {
       // Pas encore de document Firestore ET on a des projets locaux → premier upload
@@ -3012,7 +3043,7 @@ function uploadNow(uid, projects) {
     activeId:          localStorage.getItem('tache_active') || null,
     quicktodo:         getQTRaw(),
     updatedAt:         firebase.firestore.FieldValue.serverTimestamp()
-  }).catch(e => console.warn('Firestore upload:', e));
+  }, { merge: true }).catch(e => console.warn('Firestore upload:', e));
 }
 
 function renderUserPill(user) {
@@ -3557,7 +3588,25 @@ function getQTRaw() {
 }
 function getQT() { return getQTRaw(); }
 let _syncQTTimer = null;
+// Horodate les items QT modifiés (updatedAt) → la fusion multi-appareils sait
+// quelle version garder, et propage coche/édition au lieu d'un « cloud gagne ».
+function _stampQT(list) {
+  try {
+    const prev = {};
+    getQTRaw().forEach(it => { if (it && it.id != null) prev[it.id] = it; });
+    const now = Date.now();
+    const sig = n => JSON.stringify(Object.assign({}, n, { updatedAt: 0 }));
+    list.forEach(it => {
+      if (!it || it.id == null) return;
+      const old = prev[it.id];
+      if (!old) it.updatedAt = now;
+      else if (sig(it) !== sig(old)) it.updatedAt = now;
+      else it.updatedAt = old.updatedAt || now;
+    });
+  } catch (e) { /* horodatage best-effort */ }
+}
 function saveQT(items) {
+  _stampQT(items);
   saveJSON('ft_quicktodo', items);
   // Sync QT immediately (500 ms) — separate from the 2 s project sync
   if (FB_READY && _fbUser) {
