@@ -238,6 +238,11 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .timer-num { font-family: 'Syne', sans-serif; font-size: 42px; font-weight: 800; text-align: center; margin-bottom: 12px; line-height: 1; }
 .timer-track { height: 10px; border-radius: 10px; background: var(--soft); overflow: hidden; margin-bottom: 14px; }
 .timer-bar { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 1s linear; }
+.timer-granularity { margin: 0 0 14px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+.timer-granularity-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
+.timer-granularity-value { color: var(--accent); }
+.timer-granularity input { width: 100%; accent-color: var(--accent); }
+.timer-granularity-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; margin-top: 3px; }
 .timer-btns { display: flex; gap: 10px; }
 .t-start { flex: 1; border: none; border-radius: 16px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font: 700 15px 'Syne', sans-serif; padding: 16px; transition: transform .13s; }
 .t-start:active { transform: scale(.97); }
@@ -2431,6 +2436,14 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div class="timer-label" id="s-mode-label">Mode 2 minutes</div>
     <div class="timer-num" id="s-timer">2:00</div>
     <div class="timer-track"><div class="timer-bar" id="s-timer-bar" style="width:100%"></div></div>
+    <div class="timer-granularity">
+      <div class="timer-granularity-head">
+        <span>Temps visible pour cette étape</span>
+        <span class="timer-granularity-value" id="s-granularity-value">15 min</span>
+      </div>
+      <input id="s-granularity" type="range" min="0" max="2" step="1" value="1" aria-label="Granularité du timer : 5, 15 ou 30 minutes">
+      <div class="timer-granularity-labels"><span>5 min</span><span>15 min</span><span>30 min</span></div>
+    </div>
     <div class="timer-btns">
       <button class="t-start" id="t-toggle">▶ Commencer</button>
       <button class="t-reset" id="t-reset">↺</button>
@@ -3298,14 +3311,14 @@ function initAuth() {
   if (date) obj.date = date;
   if (ans)  obj.answer = ans;
   if (Object.keys(obj).length) {
-    localStorage.setItem('ft_ritalin', JSON.stringify(obj));
+    saveJSON('ft_ritalin', obj);
     ['focustdah_ritalin_time','focustdah_ritalin_type','focustdah_ritalin_date','focustdah_ritalin_answer'].forEach(k => localStorage.removeItem(k));
   }
 })();
 function getRitalinStore() {
-  try { return JSON.parse(localStorage.getItem('ft_ritalin') || '{}'); } catch(e) { return {}; }
+  return loadJSON('ft_ritalin', {});
 }
-function setRitalinStore(obj) { localStorage.setItem('ft_ritalin', JSON.stringify(obj)); }
+function setRitalinStore(obj) { saveJSON('ft_ritalin', obj); }
 
 // ─── SETTINGS ───
 const SETTINGS_KEY = 'focustdah_settings';
@@ -3342,7 +3355,7 @@ const DEFAULT_MICRO_PRESETS = [
 ];
 function getSettings() {
   try {
-    const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    const raw = loadJSON(SETTINGS_KEY, {});
     const modes = (raw.modes || DEFAULT_MODES).map(m => {
       const def = DEFAULT_MODES.find(d => d.id === m.id);
       return def ? Object.assign({}, def, m) : m;
@@ -3418,9 +3431,8 @@ function getMinutesToRebound() {
 // ─── REBOUND WATCH ───
 let _reboundInterval = null;
 function startReboundWatch() {
-  if (_reboundInterval) clearInterval(_reboundInterval);
   checkReboundAlert();
-  _reboundInterval = setInterval(checkReboundAlert, 60000);
+  _reboundInterval = startManagedInterval('rebound', checkReboundAlert, 60000);
 }
 function checkReboundAlert() {
   const slot = document.getElementById('rebound-banner-slot');
@@ -3545,6 +3557,26 @@ function esc(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// ─── REGISTRE CENTRAL DES INTERVALLES ───
+// Un timer nommé remplace toujours son prédécesseur. Cela évite les intervalles
+// fantômes après une reprise, un changement d'écran ou un double clic.
+const _managedIntervals = new Map();
+function startManagedInterval(name, fn, ms) {
+  stopManagedInterval(name);
+  const id = setInterval(fn, ms);
+  _managedIntervals.set(name, id);
+  return id;
+}
+function stopManagedInterval(name) {
+  const id = _managedIntervals.get(name);
+  if (id != null) clearInterval(id);
+  _managedIntervals.delete(name);
+}
+function stopAllManagedIntervals() {
+  _managedIntervals.forEach(id => clearInterval(id));
+  _managedIntervals.clear();
 }
 
 // ─── STORAGE ───
@@ -3705,10 +3737,10 @@ function renderQT() {
   });
 
   // Relancer le timer de mise à jour si des tâches cochées existent
-  clearInterval(_qtTimer);
+  stopManagedInterval('quickTodoUndo');
   const hasPending = alive.some(i => i.done && i.checkedAt);
   if (hasPending) {
-    _qtTimer = setInterval(() => {
+    _qtTimer = startManagedInterval('quickTodoUndo', () => {
       const nowI = Date.now();
       const current = getQT();
       // Supprimer les expirées avec animation
@@ -4034,13 +4066,13 @@ const DAY_MODE_TS  = 'ft_morning_ts';
 function getDayMode() {
   const today = new Date().toDateString();
   try {
-    const s = JSON.parse(localStorage.getItem(DAY_MODE_KEY) || '{}');
+    const s = loadJSON(DAY_MODE_KEY, {});
     return s.date === today ? s.mode : null;
   } catch { return null; }
 }
 
 function setDayMode(mode) {
-  localStorage.setItem(DAY_MODE_KEY, JSON.stringify({ date: new Date().toDateString(), mode }));
+  saveJSON(DAY_MODE_KEY, { date: new Date().toDateString(), mode });
   localStorage.setItem(DAY_MODE_TS, new Date().toDateString());
 }
 
@@ -4159,7 +4191,7 @@ function showSessionEndChoice(mins) {
 // ══════════════════════════════════════════════════
 function getTodayStats() {
   try {
-    const s = JSON.parse(localStorage.getItem('ft_today_stats') || '{}');
+    const s = loadJSON('ft_today_stats', {});
     const today = new Date().toISOString().slice(0, 10);
     if (s.date !== today) return { date: today, focusMin: 0, tasks: 0, sessions: 0 };
     return s;
@@ -4168,25 +4200,25 @@ function getTodayStats() {
 function addTodayStats(delta) {
   const s = getTodayStats();
   Object.keys(delta).forEach(k => { s[k] = Math.round(((s[k] || 0) + delta[k]) * 10) / 10; });
-  localStorage.setItem('ft_today_stats', JSON.stringify(s));
+  saveJSON('ft_today_stats', s);
   // Update week stats
   try {
     const today = new Date().toDateString();
-    const raw = JSON.parse(localStorage.getItem('ft_week_stats') || '{}');
+    const raw = loadJSON('ft_week_stats', {});
     if (!raw[today]) raw[today] = { focusMin: 0, sessions: 0, tasks: 0 };
     Object.keys(delta).forEach(k => { raw[today][k] = Math.round(((raw[today][k] || 0) + delta[k]) * 10) / 10; });
     // keep last 7 days only
     const keys = Object.keys(raw).sort((a, b) => new Date(a) - new Date(b));
     if (keys.length > 7) keys.slice(0, keys.length - 7).forEach(k => delete raw[k]);
-    localStorage.setItem('ft_week_stats', JSON.stringify(raw));
+    saveJSON('ft_week_stats', raw);
   } catch(e) {}
   // Update lifetime stats
   try {
-    const lt = JSON.parse(localStorage.getItem('ft_lifetime_stats') || '{"totalMin":0,"totalTasks":0,"totalSessions":0}');
+    const lt = loadJSON('ft_lifetime_stats', { totalMin: 0, totalTasks: 0, totalSessions: 0 });
     if (delta.focusMin) lt.totalMin = Math.round(((lt.totalMin || 0) + delta.focusMin) * 10) / 10;
     if (delta.tasks) lt.totalTasks = (lt.totalTasks || 0) + delta.tasks;
     if (delta.sessions) lt.totalSessions = (lt.totalSessions || 0) + delta.sessions;
-    localStorage.setItem('ft_lifetime_stats', JSON.stringify(lt));
+    saveJSON('ft_lifetime_stats', lt);
   } catch(e) {}
   checkAndAwardBadges();
   renderLandingStats();
@@ -4208,7 +4240,7 @@ function renderLandingStats() {
   // Week bar chart
   let weekHtml = '';
   try {
-    const raw = JSON.parse(localStorage.getItem('ft_week_stats') || '{}');
+    const raw = loadJSON('ft_week_stats', {});
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     const dayLabels = ['L','M','M','J','V','S','D'];
     const today = new Date();
@@ -4231,7 +4263,7 @@ function renderLandingStats() {
   // Badges
   let badgesHtml = '';
   try {
-    const badges = JSON.parse(localStorage.getItem('ft_badges') || '[]');
+    const badges = loadJSON('ft_badges', []);
     if (badges.length > 0) {
       const allDefs = typeof BADGES_DEF !== 'undefined' ? BADGES_DEF : [];
       const chips = badges.map(id => {
@@ -4285,8 +4317,8 @@ const BADGES_DEF = [
 
 function checkAndAwardBadges() {
   try {
-    const lt = JSON.parse(localStorage.getItem('ft_lifetime_stats') || '{"totalMin":0,"totalTasks":0,"totalSessions":0}');
-    const earned = JSON.parse(localStorage.getItem('ft_badges') || '[]');
+    const lt = loadJSON('ft_lifetime_stats', { totalMin: 0, totalTasks: 0, totalSessions: 0 });
+    const earned = loadJSON('ft_badges', []);
     let changed = false;
     BADGES_DEF.forEach(def => {
       if (!earned.includes(def.id) && def.cond(lt)) {
@@ -4295,7 +4327,7 @@ function checkAndAwardBadges() {
         setTimeout(() => showDopamineToast('🏅 Badge débloqué : ' + def.label, 3500), 500);
       }
     });
-    if (changed) { localStorage.setItem('ft_badges', JSON.stringify(earned)); renderFocusRingBadges(); }
+    if (changed) { saveJSON('ft_badges', earned); renderFocusRingBadges(); }
   } catch(e) {}
 }
 
@@ -4303,7 +4335,7 @@ function renderFocusRingBadges() {
   const el = document.getElementById('focus-ring-badges');
   if (!el) return;
   try {
-    const earned = JSON.parse(localStorage.getItem('ft_badges') || '[]');
+    const earned = loadJSON('ft_badges', []);
     if (!earned.length) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
     el.innerHTML = earned.map(id => {
@@ -7047,14 +7079,14 @@ function showFedUpModal(pauseFn, resumeFn) {
 
   function fmtFU(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
-  clearInterval(fedUpInterval);
-  fedUpInterval = setInterval(() => {
+  stopManagedInterval('fedUp');
+  fedUpInterval = startManagedInterval('fedUp', () => {
     remaining--;
     const pct = ((FED_UP_DURATION - remaining) / FED_UP_DURATION) * 100;
     numEl.textContent = fmtFU(remaining);
     barEl.style.width = pct + '%';
     if (remaining <= 0) {
-      clearInterval(fedUpInterval);
+      stopManagedInterval('fedUp');
       numEl.style.display = 'none';
       bd.querySelector('.fed-up-track').style.display = 'none';
       bd.querySelector('#fu-end').style.display = '';
@@ -7064,7 +7096,7 @@ function showFedUpModal(pauseFn, resumeFn) {
   }, 1000);
 
   function dismiss(shouldResume, timerDone) {
-    clearInterval(fedUpInterval);
+    stopManagedInterval('fedUp');
     bd.remove();
     if (shouldResume && fedUpResumeFn) fedUpResumeFn();
     fedUpPauseFn = null;
@@ -7078,7 +7110,7 @@ function showFedUpModal(pauseFn, resumeFn) {
 
 // Pause/resume helpers for each timer type
 function pauseSessionTimer() {
-  if (tRunning) { tRunning = false; clearInterval(tInterval); tEndTimestamp = null; releaseWakeLock(); }
+  if (tRunning) { tRunning = false; stopManagedInterval('session'); tEndTimestamp = null; releaseWakeLock(); }
 }
 function resumeSessionTimer() {
   if (!tRunning && tRemain > 0) {
@@ -7086,7 +7118,7 @@ function resumeSessionTimer() {
     tEndTimestamp = Date.now() + tRemain * 1000;
     startContinuousFocus();
     requestWakeLock();
-    tInterval = setInterval(() => {
+    tInterval = startManagedInterval('session', () => {
       tRemain = Math.max(0, Math.ceil((tEndTimestamp - Date.now()) / 1000));
       document.getElementById('s-timer').textContent = Math.floor(tRemain/60)+':'+String(tRemain%60).padStart(2,'0');
       document.getElementById('s-timer-bar').style.width = (tRemain / tTotal * 100) + '%';
@@ -7096,7 +7128,7 @@ function resumeSessionTimer() {
   }
 }
 function pauseFreeTimer() {
-  if (ftRunning) { ftRunning = false; clearInterval(ftInterval); ftEndTimestamp = null; releaseWakeLock(); }
+  if (ftRunning) { ftRunning = false; stopManagedInterval('free'); ftEndTimestamp = null; releaseWakeLock(); }
 }
 function resumeFreeTimer() {
   if (!ftRunning && ftRemain > 0) {
@@ -7104,7 +7136,7 @@ function resumeFreeTimer() {
     ftEndTimestamp = Date.now() + ftRemain * 1000;
     startContinuousFocus();
     requestWakeLock();
-    ftInterval = setInterval(() => {
+    ftInterval = startManagedInterval('free', () => {
       ftRemain = Math.max(0, Math.ceil((ftEndTimestamp - Date.now()) / 1000));
       document.getElementById('ft-num').textContent = Math.floor(ftRemain/60)+':'+String(ftRemain%60).padStart(2,'0');
       document.getElementById('ft-bar').style.width = (1 - ftRemain / ftTotal) * 100 + '%';
@@ -7129,6 +7161,8 @@ const MODES = {
   'micro':   { label: 'Micro-étapes',     time: 180 },
   'one':     { label: 'Une seule chose',  time: 1200 }
 };
+const TIMER_GRANULARITIES = [5, 15, 30];
+const TIMER_GRANULARITY_KEY = 'ft_timer_granularity';
 let tRemain = 120, tTotal = 120, tRunning = false, tInterval = null;
 let tEndTimestamp = null, ftEndTimestamp = null;
 
@@ -7203,14 +7237,35 @@ function renderSession() {
   const si = Math.min(Math.floor(doneM / Math.max(totalM, 1) * storyLines.length), storyLines.length - 1);
   document.getElementById('s-story').textContent = storyLines[si];
 
+  syncGranularityControl();
   resetTimer();
 }
 
 // ─── TIMER ───
+function getTimerGranularity() {
+  const saved = parseInt(localStorage.getItem(TIMER_GRANULARITY_KEY), 10);
+  return TIMER_GRANULARITIES.includes(saved) ? saved : 15;
+}
+
+function syncGranularityControl() {
+  const slider = document.getElementById('s-granularity');
+  const value = document.getElementById('s-granularity-value');
+  if (!slider || !value) return;
+  if (currentMode === '2min') {
+    slider.disabled = true;
+    value.textContent = '2 min';
+    return;
+  }
+  slider.disabled = false;
+  const minutes = getTimerGranularity();
+  slider.value = String(Math.max(0, TIMER_GRANULARITIES.indexOf(minutes)));
+  value.textContent = minutes + ' min';
+}
+
 function resetTimer() {
-  clearInterval(tInterval);
+  stopManagedInterval('session');
   tRunning = false;
-  tTotal = MODES[currentMode].time;
+  tTotal = currentMode === '2min' ? MODES[currentMode].time : getTimerGranularity() * 60;
   tRemain = tTotal;
   renderTimerDisplay();
   document.getElementById('t-toggle').textContent = '▶ Commencer';
@@ -7224,7 +7279,7 @@ function renderTimerDisplay() {
 
 document.getElementById('t-toggle').onclick = function() {
   if (tRunning) {
-    clearInterval(tInterval);
+    stopManagedInterval('session');
     tRunning = false;
     stopContinuousFocus();
     releaseWakeLock();
@@ -7237,7 +7292,7 @@ document.getElementById('t-toggle').onclick = function() {
     startContinuousFocus();
     requestWakeLock();
     document.getElementById('t-toggle').textContent = '⏸ Pause';
-    tInterval = setInterval(function() {
+    tInterval = startManagedInterval('session', function() {
       tRemain = Math.max(0, Math.ceil((tEndTimestamp - Date.now()) / 1000));
       renderTimerDisplay();
       if (tRemain <= 0) onSessionTimerEnd();
@@ -7245,6 +7300,13 @@ document.getElementById('t-toggle').onclick = function() {
   }
 };
 document.getElementById('t-reset').onclick = resetTimer;
+document.getElementById('s-granularity').oninput = function() {
+  if (currentMode === '2min') return;
+  const minutes = TIMER_GRANULARITIES[parseInt(this.value, 10)] || 15;
+  localStorage.setItem(TIMER_GRANULARITY_KEY, String(minutes));
+  document.getElementById('s-granularity-value').textContent = minutes + ' min';
+  resetTimer();
+};
 
 // ─── DONE / SKIP ───
 function advanceMicro() {
@@ -7260,7 +7322,7 @@ function advanceMicro() {
   }
   saveProjects(projects);
   currentProject = p;
-  clearInterval(tInterval); tRunning = false;
+  stopManagedInterval('session'); tRunning = false;
 
   if (stComplete(step)) {
     const allDone = getActiveSteps(p).every(st => stComplete(st));
@@ -7292,7 +7354,7 @@ document.getElementById('c-next').onclick = () => { renderSession(); show('sessi
 document.getElementById('c-home').onclick = () => { renderHome(); show('landing'); };
 document.getElementById('f-home').onclick = () => { renderHome(); show('landing'); };
 document.getElementById('back-session').onclick = () => {
-  clearInterval(tInterval); tRunning = false;
+  stopManagedInterval('session'); tRunning = false;
   if (currentProject) { renderPlanPreview(currentProject); show('plan-preview'); }
   else { renderHome(); show('landing'); }
 };
@@ -7346,7 +7408,7 @@ let ftSession = 1, ftIsPause = false, ftTaskName = '';
 
 document.getElementById('btn-timers').onclick = () => openWorkModeSheet();
 document.getElementById('back-timer-setup').onclick = () => { renderHome(); show('landing'); };
-document.getElementById('back-timer-free').onclick = () => { clearInterval(ftInterval); ftRunning = false; releaseWakeLock(); resetFtSetup(); show('timer-setup'); };
+document.getElementById('back-timer-free').onclick = () => { stopManagedInterval('free'); ftRunning = false; releaseWakeLock(); resetFtSetup(); show('timer-setup'); };
 
 function resetFtSetup() {
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
@@ -7384,7 +7446,7 @@ function startFtTimer(seconds) {
   ftTotal = seconds;
   ftRemain = seconds;
   ftRunning = false;
-  clearInterval(ftInterval);
+  stopManagedInterval('free');
   renderFtTimer();
   document.getElementById('ft-end-panel').style.display = 'none';
   document.getElementById('ft-toggle').style.display = '';
@@ -7419,7 +7481,7 @@ function renderFtTimer() {
 
 document.getElementById('ft-toggle').onclick = function() {
   if (ftRunning) {
-    clearInterval(ftInterval);
+    stopManagedInterval('free');
     ftRunning = false;
     stopContinuousFocus();
     releaseWakeLock();
@@ -7432,7 +7494,7 @@ document.getElementById('ft-toggle').onclick = function() {
     startContinuousFocus();
     requestWakeLock();
     this.textContent = '⏸ Pause';
-    ftInterval = setInterval(() => {
+    ftInterval = startManagedInterval('free', () => {
       ftRemain = Math.max(0, Math.ceil((ftEndTimestamp - Date.now()) / 1000));
       renderFtTimer();
       if (ftRemain <= 0) onFtTimerEnd();
@@ -7441,7 +7503,7 @@ document.getElementById('ft-toggle').onclick = function() {
 };
 
 document.getElementById('ft-stop').onclick = () => {
-  clearInterval(ftInterval);
+  stopManagedInterval('free');
   ftRunning = false;
   releaseWakeLock();
   renderHome();
@@ -7474,14 +7536,14 @@ document.getElementById('ft-opt-pause').onclick = () => {
 };
 
 document.getElementById('ft-opt-change').onclick = () => {
-  clearInterval(ftInterval);
+  stopManagedInterval('free');
   ftRunning = false;
   resetFtSetup();
   show('timer-setup');
 };
 
 document.getElementById('ft-opt-home').onclick = () => {
-  clearInterval(ftInterval);
+  stopManagedInterval('free');
   ftRunning = false;
   renderHome();
   show('landing');
@@ -7528,7 +7590,7 @@ const AIDE_LOG_KEY = 'focustdah_aide_log';
 function getAideLog() {
   const today = new Date().toDateString();
   try {
-    const raw = JSON.parse(localStorage.getItem(AIDE_LOG_KEY) || '{}');
+    const raw = loadJSON(AIDE_LOG_KEY, {});
     return raw.date === today ? raw : { date: today, entries: [] };
   } catch { return { date: new Date().toDateString(), entries: [] }; }
 }
@@ -7536,7 +7598,7 @@ function getAideLog() {
 function logAideEntry(source, feeling) {
   const log = getAideLog();
   log.entries.push({ source, feeling, t: Date.now() });
-  localStorage.setItem(AIDE_LOG_KEY, JSON.stringify(log));
+  saveJSON(AIDE_LOG_KEY, log);
   refreshAideBadge();
 }
 
@@ -7679,7 +7741,7 @@ function playTimerEndSound() {
 function onSessionTimerEnd() {
   _flushSessionFocusMin();
   renderLandingStats();
-  clearInterval(tInterval);
+  stopManagedInterval('session');
   tRunning = false;
   tEndTimestamp = null;
   document.getElementById('t-toggle').textContent = '▶ Rejouer';
@@ -7696,7 +7758,7 @@ function onSessionTimerEnd() {
 }
 function onFtTimerEnd() {
   if (ftRunning) { addTodayStats({ focusMin: Math.floor((ftDuration - ftRemain) / 60) }); renderLandingStats(); }
-  clearInterval(ftInterval);
+  stopManagedInterval('free');
   ftRunning = false;
   ftEndTimestamp = null;
   document.getElementById('ft-num').textContent = '✓';
@@ -7782,7 +7844,7 @@ function showDemarrageModal() {
 function getBehaviorData() {
   const today = new Date().toDateString();
   try {
-    const raw = JSON.parse(localStorage.getItem('ft_focus_behavior') || '{}');
+    const raw = loadJSON('ft_focus_behavior', {});
     if (raw.date !== today) return { date: today, events: [] };
     return raw;
   } catch(e) { return { date: today, events: [] }; }
@@ -7792,7 +7854,7 @@ function addBehaviorEvent(type, value) {
   const data = getBehaviorData();
   data.events.push({ type, value: value || 0, ts: Date.now() });
   if (data.events.length > 20) data.events = data.events.slice(-20);
-  localStorage.setItem('ft_focus_behavior', JSON.stringify(data));
+  saveJSON('ft_focus_behavior', data);
   updateFocusRing();
 }
 
@@ -7904,11 +7966,11 @@ function showFocusCheckIn(source) {
 function getFocusSupplTaken() {
   const today = new Date().toDateString();
   if (localStorage.getItem('ft_suppl_date') !== today) return [];
-  return JSON.parse(localStorage.getItem('ft_suppl_taken') || '[]');
+  return loadJSON('ft_suppl_taken', []);
 }
 function setFocusSupplTaken(arr) {
   localStorage.setItem('ft_suppl_date', new Date().toDateString());
-  localStorage.setItem('ft_suppl_taken', JSON.stringify(arr));
+  saveJSON('ft_suppl_taken', arr);
 }
 
 // ── Tracking temps continu ──
@@ -8032,7 +8094,7 @@ function getInteractions(compoundNames) {
 // ── Autres médicaments (localStorage, reset quotidien) ──
 function getOtherMeds() {
   try {
-    const d = JSON.parse(localStorage.getItem('ft_other_meds') || '{"date":"","list":[]}');
+    const d = loadJSON('ft_other_meds', { date: '', list: [] });
     if (d.date !== new Date().toDateString()) return { date: new Date().toDateString(), list: [] };
     return d;
   } catch(e) { return { date: new Date().toDateString(), list: [] }; }
@@ -8040,106 +8102,7 @@ function getOtherMeds() {
 function toggleOtherMed(name) {
   const d = getOtherMeds();
   d.list = d.list.includes(name) ? d.list.filter(n => n !== name) : [...d.list, name];
-  localStorage.setItem('ft_other_meds', JSON.stringify(d));
-}
-function getOtherMedNames() { return getOtherMeds().list; }
-
-// ── Base de données des composés (effets sur focus/énergie/anxiété) ──
-// focus/energie/anxiete : valeur relative −10..+10
-const COMPOUND_DB = {
-  'Café':       { emoji:'☕', cat:'boisson', focus:+2, energie:+3, anxiete:+1, duree:'4-6h',     note:'Bloque l\'adénosine → vigilance. Crash à 4-6h.' },
-  'Matcha':     { emoji:'🍵', cat:'boisson', focus:+3, energie:+2, anxiete:-1, duree:'5-7h',     note:'Caféine + L-théanine naturelle → focus calme et soutenu.' },
-  'Red Bull':   { emoji:'🐂', cat:'boisson', focus:+2, energie:+5, anxiete:+3, duree:'2-3h',     note:'Pic rapide, crash sévère. ⚠️ Contre-indiqué avec Ritalin.' },
-  'Holy Energy':{ emoji:'⚡', cat:'boisson', focus:+2, energie:+4, anxiete:+2, duree:'2-3h',     note:'Similaire Red Bull. ⚠️ Trop stimulant avec Ritalin.' },
-  'Eau froide': { emoji:'💧', cat:'boisson', focus:+1, energie:+1, anxiete: 0, duree:'30 min',   note:'Déshydratation −10% cognition — l\'eau restaure.' },
-  'Oméga-3':    { emoji:'🐟', cat:'suppl',  focus:+2, energie:+1, anxiete:-1, duree:'cumulatif', note:'Soutient la membrane neuronale et la synthèse de dopamine. Effet à long terme.' },
-  'Oméga 3':    { emoji:'🐟', cat:'suppl',  focus:+2, energie:+1, anxiete:-1, duree:'cumulatif', note:'Soutient la membrane neuronale et la synthèse de dopamine. Effet à long terme.' },
-  'Magnésium':  { emoji:'🪨', cat:'suppl',  focus:+1, energie:+1, anxiete:-2, duree:'4-8h',      note:'Réduit hyperactivité et rebound Ritalin. Déficience fréquente en TDAH.' },
-  'Zinc':       { emoji:'⚗️', cat:'suppl',  focus:+2, energie:+1, anxiete:-1, duree:'cumulatif', note:'Cofacteur dopamine. Potentialise légèrement le méthylphénidate.' },
-  'L-Théanine': { emoji:'🍃', cat:'suppl',  focus:+2, energie: 0, anxiete:-3, duree:'3-4h',      note:'Acide aminé du thé. Synergique avec caféine. Réduit l\'anxiété liée au Ritalin.' },
-  'Rhodiola':   { emoji:'🌿', cat:'suppl',  focus:+2, energie:+3, anxiete:-2, duree:'4-6h',      note:'Adaptogène. Réduit fatigue mentale. Léger effet stimulant — surveiller avec Ritalin.' },
-  'Choline':    { emoji:'🥚', cat:'suppl',  focus:+3, energie:+1, anxiete: 0, duree:'cumulatif', note:'Précurseur acétylcholine → mémoire de travail. Souvent faible chez TDAH.' },
-  'Vitamine D': { emoji:'☀️', cat:'suppl',  focus:+1, energie:+1, anxiete:-1, duree:'cumulatif', note:'Déficience très fréquente en TDAH. Modulation dopaminergique.' },
-  'Vitamine B': { emoji:'🅱️', cat:'suppl',  focus:+1, energie:+1, anxiete:-1, duree:'cumulatif', note:'B6/B12/folate : cofacteurs synthèse dopamine et sérotonine.' },
-  'Ritalin IR': { emoji:'💊', cat:'med',    focus:+8, energie:+5, anxiete:+2, duree:'4-5h',      note:'Méthylphénidate IR. Bloque recapture dopamine/norépinéphrine. Pic à 1-2h.' },
-  'Ritalin LP': { emoji:'💊', cat:'med',    focus:+7, energie:+4, anxiete:+1, duree:'8-12h',     note:'Méthylphénidate LP (Concerta). Libération biphasique, profil plus stable.' },
-};
-
-// ── Autres médicaments (influencent la concentration) ──
-const OTHER_MEDS_DEF = [
-  { name:'Antihistaminique sédatif',   emoji:'💊', focusBrut:-5, energie:-4, surcharge:+2, note:'1ère génération (Phénergan, etc.). Forte sédation, ⚠️ antagonise partiellement le Ritalin.' },
-  { name:'Antihistaminique (2e gén.)', emoji:'💊', focusBrut:-1, energie:-1, surcharge: 0, note:'Loratadine, cétirizine. Peu d\'impact cognitif comparé à la 1ère génération.' },
-  { name:'Ibuprofène',                 emoji:'💊', focusBrut: 0, energie: 0, surcharge: 0, note:'AINS. Neutre pour la concentration. Peut réduire légèrement l\'anxiété si douleur.' },
-  { name:'Paracétamol',                emoji:'💊', focusBrut: 0, energie: 0, surcharge: 0, note:'Antalgique. Neutre. Possible légère émousse émotionnelle à haute dose.' },
-  { name:'Bêta-bloquant',             emoji:'💊', focusBrut:+1, energie:-1, surcharge:-3, note:'Propranolol. Réduit anxiété de performance. Utile avant présentations. Compatible Ritalin.' },
-  { name:'Benzodiazépine',            emoji:'💊', focusBrut:-6, energie:-5, surcharge:-4, note:'Xanax, Valium. Fort impact cognitif négatif. Altère mémoire de travail. Contre-indiqué avec Ritalin.' },
-  { name:'ISRS / IRSN',              emoji:'💊', focusBrut:+1, energie: 0, surcharge:-2, note:'Antidépresseurs (Prozac, Zoloft, Effexor). Compatibles avec Ritalin. Premières semaines : agitation possible.' },
-  { name:'Mélatonine (jour)',         emoji:'🌙', focusBrut:-4, energie:-4, surcharge: 0, note:'Hormone du sommeil. Si pris le jour : forte somnolence. Réservé au coucher.' },
-  { name:'Corticoïde',               emoji:'💊', focusBrut:+2, energie:+3, surcharge:+4, note:'Prednisone, cortisone. ⚠️ Peut causer agitation/hyperactivité, amplifié par Ritalin.' },
-];
-
-// ── Interactions entre paires de composés ──
-const INTERACTION_PAIRS = [
-  { a:'Ritalin IR',  b:'Café',          level:'caution', msg:'Peut amplifier anxiété et palpitations — 1 café max.' },
-  { a:'Ritalin LP',  b:'Café',          level:'caution', msg:'Surveille l\'anxiété. Limite à 1 café.' },
-  { a:'Ritalin IR',  b:'Red Bull',      level:'danger',  msg:'Trop de stimulants — risque cardiovasculaire réel.' },
-  { a:'Ritalin LP',  b:'Red Bull',      level:'danger',  msg:'Trop de stimulants — risque cardiovasculaire réel.' },
-  { a:'Ritalin IR',  b:'Holy Energy',   level:'danger',  msg:'Même risque que Red Bull — trop de stimulants.' },
-  { a:'Ritalin LP',  b:'Holy Energy',   level:'danger',  msg:'Même risque que Red Bull — trop de stimulants.' },
-  { a:'Ritalin IR',  b:'Matcha',        level:'good',    msg:'L-théanine du matcha adoucit les effets — bonne combinaison.' },
-  { a:'Ritalin LP',  b:'Matcha',        level:'good',    msg:'Compatible — L-théanine réduit l\'anxiété de fin de dose.' },
-  { a:'Ritalin IR',  b:'Magnésium',     level:'good',    msg:'Réduit le crash et l\'anxiété en fin de dose — recommandé.' },
-  { a:'Ritalin LP',  b:'Magnésium',     level:'good',    msg:'Réduit l\'anxiété de fin de dose — recommandé.' },
-  { a:'Ritalin IR',  b:'L-Théanine',    level:'good',    msg:'Réduit l\'anxiété sans diminuer l\'effet du Ritalin.' },
-  { a:'Ritalin LP',  b:'L-Théanine',    level:'good',    msg:'Réduit l\'anxiété sans diminuer l\'effet du Ritalin.' },
-  { a:'Ritalin IR',  b:'Zinc',          level:'good',    msg:'Zinc potentialise légèrement le méthylphénidate.' },
-  { a:'Ritalin LP',  b:'Zinc',          level:'good',    msg:'Zinc potentialise légèrement le méthylphénidate.' },
-  { a:'Ritalin IR',  b:'Rhodiola',      level:'caution', msg:'Deux stimulants — surveille la tension et l\'anxiété.' },
-  { a:'Ritalin LP',  b:'Rhodiola',      level:'caution', msg:'Deux stimulants — surveille la tension et l\'anxiété.' },
-  { a:'Ritalin IR',  b:'Benzodiazépine',level:'caution', msg:'Se contre-balancent : l\'un stimule, l\'autre sédationne — consulte ton médecin.' },
-  { a:'Ritalin LP',  b:'Benzodiazépine',level:'caution', msg:'Se contre-balancent — consulte ton médecin.' },
-  { a:'Ritalin IR',  b:'Antihistaminique sédatif', level:'caution', msg:'L\'antihistaminique peut partiellement bloquer l\'effet du Ritalin.' },
-  { a:'Ritalin LP',  b:'Antihistaminique sédatif', level:'caution', msg:'L\'antihistaminique peut partiellement bloquer l\'effet du Ritalin.' },
-  { a:'Ritalin IR',  b:'Corticoïde',    level:'caution', msg:'Peut causer forte agitation et hyperactivité — surveille.' },
-  { a:'Ritalin LP',  b:'Corticoïde',    level:'caution', msg:'Peut causer forte agitation et hyperactivité — surveille.' },
-  { a:'Ritalin IR',  b:'ISRS / IRSN',  level:'neutral', msg:'Généralement compatible. Surveille lors des premières semaines.' },
-  { a:'Ritalin LP',  b:'ISRS / IRSN',  level:'neutral', msg:'Généralement compatible. Surveille lors des premières semaines.' },
-  { a:'Ritalin IR',  b:'Mélatonine (jour)', level:'caution', msg:'Mélatonine de jour = forte somnolence qui annule le Ritalin.' },
-  { a:'Ritalin LP',  b:'Mélatonine (jour)', level:'caution', msg:'Mélatonine de jour = forte somnolence qui annule le Ritalin.' },
-  { a:'Café',        b:'Matcha',        level:'caution', msg:'Double dose de caféine — surveille anxiété et palpitations.' },
-  { a:'Café',        b:'Red Bull',      level:'danger',  msg:'Triple caféine — risque cardiovasculaire réel.' },
-  { a:'Café',        b:'L-Théanine',    level:'good',    msg:'Combinaison classique (2:1 L-théanine:caféine) — focus calme et soutenu.' },
-  { a:'Café',        b:'Benzodiazépine',level:'neutral', msg:'Se neutralisent partiellement.' },
-  { a:'Matcha',      b:'Red Bull',      level:'caution', msg:'Double source de caféine + taurine — surveille.' },
-  { a:'Red Bull',    b:'Holy Energy',   level:'danger',  msg:'Deux energy drinks = surdose de caféine + taurine — évite.' },
-  { a:'Magnésium',   b:'Benzodiazépine',level:'neutral', msg:'Magnésium peut légèrement renforcer l\'effet sédatif.' },
-  { a:'Café',        b:'Mélatonine (jour)', level:'neutral', msg:'Se contre-balancent : stimulant vs sédatif.' },
-];
-
-function getInteractions(compoundNames) {
-  const results = [];
-  INTERACTION_PAIRS.forEach(pair => {
-    const hasA = compoundNames.some(n => n === pair.a || n === pair.b);
-    const hasB = compoundNames.some(n => n === (hasA && n === pair.a ? pair.b : pair.a));
-    if (compoundNames.includes(pair.a) && compoundNames.includes(pair.b)) {
-      results.push(pair);
-    }
-  });
-  return results;
-}
-
-// ── Autres médicaments (localStorage, reset quotidien) ──
-function getOtherMeds() {
-  try {
-    const d = JSON.parse(localStorage.getItem('ft_other_meds') || '{"date":"","list":[]}');
-    if (d.date !== new Date().toDateString()) return { date: new Date().toDateString(), list: [] };
-    return d;
-  } catch(e) { return { date: new Date().toDateString(), list: [] }; }
-}
-function toggleOtherMed(name) {
-  const d = getOtherMeds();
-  d.list = d.list.includes(name) ? d.list.filter(n => n !== name) : [...d.list, name];
-  localStorage.setItem('ft_other_meds', JSON.stringify(d));
+  saveJSON('ft_other_meds', d);
 }
 function getOtherMedNames() { return getOtherMeds().list; }
 
@@ -8173,31 +8136,31 @@ const DRINK_PHASE_EFFECTS = {
 // ── Boissons (liste) ──
 function getDrinks() {
   try {
-    const arr = JSON.parse(localStorage.getItem('ft_drinks') || '[]');
+    const arr = loadJSON('ft_drinks', []);
     // Migration depuis l'ancien format ft_drink_taken
     if (!arr.length) {
-      const old = JSON.parse(localStorage.getItem('ft_drink_taken') || 'null');
-      if (old) { arr.push(old); localStorage.setItem('ft_drinks', JSON.stringify(arr)); }
+      const old = loadJSON('ft_drink_taken', null);
+      if (old) { arr.push(old); saveJSON('ft_drinks', arr); }
     }
     return arr;
   } catch(e) { return []; }
 }
 function addDrink(name) {
   const arr = getDrinks(); arr.push({ name, ts: Date.now() });
-  localStorage.setItem('ft_drinks', JSON.stringify(arr));
+  saveJSON('ft_drinks', arr);
 }
 function removeDrink(name) {
   const arr = getDrinks();
   const idx = arr.map(x => x.name).lastIndexOf(name);
-  if (idx !== -1) { arr.splice(idx, 1); localStorage.setItem('ft_drinks', JSON.stringify(arr)); }
+  if (idx !== -1) { arr.splice(idx, 1); saveJSON('ft_drinks', arr); }
 }
 
 // ── Sommeil ──
 function getSleep() {
-  try { return JSON.parse(localStorage.getItem('ft_sleep') || '{}'); } catch(e) { return {}; }
+  return loadJSON('ft_sleep', {});
 }
 function setSleep(data) {
-  localStorage.setItem('ft_sleep', JSON.stringify({ ...getSleep(), ...data }));
+  saveJSON('ft_sleep', { ...getSleep(), ...data });
 }
 function computeSleepHours(wakeTime, sleepTime) {
   if (!wakeTime || !sleepTime) return null;
@@ -8865,7 +8828,7 @@ function openFocusPanel() {
 
 document.getElementById('focus-level-ring').onclick = openFocusPanel;
 updateFocusRing();
-setInterval(() => {
+startManagedInterval('focusRing', () => {
   updateFocusRing();
   if (!continuousFocusStartTs) return;
   const elapsedMin = (Date.now() - continuousFocusStartTs) / 60000;
@@ -9288,18 +9251,18 @@ function showBlockedTransition(activity) {
   // Timer
   transitionTimerSec = 10 * 60;
   transitionActivityIdx = 0;
-  clearInterval(transitionTimerInterval);
-  clearInterval(transitionActivityTimerInterval);
+  stopManagedInterval('transition');
+  stopManagedInterval('transitionActivity');
 
   renderTransitionTimer();
   renderTransitionActivity();
 
-  transitionTimerInterval = setInterval(() => {
+  transitionTimerInterval = startManagedInterval('transition', () => {
     transitionTimerSec--;
     renderTransitionTimer();
     if (transitionTimerSec <= 0) {
-      clearInterval(transitionTimerInterval);
-      clearInterval(transitionActivityTimerInterval);
+      stopManagedInterval('transition');
+      stopManagedInterval('transitionActivity');
       document.getElementById('transition-timer-num').textContent = '✓ Prêt !';
       document.getElementById('transition-timer-bar').style.width = '0%';
       document.getElementById('btn-transition-skip').textContent = '🚀 Lancer la tâche !';
@@ -9308,7 +9271,7 @@ function showBlockedTransition(activity) {
 
   // Rotate activities every ~2 min
   let actSwitchAt = 120;
-  transitionActivityTimerInterval = setInterval(() => {
+  transitionActivityTimerInterval = startManagedInterval('transitionActivity', () => {
     actSwitchAt--;
     if (actSwitchAt <= 0) {
       transitionActivityIdx = (transitionActivityIdx + 1) % TRANSITION_ACTIVITIES.length;
@@ -9339,8 +9302,8 @@ function renderTransitionActivity() {
 }
 
 function clearTransitionTimers() {
-  clearInterval(transitionTimerInterval);
-  clearInterval(transitionActivityTimerInterval);
+  stopManagedInterval('transition');
+  stopManagedInterval('transitionActivity');
 }
 
 function showBlockedV2(from) {
@@ -9572,7 +9535,7 @@ function togglePanicMicroTimer() {
   } else {
     maybeAskFocus();
     panicMicroRunning = true;
-    panicMicroTimerInterval = setInterval(() => {
+    panicMicroTimerInterval = startManagedInterval('panicMicro', () => {
       panicMicroTimerSec--;
       renderPanicMicroTimer();
       if (panicMicroTimerSec <= 0) {
@@ -9586,7 +9549,7 @@ function togglePanicMicroTimer() {
 }
 
 function clearPanicMicroTimer() {
-  clearInterval(panicMicroTimerInterval);
+  stopManagedInterval('panicMicro');
   panicMicroRunning = false;
 }
 
@@ -9633,16 +9596,16 @@ function renderPanicTimer() {
 
 function togglePanicTimer() {
   if (panicTimerRunning) {
-    clearInterval(panicTimerInterval);
+    stopManagedInterval('panic');
     panicTimerRunning = false;
   } else {
     maybeAskFocus();
     panicTimerRunning = true;
-    panicTimerInterval = setInterval(() => {
+    panicTimerInterval = startManagedInterval('panic', () => {
       panicTimerSec--;
       renderPanicTimer();
       if (panicTimerSec <= 0) {
-        clearInterval(panicTimerInterval);
+        stopManagedInterval('panic');
         panicTimerRunning = false;
         panicTimerSec = 0;
         renderPanicTimer();
@@ -9655,7 +9618,7 @@ function togglePanicTimer() {
 }
 
 function resetPanicTimer(autoStart) {
-  clearInterval(panicTimerInterval);
+  stopManagedInterval('panic');
   panicTimerRunning = false;
   panicTimerSec = PANIC_DURATION;
   renderPanicTimer();
@@ -9663,7 +9626,7 @@ function resetPanicTimer(autoStart) {
 }
 
 function clearPanicTimer() {
-  clearInterval(panicTimerInterval);
+  stopManagedInterval('panic');
   panicTimerRunning = false;
 }
 
@@ -9724,15 +9687,15 @@ function startResetStep(step) {
         <div class="action-timer-track"><div class="action-timer-bar" id="rc-stretch-bar" style="width:100%"></div></div>
         <button class="reset-complete-btn" id="rc-stretch-skip">Passer →</button>
       </div>`;
-    const iv = setInterval(() => {
+    const iv = startManagedInterval('resetStretch', () => {
       sec--;
       document.getElementById('rc-stretch-num').textContent = fmt(sec);
       const pct = (sec / 30) * 100;
       const bar = document.getElementById('rc-stretch-bar');
       if (bar) bar.style.width = pct + '%';
-      if (sec <= 0) { clearInterval(iv); completeResetStep('stretch'); }
+      if (sec <= 0) { stopManagedInterval('resetStretch'); completeResetStep('stretch'); }
     }, 1000);
-    document.getElementById('rc-stretch-skip').onclick = () => { clearInterval(iv); completeResetStep('stretch'); };
+    document.getElementById('rc-stretch-skip').onclick = () => { stopManagedInterval('resetStretch'); completeResetStep('stretch'); };
   } else if (step === 'water') {
     activeEl.innerHTML = `
       <div class="reset-active-card" style="text-align:center">
@@ -9764,7 +9727,7 @@ const RC_BREATH = { inhale:{label:'Inspire…',dur:4,cls:'expand',next:'hold'}, 
 function startResetBreath() {
   rcBreathPhase = 'inhale'; rcBreathCount = 4; rcBreathCycles = 0;
   updateRCBreath();
-  rcBreathInterval = setInterval(() => {
+  rcBreathInterval = startManagedInterval('resetBreath', () => {
     rcBreathCount--;
     const countEl = document.getElementById('rc-count');
     if (countEl) countEl.textContent = rcBreathCount;
@@ -9777,7 +9740,7 @@ function startResetBreath() {
         const dot = document.getElementById('rc-d' + (rcBreathCycles - 1));
         if (dot) dot.classList.add('done');
         if (rcBreathCycles >= 3) {
-          clearInterval(rcBreathInterval);
+          stopManagedInterval('resetBreath');
           completeResetStep('breath');
           return;
         }
@@ -9799,7 +9762,7 @@ function updateRCBreath() {
 }
 
 function completeResetStep(step, victoryText) {
-  clearInterval(rcBreathInterval);
+  stopManagedInterval('resetBreath');
   const idx = RESET_STEPS.indexOf(step);
   const stepEl = document.getElementById('rs-' + step);
   if (stepEl) stepEl.classList.add('done');
@@ -9947,14 +9910,14 @@ const SUPPL_DRINK_DURATION = 5 * 60;
 
 function startSupplDrinkTimer(drink) {
   clearSupplDrinkTimer();
-  localStorage.setItem('ft_drink_taken', JSON.stringify({ name: drink.label, ts: Date.now() }));
+  saveJSON('ft_drink_taken', { name: drink.label, ts: Date.now() });
   updateFocusRing();
   document.getElementById('suppl-drink-chosen').textContent = drink.emoji + ' ' + drink.label + ' — prépare-toi !';
   document.getElementById('suppl-drink-choice').style.display = 'none';
   document.getElementById('suppl-drink-timer').style.display = 'block';
   supplDrinkTimerSec = SUPPL_DRINK_DURATION;
   renderSupplDrinkTimer();
-  supplDrinkTimerInterval = setInterval(() => {
+  supplDrinkTimerInterval = startManagedInterval('supplementDrink', () => {
     supplDrinkTimerSec--;
     renderSupplDrinkTimer();
     if (supplDrinkTimerSec <= 0) {
@@ -9973,7 +9936,7 @@ function renderSupplDrinkTimer() {
 }
 
 function clearSupplDrinkTimer() {
-  clearInterval(supplDrinkTimerInterval);
+  stopManagedInterval('supplementDrink');
   supplDrinkTimerInterval = null;
 }
 
@@ -10007,8 +9970,10 @@ function showBlockedStrategies() {
 
 // ── Lancer une stratégie ──
 function startStrategy(id) {
-  clearInterval(breathInterval); clearInterval(pauseInterval);
-  clearInterval(stretchInterval); clearInterval(twoMinInterval);
+  stopManagedInterval('breathing');
+  stopManagedInterval('pause');
+  stopManagedInterval('stretch');
+  stopManagedInterval('twoMinute');
   show('blocked-action');
   if      (id === 'breathing') startBreathing();
   else if (id === 'pause')     startPause(300);
@@ -10025,7 +9990,7 @@ const BREATH_TOTAL = 3;
 function startBreathing() {
   breathPhase = 'inhale'; breathCount = 4; breathCycles = 0;
   renderBreath();
-  breathInterval = setInterval(() => {
+  breathInterval = startManagedInterval('breathing', () => {
     breathCount--;
     const countEl = document.getElementById('breath-count');
     const phaseEl = document.getElementById('breath-phase');
@@ -10036,7 +10001,7 @@ function startBreathing() {
       const nxt = BREATH_PHASES[breathPhase].next;
       breathPhase = nxt;
       if (nxt === 'inhale') breathCycles++;
-      if (breathCycles >= BREATH_TOTAL) { clearInterval(breathInterval); showDone('breathing'); return; }
+      if (breathCycles >= BREATH_TOTAL) { stopManagedInterval('breathing'); showDone('breathing'); return; }
       breathCount = BREATH_PHASES[breathPhase].dur;
       renderBreath();
     }
@@ -10066,12 +10031,12 @@ let pauseRemain = 300;
 function startPause(sec) {
   pauseRemain = sec;
   renderPause();
-  pauseInterval = setInterval(() => {
+  pauseInterval = startManagedInterval('pause', () => {
     pauseRemain--;
     const n = document.getElementById('pause-num'), b = document.getElementById('pause-bar');
     if (n) n.textContent = fmt(pauseRemain);
     if (b) b.style.width = (pauseRemain / sec * 100) + '%';
-    if (pauseRemain <= 0) { clearInterval(pauseInterval); showDone('pause'); }
+    if (pauseRemain <= 0) { stopManagedInterval('pause'); showDone('pause'); }
   }, 1000);
 }
 function renderPause() {
@@ -10088,7 +10053,7 @@ function renderPause() {
       <div style="font-size:14px">🌬️ Respire lentement, sans y penser</div>
     </div>
     <button class="btn-outline" id="pause-skip">Terminer maintenant</button>`;
-  document.getElementById('pause-skip').onclick = () => { clearInterval(pauseInterval); showDone('pause'); };
+  document.getElementById('pause-skip').onclick = () => { stopManagedInterval('pause'); showDone('pause'); };
 }
 
 // ── ÉTIREMENTS ──
@@ -10102,7 +10067,7 @@ let stretchIdx = 0, stretchRemain = 0;
 
 function startStretch() { stretchIdx = 0; nextStretch(); }
 function nextStretch() {
-  clearInterval(stretchInterval);
+  stopManagedInterval('stretch');
   if (stretchIdx >= STRETCHES.length) { showDone('stretch'); return; }
   const s = STRETCHES[stretchIdx]; stretchRemain = s.dur;
   const dots = STRETCHES.map((_,i) =>
@@ -10119,13 +10084,13 @@ function nextStretch() {
     <div class="action-timer-track"><div class="action-timer-bar" id="stretch-bar" style="width:100%"></div></div>
     <div style="display:flex;gap:8px;justify-content:center;margin-bottom:18px">${dots}</div>
     <button class="btn" id="stretch-next">Suivant →</button>`;
-  document.getElementById('stretch-next').onclick = () => { clearInterval(stretchInterval); stretchIdx++; nextStretch(); };
-  stretchInterval = setInterval(() => {
+  document.getElementById('stretch-next').onclick = () => { stopManagedInterval('stretch'); stretchIdx++; nextStretch(); };
+  stretchInterval = startManagedInterval('stretch', () => {
     stretchRemain--;
     const n = document.getElementById('stretch-num'), b = document.getElementById('stretch-bar');
     if (n) n.textContent = stretchRemain + 's';
     if (b) b.style.width = (stretchRemain / s.dur * 100) + '%';
-    if (stretchRemain <= 0) { clearInterval(stretchInterval); stretchIdx++; nextStretch(); }
+    if (stretchRemain <= 0) { stopManagedInterval('stretch'); stretchIdx++; nextStretch(); }
   }, 1000);
 }
 
@@ -10146,7 +10111,7 @@ function start2MinRule() {
   input.focus();
 }
 function run2Min(sec) {
-  clearInterval(twoMinInterval);
+  stopManagedInterval('twoMinute');
   twoMinRemain = twoMinTotal = sec;
   document.getElementById('blocked-action-content').innerHTML = `
     <div style="background:rgba(124,92,252,.08);border:1.5px solid rgba(124,92,252,.2);border-radius:16px;padding:16px 18px;margin-bottom:22px">
@@ -10156,13 +10121,13 @@ function run2Min(sec) {
     <div class="action-timer-num" id="twomin-num">${fmt(twoMinRemain)}</div>
     <div class="action-timer-track"><div class="action-timer-bar" id="twomin-bar" style="width:100%"></div></div>
     <button class="btn-outline" id="twomin-early">✓ C'est fait avant la fin !</button>`;
-  document.getElementById('twomin-early').onclick = () => { clearInterval(twoMinInterval); done2Min(); };
-  twoMinInterval = setInterval(() => {
+  document.getElementById('twomin-early').onclick = () => { stopManagedInterval('twoMinute'); done2Min(); };
+  twoMinInterval = startManagedInterval('twoMinute', () => {
     twoMinRemain--;
     const n = document.getElementById('twomin-num'), b = document.getElementById('twomin-bar');
     if (n) n.textContent = fmt(twoMinRemain);
     if (b) b.style.width = (twoMinRemain / twoMinTotal * 100) + '%';
-    if (twoMinRemain <= 0) { clearInterval(twoMinInterval); done2Min(); }
+    if (twoMinRemain <= 0) { stopManagedInterval('twoMinute'); done2Min(); }
   }, 1000);
 }
 function done2Min() {
@@ -10236,8 +10201,10 @@ document.getElementById('back-blocked-strategies').onclick = () => {
   else show('blocked-energy');
 };
 document.getElementById('back-blocked-action').onclick  = () => {
-  clearInterval(breathInterval); clearInterval(pauseInterval);
-  clearInterval(stretchInterval); clearInterval(twoMinInterval);
+  stopManagedInterval('breathing');
+  stopManagedInterval('pause');
+  stopManagedInterval('stretch');
+  stopManagedInterval('twoMinute');
   show(blockedStrategiesScreen);
 };
 document.getElementById('back-blocked-type').onclick    = () => show('aide-menu');
@@ -10711,11 +10678,11 @@ function showEndOfDay() {
 function getDailyPlan() {
   const today = new Date().toDateString();
   try {
-    const saved = JSON.parse(localStorage.getItem('ft_daily_plan') || '{"date":"","items":[]}');
+    const saved = loadJSON('ft_daily_plan', { date: '', items: [] });
     return saved.date === today ? saved : { date: today, items: [] };
   } catch(e) { return { date: new Date().toDateString(), items: [] }; }
 }
-function saveDailyPlan(plan) { localStorage.setItem('ft_daily_plan', JSON.stringify(plan)); }
+function saveDailyPlan(plan) { saveJSON('ft_daily_plan', plan); }
 
 function renderDailyPlanPreview() {
   const wrap = document.getElementById('home-plan-preview');
@@ -10828,9 +10795,9 @@ function showReentryModal() {
 // ── 1. AGENDA / DEADLINES ─────────────────────
 
 function getDeadlines() {
-  try { return JSON.parse(localStorage.getItem('ft_deadlines') || '{}'); } catch(e) { return {}; }
+  return loadJSON('ft_deadlines', {});
 }
-function saveDeadlines(obj) { localStorage.setItem('ft_deadlines', JSON.stringify(obj)); }
+function saveDeadlines(obj) { saveJSON('ft_deadlines', obj); }
 
 function setProjectDeadline(projId, isoDate) {
   const d = getDeadlines();
@@ -11274,18 +11241,18 @@ function showOpeningRitual(callback) {
     </div>`;
   document.body.appendChild(bd);
   let count = 30;
-  const interval = setInterval(() => {
+  const interval = startManagedInterval('openingRitual', () => {
     count--;
     const el = document.getElementById('ritual-countdown');
     if (el) el.textContent = count;
     if (count <= 0) {
-      clearInterval(interval);
+      stopManagedInterval('openingRitual');
       bd.remove();
       if (callback) callback();
     }
   }, 1000);
   document.getElementById('ritual-skip').onclick = () => {
-    clearInterval(interval);
+    stopManagedInterval('openingRitual');
     bd.remove();
     if (callback) callback();
   };
@@ -11322,9 +11289,9 @@ function showClosingRitual() {
   document.getElementById('closing-done').onclick = () => {
     const note = document.getElementById('closing-note').value.trim();
     if (note) {
-      const history = JSON.parse(localStorage.getItem('ft_closing_notes') || '[]');
+      const history = loadJSON('ft_closing_notes', []);
       history.unshift({ date: new Date().toDateString(), note });
-      localStorage.setItem('ft_closing_notes', JSON.stringify(history.slice(0, 30)));
+      saveJSON('ft_closing_notes', history.slice(0, 30));
     }
     bd.remove();
     showDopamineToast('🌙 Bonne récupération ! À demain 👋', 3000);
@@ -11577,7 +11544,7 @@ function showYesterdayCard() {
   if (localStorage.getItem(shownKey)) return;
   const sessions = parseInt(localStorage.getItem('ft_sessions_' + yStr) || '0');
   const score = parseInt(localStorage.getItem('ft_score_' + yStr) || '0');
-  const closingNotes = JSON.parse(localStorage.getItem('ft_closing_notes') || '[]');
+  const closingNotes = loadJSON('ft_closing_notes', []);
   const note = closingNotes.find(n => n.date === yStr);
   if (!sessions && !score && !note) return;
   localStorage.setItem(shownKey, '1');
@@ -11595,7 +11562,7 @@ function showYesterdayCard() {
 // ── 10. INTENTION SI–ALORS ────────────────────
 
 function showIfThenBeforeTimer(projId, callback) {
-  const ifthen = JSON.parse(localStorage.getItem('ft_ifthen_' + projId) || 'null');
+  const ifthen = loadJSON('ft_ifthen_' + projId, null);
   if (!ifthen || (!ifthen.si && !ifthen.alors)) { if (callback) callback(); return; }
   const bd = document.createElement('div');
   bd.className = 'cat-modal-backdrop';
@@ -11618,7 +11585,7 @@ function showIfThenBeforeTimer(projId, callback) {
 // Store if-then when project is saved
 (function() {
   // Hook into finalizeProject or similar — apply pending data after project creation
-  const checkInterval = setInterval(() => {
+  const checkInterval = startManagedInterval('pendingProjectMetadata', () => {
     const pending = sessionStorage.getItem('ft_pending_ifthen');
     const pendingDl = sessionStorage.getItem('ft_pending_deadline');
     if (!pending && !pendingDl) return;
@@ -11635,7 +11602,7 @@ function showIfThenBeforeTimer(projId, callback) {
       sessionStorage.removeItem('ft_pending_deadline');
     }
   }, 2000);
-  setTimeout(() => clearInterval(checkInterval), 60000);
+  setTimeout(() => stopManagedInterval('pendingProjectMetadata'), 60000);
 })();
 
 // ── 11. INITIALISATION DES NOUVELLES FEATURES ─
@@ -11685,7 +11652,7 @@ function initNewFeatures() {
 })();
 
 // Update score tracking every 5 minutes
-setInterval(() => {
+startManagedInterval('dailyScore', () => {
   try {
     const today = new Date().toDateString();
     const score = calcFocusScore();
@@ -11702,8 +11669,7 @@ function _taskKey(projId, stepName) {
 }
 
 function getTaskProgress(projId, stepName) {
-  try { return JSON.parse(localStorage.getItem(_taskKey(projId, stepName)) || 'null') || { mins: 0, pct: null }; }
-  catch(e) { return { mins: 0, pct: null }; }
+  return loadJSON(_taskKey(projId, stepName), null) || { mins: 0, pct: null };
 }
 
 function saveTaskProgress(projId, stepName, addMins, pct) {
@@ -11714,7 +11680,7 @@ function saveTaskProgress(projId, stepName, addMins, pct) {
     pct:  pct !== undefined ? pct : cur.pct,
     updatedAt: Date.now(),
   };
-  localStorage.setItem(key, JSON.stringify(next));
+  saveJSON(key, next);
   return next;
 }
 
@@ -11951,8 +11917,7 @@ let currentDumpZone = 0;
 // ════════════════════════════════════════════════
 const FT_COG_PROFILE_KEY = 'ft_cog_profile';
 function getCogProfile() {
-  try { return JSON.parse(localStorage.getItem(FT_COG_PROFILE_KEY) || '{"byHour":{},"samples":0}'); }
-  catch(e) { return { byHour: {}, samples: 0 }; }
+  return loadJSON(FT_COG_PROFILE_KEY, { byHour: {}, samples: 0 });
 }
 function trackCognitiveProfile() {
   try {
@@ -11964,7 +11929,7 @@ function trackCognitiveProfile() {
     // garder les 40 dernières mesures par heure (≈ 2 semaines si 1/heure)
     if (p.byHour[h].length > 40) p.byHour[h].shift();
     p.samples = (p.samples || 0) + 1;
-    localStorage.setItem(FT_COG_PROFILE_KEY, JSON.stringify(p));
+    saveJSON(FT_COG_PROFILE_KEY, p);
   } catch(e) {}
 }
 function getPersonalPeakHours() {
@@ -11983,10 +11948,10 @@ function formatHour(h) { return h + 'h' + (h < 12 ? '' : h < 18 ? '' : ''); }
 // ─── 2. WORKING MEMORY BUFFER (mémoire externe) ───
 // ════════════════════════════════════════════════
 const FT_WMB_KEY = 'ft_wmb';
-function getWMB() { try { return JSON.parse(localStorage.getItem(FT_WMB_KEY)); } catch(e) { return null; } }
+function getWMB() { return loadJSON(FT_WMB_KEY, null); }
 function setWMB(task, micro, why) {
   if (!task) return;
-  localStorage.setItem(FT_WMB_KEY, JSON.stringify({ task, micro: micro || '', why: why || '', ts: Date.now() }));
+  saveJSON(FT_WMB_KEY, { task, micro: micro || '', why: why || '', ts: Date.now() });
   renderWMB();
 }
 function clearWMB() { localStorage.removeItem(FT_WMB_KEY); renderWMB(); }
@@ -12026,10 +11991,10 @@ function trackLandingVisit() {
   if (typeof ftRunning !== 'undefined' && ftRunning) return;
   try {
     const now = Date.now();
-    const raw = JSON.parse(localStorage.getItem(FT_IDLE_KEY) || '[]');
+    const raw = loadJSON(FT_IDLE_KEY, []);
     const recent = raw.filter(ts => now - ts < 40 * 60 * 1000); // 40 min window
     recent.push(now);
-    localStorage.setItem(FT_IDLE_KEY, JSON.stringify(recent));
+    saveJSON(FT_IDLE_KEY, recent);
     if (recent.length >= 4 && now - _lastProcrasIntervention > 18 * 60 * 1000) {
       setTimeout(maybeShowProcrastinationIntervention, 1200);
     }
@@ -12126,7 +12091,7 @@ function showTimerPrescreen(callback) {
       const val = btn.dataset.val, adj = +btn.dataset.adj, tip = btn.dataset.tip;
       bd.remove();
       addBehaviorEvent('prescreen_' + val);
-      localStorage.setItem('ft_prescreen_today', JSON.stringify({ val, adj, ts: Date.now() }));
+      saveJSON('ft_prescreen_today', { val, adj, ts: Date.now() });
       if (tip) showDopamineToast(tip, 3200);
       callback(val, adj);
     };
@@ -12186,10 +12151,9 @@ const RARITY_CONFIG = {
 
 // ── Storage ──
 function getBestiary() {
-  try { return JSON.parse(localStorage.getItem('ft_bestiary') || '{"owned":{},"guardian":null}'); }
-  catch(e) { return { owned: {}, guardian: null }; }
+  return loadJSON('ft_bestiary', { owned: {}, guardian: null });
 }
-function saveBestiary(b) { localStorage.setItem('ft_bestiary', JSON.stringify(b)); }
+function saveBestiary(b) { saveJSON('ft_bestiary', b); }
 
 function getActiveGuardianData() {
   const b = getBestiary();
@@ -12391,7 +12355,7 @@ function updateGuardianBadge() {
         case 'lion':       s.surcharge = Math.max(0, s.surcharge - Math.floor((Date.now() % 1200000) / 60000)); break;
         case 'cerf':       s.friction = Math.max(0, s.friction - 4); break;
         case 'serpent':    /* handled in reset cognitif event */ break;
-        case 'sirene':     { const ps = JSON.parse(localStorage.getItem('ft_prescreen_today') || '{}'); if (ps.val === 'pret') s.focusBrut += 5; break; }
+        case 'sirene':     { const ps = loadJSON('ft_prescreen_today', {}); if (ps.val === 'pret') s.focusBrut += 5; break; }
         case 'griffon':    /* handled in variableReward */ break;
         case 'dragonjade': s.focusBrut += 4; break;
         case 'fee':        /* handled in brain dump */ break;
@@ -12651,7 +12615,7 @@ function applyAdaptiveUI() {
 // I — Afficher "why" comme ancre si score chute brutalement
 (function() {
   let _prevScore = 0;
-  setInterval(() => {
+  startManagedInterval('focusDropWatch', () => {
     try {
       const score = calcFocusScore();
       if (_prevScore - score >= 12 && _prevScore > 0) {
@@ -12687,7 +12651,7 @@ function applyAdaptiveUI() {
   });
 
   // Pegase — marquer utilisation journalière quand score < 52
-  setInterval(() => {
+  startManagedInterval('pegaseWatch', () => {
     try {
       const g = getActiveGuardianData();
       if (g && g.id === 'pegase') {
