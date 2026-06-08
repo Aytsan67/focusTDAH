@@ -3328,7 +3328,7 @@ function getSettings() {
   }
 }
 function saveSettings(s) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  saveJSON(SETTINGS_KEY, s);
 }
 function getSeanceMicroOptions() { return getSettings().microPresets; }
 
@@ -3440,14 +3440,107 @@ function _showReboundBanner(slot, isRebound, minLeft) {
   }
 }
 
+// ─── HELPERS STOCKAGE ROBUSTE ───
+// Lecture tolérante aux pannes : un store corrompu (write interrompu, quota,
+// sync foireuse) ne doit jamais casser tout le rendu — on retombe sur le fallback.
+function loadJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw == null) return fallback;
+    const v = JSON.parse(raw);
+    return v == null ? fallback : v;
+  } catch (e) {
+    console.warn('loadJSON(' + key + ') corrompu → fallback :', e);
+    return fallback;
+  }
+}
+// Écriture sûre : capte QuotaExceededError au lieu d'échouer en silence.
+// Sans ce garde-fou, l'utilisateur croit avoir enregistré alors que tout est perdu.
+function saveJSON(key, val) {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+    return true;
+  } catch (e) {
+    const quota = e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
+    if (quota) {
+      // Dernier recours : purger le cache de progression (ft_tp_*, régénérable)
+      // puis réessayer une fois. On ne touche jamais aux tâches / projets / QT.
+      if (_freeStorageSpace()) {
+        try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e2) {}
+      }
+      _warnStorageFull();
+      return false;
+    }
+    console.warn('saveJSON(' + key + ') échec :', e);
+    return false;
+  }
+}
+// Purge des seules clés jetables (compteurs de temps par étape). true si on a libéré.
+function _freeStorageSpace() {
+  let freed = 0;
+  try {
+    const doomed = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf('ft_tp_') === 0) doomed.push(k);
+    }
+    doomed.forEach(k => { localStorage.removeItem(k); freed++; });
+  } catch (e) {}
+  return freed > 0;
+}
+// Bannière persistante : la mémoire est pleine et la dernière sauvegarde a échoué.
+let _storageWarnShown = false;
+function _warnStorageFull() {
+  if (_storageWarnShown) return;
+  _storageWarnShown = true;
+  try {
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;background:#b3261e;color:#fff;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.4;box-shadow:0 6px 24px rgba(0,0,0,.4)';
+    b.innerHTML = '⚠️ <strong>Mémoire de l\'appareil pleine.</strong> Ta dernière modification n\'a pas pu être sauvegardée. Supprime quelques anciennes tâches ou journaux pour libérer de la place.';
+    const x = document.createElement('button');
+    x.textContent = '✕';
+    x.style.cssText = 'float:right;background:none;border:none;color:#fff;font-size:16px;cursor:pointer;margin-left:8px';
+    x.onclick = () => { b.remove(); _storageWarnShown = false; };
+    b.appendChild(x);
+    document.body.appendChild(b);
+  } catch (e) { alert('Mémoire pleine : dernière sauvegarde échouée.'); }
+}
+// Échappement HTML : les noms/titres saisis sont injectés en innerHTML.
+// Un « < », « > » ou backtick non échappé casse le rendu (self-XSS / breakage).
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ─── STORAGE ───
 const STORE = 'tache_v3';
-const getProjectsRaw = () => JSON.parse(localStorage.getItem(STORE) || '[]');
+const getProjectsRaw = () => loadJSON(STORE, []);
 const getProjects    = () => getProjectsRaw();
-const saveProjects   = list => { localStorage.setItem(STORE, JSON.stringify(list)); scheduleSync(); };
+// Horodate les projets modifiés (updatedAt) → fusion multi-appareils « au plus récent »
+// plutôt qu'un « le cloud gagne toujours » qui effaçait les éditions locales.
+function _stampProjects(list) {
+  try {
+    const prev = {};
+    getProjectsRaw().forEach(p => { if (p && p.id != null) prev[p.id] = p; });
+    const now = Date.now();
+    const sig = n => JSON.stringify(Object.assign({}, n, { updatedAt: 0 }));
+    list.forEach(p => {
+      if (!p || p.id == null) return;
+      const old = prev[p.id];
+      if (!old) p.updatedAt = now;
+      else if (sig(p) !== sig(old)) p.updatedAt = now;
+      else p.updatedAt = old.updatedAt || now;
+    });
+  } catch (e) { /* horodatage best-effort */ }
+}
+const saveProjects   = list => { _stampProjects(list); saveJSON(STORE, list); scheduleSync(); };
 // Tombstone : IDs de projets supprimés (évite la résurrection multi-appareils)
-const getDeletedIds  = () => { try { return JSON.parse(localStorage.getItem('tache_deleted_ids') || '[]'); } catch(e) { return []; } };
-const addDeletedId   = id => { const ids = getDeletedIds(); if (!ids.includes(id)) { ids.push(id); localStorage.setItem('tache_deleted_ids', JSON.stringify(ids)); } };
+const getDeletedIds  = () => loadJSON('tache_deleted_ids', []);
+const addDeletedId   = id => { const ids = getDeletedIds(); if (!ids.includes(id)) { ids.push(id); saveJSON('tache_deleted_ids', ids); } };
 const getActiveId = () => localStorage.getItem('tache_active');
 const setActiveId = id => id ? localStorage.setItem('tache_active', id) : localStorage.removeItem('tache_active');
 
@@ -3460,12 +3553,12 @@ function show(id) {
 
 // ─── QUICK TODO ───
 function getQTRaw() {
-  try { return JSON.parse(localStorage.getItem('ft_quicktodo') || '[]'); } catch(e) { return []; }
+  return loadJSON('ft_quicktodo', []);
 }
 function getQT() { return getQTRaw(); }
 let _syncQTTimer = null;
 function saveQT(items) {
-  localStorage.setItem('ft_quicktodo', JSON.stringify(items));
+  saveJSON('ft_quicktodo', items);
   // Sync QT immediately (500 ms) — separate from the 2 s project sync
   if (FB_READY && _fbUser) {
     clearTimeout(_syncQTTimer);
@@ -3777,7 +3870,7 @@ function renderHome() {
     if (matchedSteps.length) {
       const hint = document.createElement('div');
       hint.style.cssText = 'padding:10px 14px;border-radius:14px;background:rgba(124,92,252,.07);border:1px solid rgba(124,92,252,.2);font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5';
-      hint.innerHTML = `${energyEmoji[suggestedEnergy]} <strong style="color:var(--text)">Adapté à ton énergie (${energyLabel[suggestedEnergy]})</strong><br>${matchedSteps.slice(0,2).map(m => `<span style="color:var(--accent)">${m.step}</span> — ${m.proj}`).join('<br>')}`;
+      hint.innerHTML = `${energyEmoji[suggestedEnergy]} <strong style="color:var(--text)">Adapté à ton énergie (${energyLabel[suggestedEnergy]})</strong><br>${matchedSteps.slice(0,2).map(m => `<span style="color:var(--accent)">${esc(m.step)}</span> — ${esc(m.proj)}`).join('<br>')}`;
       listEl.appendChild(hint);
     }
     projects.slice(0, 5).forEach(p => {
@@ -3788,8 +3881,8 @@ function renderHome() {
       btn.className = 'proj-card';
       btn.innerHTML =
         '<div class="proj-info">' +
-          '<div class="proj-name">' + p.name + '</div>' +
-          '<div class="proj-meta">' + energyDot + (energyDot ? ' ' : '') + (step ? step.name : 'Terminé ✓') + '</div>' +
+          '<div class="proj-name">' + esc(p.name) + '</div>' +
+          '<div class="proj-meta">' + energyDot + (energyDot ? ' ' : '') + (step ? esc(step.name) : 'Terminé ✓') + '</div>' +
           '<div class="mini-bar"><div class="mini-fill" style="width:' + pct + '%"></div></div>' +
         '</div>' +
         '<div class="ring" style="background:conic-gradient(var(--accent) ' + (pct * 3.6) + 'deg,var(--soft) 0)">' +
@@ -4277,7 +4370,7 @@ function openCheckin() {
     if (feelEnergyDone && currentStep) {
       emotionSection = `
         <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Cette tâche te semble… ?
-          <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:4px">${currentStep.name}</span>
+          <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:4px">${esc(currentStep.name)}</span>
         </div>
         <div class="ci-emotion-row">
           ${EMOTION_META.map((em, i) =>
@@ -4893,7 +4986,7 @@ document.getElementById('fo-categorie').onclick = function() {
     catList.forEach(function(cat) {
       var btn = document.createElement('button');
       btn.className = 'block-btn block-secondary';
-      btn.innerHTML = '<span class="b-title">' + cat.name + '</span><span class="b-sub">Ajouter des étapes dérivées des fichiers</span>';
+      btn.innerHTML = '<span class="b-title">' + esc(cat.name) + '</span><span class="b-sub">Ajouter des étapes dérivées des fichiers</span>';
       (function(cid) { btn.onclick = function() { foApplyCategory = cid; applyFileOptions(); }; })(cat.id);
       cats.appendChild(btn);
     });
@@ -5117,7 +5210,7 @@ function showSubcatPrompt(cat, proj, done) {
   sheet.innerHTML = `
     <div class="cat-modal-handle"></div>
     <h2 style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:8px">
-      Découper <em style="font-style:normal;${grad}">${cat.name}</em> ?
+      Découper <em style="font-style:normal;${grad}">${esc(cat.name)}</em> ?
     </h2>
     <p style="color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:20px">
       Veux-tu ajouter des <strong style="color:var(--text)">sous-étapes</strong> pour mieux découper le travail ? (une par ligne)
@@ -10724,7 +10817,7 @@ function renderAgenda() {
       div.className = 'agenda-item ' + (lbl ? lbl.cls : '');
       div.innerHTML = `
         <div style="flex:1">
-          <div class="agenda-item-name">${p.name || 'Sans nom'}</div>
+          <div class="agenda-item-name">${esc(p.name || 'Sans nom')}</div>
           <div class="agenda-item-meta">${new Date(deadlines[p.id]).toLocaleDateString('fr-FR', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}</div>
         </div>
         ${lbl ? `<span class="deadline-chip" style="background:${lbl.cls==='overdue'?'rgba(239,83,80,.15)':'rgba(255,167,38,.15)'};color:${lbl.cls==='overdue'?'#ef5350':'#ff9800'}">${lbl.text}</span>` : ''}
@@ -10745,7 +10838,7 @@ function renderAgenda() {
     row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--soft);border:1.5px solid var(--border);border-radius:12px;margin-bottom:8px';
     const existing = deadlines[p.id];
     row.innerHTML = `
-      <span style="font-size:13px;font-weight:600">${p.name||'Sans nom'}</span>
+      <span style="font-size:13px;font-weight:600">${esc(p.name||'Sans nom')}</span>
       <input type="datetime-local" data-proj="${p.id}" value="${existing||''}"
         style="font-size:12px;padding:4px 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text)">
     `;
@@ -10915,9 +11008,9 @@ function pickTaskForMe() {
   card.style.display = 'block';
   card.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">${focusHint}</div>
-    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">🎯 ${pick.name||'Projet'}</div>
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">🎯 ${esc(pick.name||'Projet')}</div>
     ${lbl ? `<span class="deadline-chip" style="background:rgba(255,167,38,.15);color:#ff9800;margin-bottom:8px;display:inline-block">${lbl.text}</span>` : ''}
-    <p style="font-size:13px;color:var(--muted);margin:6px 0 12px;line-height:1.5">${pick.goal||'Lance-toi sur ce projet.'}</p>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0 12px;line-height:1.5">${esc(pick.goal||'Lance-toi sur ce projet.')}</p>
     <button class="btn" id="pick-start-btn" style="font-size:14px;padding:12px">→ Démarrer ce projet</button>
     <button id="pick-other" style="background:none;border:none;color:var(--muted);font:600 12px 'DM Sans',sans-serif;padding:8px 0;cursor:pointer;display:block;width:100%;text-align:center;margin-top:6px">Autre choix</button>
   `;
@@ -11761,6 +11854,15 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 initAuth();
+
+// ── Fallback splash : si Firebase bloque ou ft_redirect_pending est coincé,
+//    on force l'écran auth après 6 secondes
+setTimeout(() => {
+  if (document.getElementById('splash').classList.contains('active')) {
+    localStorage.removeItem('ft_redirect_pending');
+    show('auth');
+  }
+}, 6000);
 
 // Load brain dump from localStorage (zone 0 by default)
 let currentDumpZone = 0;
