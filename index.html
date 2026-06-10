@@ -10379,6 +10379,7 @@ function showDumpGuideSummary() {
   const ts = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   textarea.value = (existing ? existing + '\n\n' : '') + '— ' + ts + ' —\n' + summary;
   localStorage.setItem('focustdah_brain_dump', textarea.value);
+  localStorage.setItem('ft_dump_' + currentDumpZone, textarea.value);
 
   document.getElementById('dg-finish').onclick = () => {
     hideDumpGuide();
@@ -10452,6 +10453,7 @@ function showDumpSorted() {
 document.getElementById('back-brain-dump').onclick      = () => { hideDumpGuide(); show('aide-menu'); };
 document.getElementById('btn-brain-dump-done').onclick  = () => {
   localStorage.setItem('focustdah_brain_dump', document.getElementById('brain-dump-text').value);
+  localStorage.setItem('ft_dump_' + currentDumpZone, document.getElementById('brain-dump-text').value);
   addBehaviorEvent('brain_dump');
   showCheckIn('home', 'dump', 'Après avoir vidé ton cerveau 🧠');
 };
