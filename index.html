@@ -7213,7 +7213,15 @@ function renderSession() {
   if (!p) return;
 
   const step = getCurrentStep(p);
-  if (!step) { finishProject(); return; }
+  if (!step) {
+    if (getActiveSteps(p).length === 0) {
+      alert('Ce projet n\'a aucune étape pour le moment. Ajoute au moins une étape avant de commencer.');
+      renderPlanPreview(p);
+      show('plan-preview');
+      return;
+    }
+    finishProject(); return;
+  }
 
   const idx = getCurrentStepIdx(p);
   const activeSteps = getActiveSteps(p);
