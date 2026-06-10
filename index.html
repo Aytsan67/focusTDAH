@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>focusTDAH</title>
 <!-- PWA iPhone -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2102,6 +2102,15 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   .screen:not(#plan-preview) { display: none !important; }
   .back, #btn-start-project, #btn-export-plan, #btn-delete-project, .file-add-btn { display: none !important; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -3610,8 +3619,11 @@ const setActiveId = id => id ? localStorage.setItem('tache_active', id) : localS
 // ─── NAV ───
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const el = document.getElementById(id);
+  el.classList.add('active');
   window.scrollTo(0, 0);
+  if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+  el.focus({ preventScroll: true });
 }
 
 // ─── QUICK TODO ───
