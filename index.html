@@ -143,6 +143,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .dump-zone-tabs { display:flex; gap:6px; margin-bottom:10px; }
 .dump-zone-tab { flex:1; padding:9px 4px; border:1.5px solid var(--border); border-radius:10px; background:var(--soft); color:var(--muted); font:600 12px 'DM Sans',sans-serif; cursor:pointer; text-align:center; transition:all .13s; }
 .dump-zone-tab.active { border-color:var(--accent); background:rgba(124,92,252,.1); color:var(--accent); }
+.dump-pending-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:999px; background:var(--soft); border:1px solid var(--border); color:var(--muted); font-size:11px; font-weight:700; margin:6px 0 10px; }
 
 /* Daily plan */
 .plan-row { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; background:var(--soft); border-radius:12px; margin-bottom:8px; }
@@ -356,6 +357,16 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .sas-btn.danger:hover, .sas-btn.danger:focus-visible { border-color:#fc5c7d; background:rgba(252,92,125,.08); outline-color:#fc5c7d; }
 .sas-hint { font-size:12px; color:var(--muted); text-align:center; margin-top:14px; opacity:0; transition:opacity .3s; }
 .sas-hint.visible { opacity:1; }
+/* ── PENDANT QUE J'Y PENSE (capture rapide, flag ft_flag_pendant_jy_pense) ── */
+.pending-thought-wrap { margin-top:18px; border-top:1px solid var(--border); padding-top:14px; }
+.pending-thought-label { display:block; font-size:12px; color:var(--muted); margin-bottom:8px; }
+.pending-thought-form { display:flex; gap:8px; align-items:center; }
+.pending-thought-input { flex:1; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--soft); color:var(--text); font:500 14px 'DM Sans',sans-serif; }
+.pending-thought-input:focus { border-color:var(--accent); outline:none; }
+.pending-thought-submit { padding:10px 14px; border-radius:12px; background:var(--soft); border:1.5px solid var(--border); color:var(--text); font:700 13px 'DM Sans',sans-serif; cursor:pointer; transition:border-color .15s; }
+.pending-thought-submit:hover, .pending-thought-submit:focus-visible { border-color:var(--accent); outline:2px solid var(--accent); outline-offset:2px; }
+.pending-thought-confirm { font-size:12px; color:var(--green); margin-top:8px; min-height:16px; opacity:0; transition:opacity .25s; }
+.pending-thought-confirm.visible { opacity:1; }
 .edit-btn { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 6px; flex: 0 0 auto; opacity: .45; transition: opacity .2s, color .2s; line-height: 1; }
 .edit-btn:hover { opacity: 1; color: var(--accent); }
 .inline-input { background: transparent; border: none; border-bottom: 1.5px solid var(--accent); color: var(--text); font: inherit; outline: none; padding: 1px 0; min-width: 40px; max-width: 100%; }
@@ -2488,6 +2499,14 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div class="prog-bar"><div class="prog-fill" id="s-global-bar" style="width:0%"></div></div>
     <div class="story" id="s-story">Tu fais le premier pas...</div>
   </div>
+  <div class="pending-thought-wrap" id="pending-thought-wrap" style="display:none">
+    <span class="pending-thought-label">Pendant que j'y pense…</span>
+    <form class="pending-thought-form" id="pending-thought-form">
+      <input type="text" id="pending-thought-input" class="pending-thought-input" aria-label="Pendant que j'y pense, note rapide" placeholder="note rapide, sans y réfléchir" autocomplete="off" maxlength="280">
+      <button type="submit" class="pending-thought-submit">Noter</button>
+    </form>
+    <div class="pending-thought-confirm" id="pending-thought-confirm" role="status" aria-live="polite"></div>
+  </div>
 </section>
 
 <!-- CELEBRATION -->
@@ -2808,6 +2827,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <div id="dump-free-zone">
     <p class="sub" style="margin-top:10px">Écris tout ce qui tourne en boucle. Rien à organiser — juste vider.</p>
     <div class="brain-dump-hint">💡 Pensées, peurs, tâches oubliées, idées aléatoires, stress… tout y passe.</div>
+    <div class="dump-pending-badge" id="dump-pending-badge" style="display:none"></div>
     <div class="dump-zone-tabs" id="dump-zone-tabs">
       <button class="dump-zone-tab active" data-zone="0">📌 Tâches</button>
       <button class="dump-zone-tab" data-zone="1">💭 Pensées</button>
@@ -3636,6 +3656,7 @@ function show(id) {
   window.scrollTo(0, 0);
   if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
   el.focus({ preventScroll: true });
+  if (id === 'brain-dump' && typeof updateDumpPendingBadge === 'function') updateDumpPendingBadge();
 }
 
 // ─── QUICK TODO ───
@@ -7374,6 +7395,7 @@ function renderSession() {
 
   syncGranularityControl();
   resetTimer();
+  setupPendingThought();
 }
 
 // ─── TIMER ───
@@ -10515,6 +10537,7 @@ document.getElementById('btn-dump-guide').onclick = () => showDumpGuide();
 // MODE BROUILLARD MENTAL — tri automatique du dump
 // ══════════════════════════════════════════════════
 function classifyDumpLine(line) {
+  if (line.startsWith(PENDING_THOUGHT_MARKER)) return 'captured';
   const l = line.toLowerCase();
   if (/urgent|deadline|asap|aujourd'hui|maintenant|vite|immédiat|rendre|remettre|demain matin/i.test(l)) return 'urgent';
   if (/peur|stressé|anxieux|angoissé|culpabilité|suis nul|honte|triste|inquiet|inquiète|overwhelm/i.test(l)) return 'émotionnel';
@@ -10525,6 +10548,7 @@ function classifyDumpLine(line) {
 }
 
 const DUMP_CAT_META = {
+  captured:   { label: '🧷 Capturées pendant une tâche', bg: 'rgba(124,92,252,.07)', border: 'rgba(124,92,252,.25)', color: 'var(--accent)' },
   urgent:     { label: '🔴 Urgent',       bg: 'rgba(239,83,80,.08)',   border: 'rgba(239,83,80,.3)',   color: '#ef5350' },
   simple:     { label: '✅ Simple à faire', bg: 'rgba(102,187,106,.08)', border: 'rgba(102,187,106,.3)', color: '#66bb6a' },
   'à faire':  { label: '📋 À faire',       bg: 'rgba(124,92,252,.07)', border: 'rgba(124,92,252,.25)', color: 'var(--accent)' },
@@ -10545,7 +10569,7 @@ function showDumpSorted() {
   const bd = document.createElement('div');
   bd.className = 'dump-sorted-backdrop';
 
-  const order = ['urgent', 'simple', 'à faire', 'émotionnel', 'impulsif', 'long terme'];
+  const order = ['captured', 'urgent', 'simple', 'à faire', 'émotionnel', 'impulsif', 'long terme'];
   const catsHtml = order.filter(k => buckets[k].length).map(k => {
     const m = DUMP_CAT_META[k];
     const items = buckets[k].map(l =>
@@ -12046,6 +12070,76 @@ let currentDumpZone = 0;
     ind.textContent = 'Sauvegardé ✓';
     clearTimeout(ind._t);
     ind._t = setTimeout(() => { ind.style.opacity = '0'; }, 1800);
+  });
+})();
+
+// ─── PENDANT QUE J'Y PENSE (capture-éclair pendant la tâche active) ───
+// Test reversible derriere flag localStorage ft_flag_pendant_jy_pense === '1'.
+// Flag absent/different de '1' -> champ invisible, zero regression (cf. e4212e7).
+// Les notes sont ecrites dans ft_dump_0 (zone Brain Dump 'Taches'), prefixees du
+// marqueur PENDING_THOUGHT_MARKER pour etre reperees comme << en attente de tri >>
+// (ajustement Vex : categorie dediee dans showDumpSorted + badge de comptage).
+const PENDING_THOUGHT_MARKER = '🧷';
+
+function isPendingThoughtEnabled() {
+  return localStorage.getItem('ft_flag_pendant_jy_pense') === '1';
+}
+
+function countPendingThoughts() {
+  const text = localStorage.getItem('ft_dump_0') || '';
+  return text.split('\n').filter(l => l.trim().startsWith(PENDING_THOUGHT_MARKER)).length;
+}
+
+function updateDumpPendingBadge() {
+  const badge = document.getElementById('dump-pending-badge');
+  if (!badge) return;
+  const n = countPendingThoughts();
+  if (n > 0) {
+    badge.textContent = PENDING_THOUGHT_MARKER + ' ' + n + (n === 1 ? ' note en attente de tri (onglet ' : ' notes en attente de tri (onglet ') + '📌 Tâches)';
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function capturePendingThought(text) {
+  text = text.trim();
+  if (!text) return false;
+  const ts = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const existing = (localStorage.getItem('ft_dump_0') || '').trim();
+  const line = PENDING_THOUGHT_MARKER + ' [' + ts + '] ' + text;
+  const updated = existing ? existing + '\n' + line : line;
+  localStorage.setItem('ft_dump_0', updated);
+  // Si la zone 0 du Brain Dump est deja affichee (ecran existant dans le DOM,
+  // meme cache), on la garde en phase sans attendre une re-ouverture.
+  if (currentDumpZone === 0) {
+    const ta = document.getElementById('brain-dump-text');
+    if (ta) ta.value = updated;
+  }
+  return true;
+}
+
+function setupPendingThought() {
+  const wrap = document.getElementById('pending-thought-wrap');
+  if (!wrap) return;
+  wrap.style.display = isPendingThoughtEnabled() ? '' : 'none';
+}
+
+(function() {
+  const form = document.getElementById('pending-thought-form');
+  const input = document.getElementById('pending-thought-input');
+  const confirmEl = document.getElementById('pending-thought-confirm');
+  if (!form || !input || !confirmEl) return;
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!capturePendingThought(input.value)) return;
+    input.value = '';
+    confirmEl.textContent = 'Noté — retrouvable dans Vide ton cerveau.';
+    confirmEl.classList.add('visible');
+    clearTimeout(confirmEl._t);
+    confirmEl._t = setTimeout(() => confirmEl.classList.remove('visible'), 4000);
+    updateDumpPendingBadge();
+    input.focus();
   });
 })();
 
