@@ -367,6 +367,33 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .pending-thought-submit:hover, .pending-thought-submit:focus-visible { border-color:var(--accent); outline:2px solid var(--accent); outline-offset:2px; }
 .pending-thought-confirm { font-size:12px; color:var(--green); margin-top:8px; min-height:16px; opacity:0; transition:opacity .25s; }
 .pending-thought-confirm.visible { opacity:1; }
+/* ── NOTE DE REPRISE (consolidation Pont de transition + Sas de reprise prop.2, flag ft_flag_note_reprise) ── */
+.reprise-banner { display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--soft); border:1.5px solid var(--border); border-radius:14px; padding:10px 14px; margin-bottom:14px; font-size:13px; color:var(--text); line-height:1.5; }
+.reprise-banner-text { flex:1; }
+.reprise-banner-clear { flex:0 0 auto; background:none; border:1.5px solid var(--border); border-radius:10px; color:var(--muted); font:600 12px 'DM Sans',sans-serif; padding:6px 12px; cursor:pointer; transition:border-color .15s, color .15s; }
+.reprise-banner-clear:hover, .reprise-banner-clear:focus-visible { border-color:var(--accent); color:var(--accent); outline:2px solid var(--accent); outline-offset:2px; }
+.reprise-wrap { margin-top:14px; border-top:1px solid var(--border); padding-top:14px; }
+.reprise-toggle { background:var(--soft); border:1.5px solid var(--border); border-radius:12px; color:var(--text); font:600 13px 'DM Sans',sans-serif; padding:9px 14px; cursor:pointer; transition:border-color .15s, color .15s; }
+.reprise-toggle:hover, .reprise-toggle:focus-visible { border-color:var(--accent); color:var(--accent); outline:2px solid var(--accent); outline-offset:2px; }
+.reprise-form { margin-top:10px; }
+.reprise-form-label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+.reprise-input { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--soft); color:var(--text); font:500 14px 'DM Sans',sans-serif; resize:vertical; }
+.reprise-input:focus { border-color:var(--accent); outline:none; }
+.reprise-form-actions { display:flex; gap:8px; margin-top:8px; }
+.reprise-save, .reprise-cancel { padding:9px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--soft); color:var(--text); font:700 13px 'DM Sans',sans-serif; cursor:pointer; transition:border-color .15s; }
+.reprise-save:hover, .reprise-save:focus-visible, .reprise-cancel:hover, .reprise-cancel:focus-visible { border-color:var(--accent); outline:2px solid var(--accent); outline-offset:2px; }
+.reprise-confirm { font-size:12px; color:var(--green); margin-top:8px; min-height:16px; opacity:0; transition:opacity .25s; }
+.reprise-confirm.visible { opacity:1; }
+.reprise-transition-bar { position:fixed; left:12px; right:12px; bottom:12px; max-width:420px; margin:0 auto; z-index:9100; background:var(--card); border:1.5px solid var(--border); border-radius:16px; padding:14px 16px; box-shadow:0 6px 24px rgba(0,0,0,.3); }
+.reprise-transition-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+.reprise-transition-label { font-size:12px; color:var(--muted); }
+.reprise-transition-dismiss { background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer; padding:2px 6px; line-height:1; }
+.reprise-transition-dismiss:hover, .reprise-transition-dismiss:focus-visible { color:var(--accent); outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+.reprise-transition-input { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--soft); color:var(--text); font:500 14px 'DM Sans',sans-serif; resize:vertical; }
+.reprise-transition-input:focus { border-color:var(--accent); outline:none; }
+.reprise-transition-actions { display:flex; gap:8px; margin-top:8px; }
+.reprise-transition-save { padding:9px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--soft); color:var(--text); font:700 13px 'DM Sans',sans-serif; cursor:pointer; transition:border-color .15s; }
+.reprise-transition-save:hover, .reprise-transition-save:focus-visible { border-color:var(--accent); outline:2px solid var(--accent); outline-offset:2px; }
 /* ── CE QUI M'ATTIRE LÀ, MAINTENANT (tri envie du moment, flag ft_flag_envie_du_moment) ── */
 .vierge-view-toggle { display:flex; justify-content:flex-end; padding:0 12px 8px; }
 .vierge-view-toggle-btn { background:var(--soft); border:1.5px solid var(--border); border-radius:999px; color:var(--muted); font:600 12px 'DM Sans',sans-serif; padding:7px 14px; cursor:pointer; transition:border-color .15s, color .15s; }
@@ -2468,6 +2495,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div class="step-dots" id="s-dots"></div>
   </div>
   <div class="task-name" id="s-task-name"></div>
+  <div class="reprise-banner" id="reprise-banner" style="display:none" role="status" aria-live="polite">
+    <span class="reprise-banner-text" id="reprise-banner-text"></span>
+    <button type="button" class="reprise-banner-clear" id="reprise-banner-clear">Effacer</button>
+  </div>
   <!-- Temps cumulé + % déclaré sur cette tâche -->
   <div id="s-task-progress" style="display:none;margin:-6px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
   <div class="micro-box" id="micro-box">
@@ -2507,6 +2538,18 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     </div>
     <div class="prog-bar"><div class="prog-fill" id="s-global-bar" style="width:0%"></div></div>
     <div class="story" id="s-story">Tu fais le premier pas...</div>
+  </div>
+  <div class="reprise-wrap" id="reprise-wrap" style="display:none">
+    <button type="button" class="reprise-toggle" id="reprise-toggle" aria-expanded="false">🧵 Je pose le fil</button>
+    <form class="reprise-form" id="reprise-form" style="display:none">
+      <label class="reprise-form-label" for="reprise-input">Où j'en suis / par quoi reprendre</label>
+      <textarea id="reprise-input" class="reprise-input" maxlength="280" rows="2" placeholder="ex : reprendre par la partie 2, j'ai bloqué sur..."></textarea>
+      <div class="reprise-form-actions">
+        <button type="submit" class="reprise-save">Enregistrer</button>
+        <button type="button" class="reprise-cancel" id="reprise-cancel">Annuler</button>
+      </div>
+    </form>
+    <div class="reprise-confirm" id="reprise-confirm" role="status" aria-live="polite"></div>
   </div>
   <div class="pending-thought-wrap" id="pending-thought-wrap" style="display:none">
     <span class="pending-thought-label">Pendant que j'y pense…</span>
@@ -7490,6 +7533,7 @@ function renderSession() {
   syncGranularityControl();
   resetTimer();
   setupPendingThought();
+  setupNoteReprise();
 }
 
 // ─── TIMER ───
@@ -7606,8 +7650,13 @@ document.getElementById('c-home').onclick = () => { renderHome(); show('landing'
 document.getElementById('f-home').onclick = () => { renderHome(); show('landing'); };
 document.getElementById('back-session').onclick = () => {
   stopManagedInterval('session'); tRunning = false;
+  const repriseKey = _currentRepriseKey;
   if (currentProject) { renderPlanPreview(currentProject); show('plan-preview'); }
   else { renderHome(); show('landing'); }
+  if (isNoteRepriseTransitionEnabled() && repriseKey) {
+    const repriseNote = getNoteReprise(repriseKey);
+    showRepriseTransitionPrompt(repriseKey, repriseNote ? repriseNote.text : '');
+  }
 };
 
 // ─── NOTIFICATIONS ───
@@ -12236,6 +12285,190 @@ function setupPendingThought() {
     input.focus();
   });
 })();
+
+// ─── NOTE DE REPRISE (consolidation Pont de transition + Sas de reprise prop. 2) ───
+// Test reversible derriere flag localStorage ft_flag_note_reprise === '1'.
+// Flag absent/different de '1' -> bouton, zone et encart invisibles, zero regression.
+// Sous-reglage pour le declencheur (b) (prompt au changement de tache) :
+// ft_flag_note_reprise_transition === '1', off par defaut meme si le flag principal
+// est actif (cf. consolidation, garde-fou opt-in du declencheur b).
+// Donnee unique ft_notes_reprise (localStorage), une note par tache, jamais
+// synchronisee avec Firestore (cf. e4212e7 / ft_projets_en_attente, meme choix).
+const NOTE_REPRISE_KEY = 'ft_notes_reprise';
+const NOTE_REPRISE_EXPIRY_MS = 14 * 24 * 60 * 60 * 1000; // expiration douce : 14 jours
+
+function isNoteRepriseEnabled() {
+  return localStorage.getItem('ft_flag_note_reprise') === '1';
+}
+function isNoteRepriseTransitionEnabled() {
+  return isNoteRepriseEnabled() && localStorage.getItem('ft_flag_note_reprise_transition') === '1';
+}
+
+function getReprisesMap() {
+  return loadJSON(NOTE_REPRISE_KEY, {});
+}
+function saveReprisesMap(map) {
+  saveJSON(NOTE_REPRISE_KEY, map);
+}
+
+// Cle stable par tache : projet + categorie active + position de l'etape courante.
+function getRepriseTaskKey(p, idx) {
+  if (!p || idx == null || idx < 0) return null;
+  const cat = (p.categories && p.categories.length)
+    ? (currentCategoryId ? p.categories.find(c => c.id === currentCategoryId) : p.categories[0])
+    : null;
+  const catId = cat ? cat.id : 'default';
+  return p.id + '::' + catId + '::' + idx;
+}
+
+function getNoteReprise(key) {
+  if (!key) return null;
+  return getReprisesMap()[key] || null;
+}
+
+// Une seule note active par tache : une nouvelle ecriture remplace l'ancienne.
+// Texte vide -> suppression (pas de note vide stockee).
+function setNoteReprise(key, text) {
+  if (!key) return;
+  text = (text || '').trim();
+  const map = getReprisesMap();
+  if (!text) { delete map[key]; saveReprisesMap(map); return; }
+  map[key] = { text: text, ts: Date.now() };
+  saveReprisesMap(map);
+}
+
+function clearNoteReprise(key) {
+  if (!key) return;
+  const map = getReprisesMap();
+  if (map[key]) { delete map[key]; saveReprisesMap(map); }
+}
+
+function isNoteRepriseExpired(note) {
+  return !!note && (Date.now() - note.ts) > NOTE_REPRISE_EXPIRY_MS;
+}
+
+let _currentRepriseKey = null;
+
+// Met a jour le bouton (a), le formulaire et l'encart de retour pour la tache courante.
+function setupNoteReprise() {
+  const wrap = document.getElementById('reprise-wrap');
+  const banner = document.getElementById('reprise-banner');
+  if (!wrap || !banner) return;
+  if (!isNoteRepriseEnabled() || !currentProject) {
+    wrap.style.display = 'none';
+    banner.style.display = 'none';
+    _currentRepriseKey = null;
+    return;
+  }
+  _currentRepriseKey = getRepriseTaskKey(currentProject, getCurrentStepIdx(currentProject));
+  wrap.style.display = '';
+  const form = document.getElementById('reprise-form');
+  const toggle = document.getElementById('reprise-toggle');
+  const input = document.getElementById('reprise-input');
+  const confirmEl = document.getElementById('reprise-confirm');
+  if (form) form.style.display = 'none';
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  if (confirmEl) { confirmEl.textContent = ''; confirmEl.classList.remove('visible'); }
+  const note = getNoteReprise(_currentRepriseKey);
+  if (input) input.value = note ? note.text : '';
+  refreshRepriseBanner(note);
+}
+
+// Encart neutre "Note laissee la derniere fois" + bouton "effacer" (cf. expiration douce).
+function refreshRepriseBanner(note) {
+  const banner = document.getElementById('reprise-banner');
+  const textEl = document.getElementById('reprise-banner-text');
+  if (!banner || !textEl) return;
+  if (note && !isNoteRepriseExpired(note)) {
+    textEl.textContent = 'Note laissée la dernière fois : ' + note.text;
+    banner.style.display = '';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+(function() {
+  const toggle = document.getElementById('reprise-toggle');
+  const form = document.getElementById('reprise-form');
+  const input = document.getElementById('reprise-input');
+  const cancel = document.getElementById('reprise-cancel');
+  const confirmEl = document.getElementById('reprise-confirm');
+  const bannerClear = document.getElementById('reprise-banner-clear');
+  if (!toggle || !form || !input || !cancel || !confirmEl) return;
+
+  toggle.addEventListener('click', function() {
+    const opening = form.style.display === 'none';
+    form.style.display = opening ? '' : 'none';
+    toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+    if (opening) input.focus();
+  });
+
+  cancel.addEventListener('click', function() {
+    form.style.display = 'none';
+    toggle.setAttribute('aria-expanded', 'false');
+    const note = getNoteReprise(_currentRepriseKey);
+    input.value = note ? note.text : '';
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!_currentRepriseKey) return;
+    setNoteReprise(_currentRepriseKey, input.value);
+    const note = getNoteReprise(_currentRepriseKey);
+    confirmEl.textContent = note ? 'Note enregistrée.' : 'Note effacée.';
+    confirmEl.classList.add('visible');
+    clearTimeout(confirmEl._t);
+    confirmEl._t = setTimeout(() => confirmEl.classList.remove('visible'), 3000);
+    refreshRepriseBanner(note);
+  });
+
+  if (bannerClear) {
+    bannerClear.addEventListener('click', function() {
+      if (!_currentRepriseKey) return;
+      clearNoteReprise(_currentRepriseKey);
+      refreshRepriseBanner(null);
+      input.value = '';
+    });
+  }
+})();
+
+// Prompt discret et skippable (declencheur b), affiche en bas de l'ecran de
+// destination quand on quitte l'ecran de session de la tache active.
+function showRepriseTransitionPrompt(key, prefill) {
+  if (!key) return;
+  let bar = document.getElementById('reprise-transition-bar');
+  if (bar) bar.remove();
+  bar = document.createElement('div');
+  bar.className = 'reprise-transition-bar';
+  bar.id = 'reprise-transition-bar';
+  bar.setAttribute('role', 'region');
+  bar.setAttribute('aria-label', 'Note de reprise pour la tâche que tu quittes');
+  bar.innerHTML =
+    '<div class="reprise-transition-head">' +
+      '<span class="reprise-transition-label">Avant de continuer : un mot pour la reprise ?</span>' +
+      '<button type="button" class="reprise-transition-dismiss" id="reprise-transition-dismiss" aria-label="Ignorer">✕</button>' +
+    '</div>' +
+    '<textarea class="reprise-transition-input" id="reprise-transition-input" maxlength="280" rows="2" placeholder="où tu en es / par quoi reprendre"></textarea>' +
+    '<div class="reprise-transition-actions">' +
+      '<button type="button" class="reprise-transition-save" id="reprise-transition-save">Enregistrer</button>' +
+    '</div>';
+  document.body.appendChild(bar);
+  const input = bar.querySelector('#reprise-transition-input');
+  const dismiss = bar.querySelector('#reprise-transition-dismiss');
+  const save = bar.querySelector('#reprise-transition-save');
+  input.value = prefill || '';
+
+  const close = () => { bar.remove(); window.removeEventListener('scroll', close, true); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  dismiss.addEventListener('click', close);
+  window.addEventListener('scroll', close, true);
+  document.addEventListener('keydown', onKey);
+
+  save.addEventListener('click', function() {
+    setNoteReprise(key, input.value);
+    close();
+  });
+}
 
 // ════════════════════════════════════════════════
 // ─── 1. PROFIL COGNITIF PERSONNEL (apprend dans le temps) ───
