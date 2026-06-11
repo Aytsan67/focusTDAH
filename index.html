@@ -367,6 +367,15 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .pending-thought-submit:hover, .pending-thought-submit:focus-visible { border-color:var(--accent); outline:2px solid var(--accent); outline-offset:2px; }
 .pending-thought-confirm { font-size:12px; color:var(--green); margin-top:8px; min-height:16px; opacity:0; transition:opacity .25s; }
 .pending-thought-confirm.visible { opacity:1; }
+/* ── CE QUI M'ATTIRE LÀ, MAINTENANT (tri envie du moment, flag ft_flag_envie_du_moment) ── */
+.vierge-view-toggle { display:flex; justify-content:flex-end; padding:0 12px 8px; }
+.vierge-view-toggle-btn { background:var(--soft); border:1.5px solid var(--border); border-radius:999px; color:var(--muted); font:600 12px 'DM Sans',sans-serif; padding:7px 14px; cursor:pointer; transition:border-color .15s, color .15s; }
+.vierge-view-toggle-btn[aria-pressed="true"] { border-color:var(--accent); color:var(--accent); }
+.vierge-view-toggle-btn:hover, .vierge-view-toggle-btn:focus-visible { border-color:var(--accent); outline:2px solid var(--accent); outline-offset:2px; }
+.vierge-envie-hint { font-size:12px; color:var(--muted); padding:0 12px 10px; line-height:1.5; }
+.vierge-item-spark { background:none; border:none; font-size:15px; line-height:1; cursor:pointer; padding:2px 5px; opacity:.4; transition:opacity .15s; flex-shrink:0; }
+.vierge-item-spark[aria-pressed="true"] { opacity:1; }
+.vierge-item-spark:hover, .vierge-item-spark:focus-visible { opacity:1; outline:2px solid var(--accent); outline-offset:2px; }
 .edit-btn { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 6px; flex: 0 0 auto; opacity: .45; transition: opacity .2s, color .2s; line-height: 1; }
 .edit-btn:hover { opacity: 1; color: var(--accent); }
 .inline-input { background: transparent; border: none; border-bottom: 1.5px solid var(--accent); color: var(--text); font: inherit; outline: none; padding: 1px 0; min-width: 40px; max-width: 100%; }
@@ -6342,9 +6351,73 @@ function promptSeanceMicros(onConfirm) {
 // ─── VIERGE BOARD ───
 let vDragItem = null;
 
+// ─── CE QUI M'ATTIRE LÀ, MAINTENANT (second tri ephemere, mode vierge) ───
+// Test reversible derriere flag localStorage ft_flag_envie_du_moment === '1'.
+// Flag absent/different de '1' -> aucun changement, tri par priorite uniquement.
+// Le marqueur "envie du moment" est ephemere : stocke avec la date du jour,
+// purge automatiquement au changement de jour (pas d'historique).
+function isEnvieDuMomentEnabled() {
+  return localStorage.getItem('ft_flag_envie_du_moment') === '1';
+}
+
+function ftTodayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function getEnvieDuMomentState() {
+  let st = loadJSON('ft_envie_du_moment', null);
+  const today = ftTodayStr();
+  if (!st || st.date !== today || !Array.isArray(st.marked)) {
+    st = { date: today, marked: [] };
+    saveJSON('ft_envie_du_moment', st);
+  }
+  return st;
+}
+
+function isMarkedEnvieDuMoment(itemId) {
+  return getEnvieDuMomentState().marked.includes(itemId);
+}
+
+function toggleEnvieDuMoment(itemId) {
+  const st = getEnvieDuMomentState();
+  const idx = st.marked.indexOf(itemId);
+  if (idx === -1) st.marked.push(itemId); else st.marked.splice(idx, 1);
+  saveJSON('ft_envie_du_moment', st);
+}
+
+// Vue active par categorie (en memoire, non persistee : retombe sur "priorite" au rechargement)
+const viergeEnvieDuMomentView = {};
+
 function renderViergeBoard(cat, proj, parentCard) {
   const board = document.createElement('div');
   board.className = 'vierge-board';
+
+  const envieEnabled = isEnvieDuMomentEnabled();
+  const envieView = envieEnabled && !!viergeEnvieDuMomentView[cat.id];
+  if (envieEnabled) {
+    const toggleRow = document.createElement('div');
+    toggleRow.className = 'vierge-view-toggle';
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'vierge-view-toggle-btn';
+    toggleBtn.type = 'button';
+    toggleBtn.setAttribute('aria-pressed', envieView ? 'true' : 'false');
+    toggleBtn.textContent = envieView ? '↩ Trier par priorité' : '✨ Trier par envie du moment';
+    toggleBtn.onclick = () => {
+      viergeEnvieDuMomentView[cat.id] = !envieView;
+      renderPlanPreview(proj);
+    };
+    toggleRow.appendChild(toggleBtn);
+    board.appendChild(toggleRow);
+
+    if (envieView) {
+      const hint = document.createElement('div');
+      hint.className = 'vierge-envie-hint';
+      hint.textContent = 'Une tâche avancée compte, quelle qu\'elle soit — tes tâches prioritaires restent là, dans l\'autre vue.';
+      board.appendChild(hint);
+    }
+  }
+
   (cat.priorities || []).forEach(prio => {
     const group = document.createElement('div');
     const header = document.createElement('div');
@@ -6370,7 +6443,11 @@ function renderViergeBoard(cat, proj, parentCard) {
       saveProjectChanges(); renderPlanPreview(proj);
     };
 
-    prio.items.forEach(item => {
+    const itemsToRender = envieView
+      ? [...prio.items].sort((a, b) => (isMarkedEnvieDuMoment(b.id) ? 1 : 0) - (isMarkedEnvieDuMoment(a.id) ? 1 : 0))
+      : prio.items;
+
+    itemsToRender.forEach(item => {
       const row = document.createElement('div');
       row.className = 'vierge-item' + (item.done ? ' done' : '');
       row.draggable = true;
@@ -6388,7 +6465,24 @@ function renderViergeBoard(cat, proj, parentCard) {
       const del = document.createElement('button'); del.className = 'vierge-item-del'; del.textContent = '✕';
       del.onclick = () => { prio.items = prio.items.filter(i => i.id !== item.id); saveProjectChanges(); renderPlanPreview(proj); };
 
-      row.appendChild(chk); row.appendChild(txt); row.appendChild(mov); row.appendChild(del);
+      row.appendChild(chk); row.appendChild(txt);
+      if (envieEnabled) {
+        const marked = isMarkedEnvieDuMoment(item.id);
+        const spark = document.createElement('button');
+        spark.className = 'vierge-item-spark';
+        spark.type = 'button';
+        spark.setAttribute('aria-pressed', marked ? 'true' : 'false');
+        spark.setAttribute('aria-label', marked ? 'Retirer le marqueur « envie du moment » sur cette tâche' : 'Marquer cette tâche comme « ça me dit aujourd\'hui »');
+        spark.title = marked ? 'Marquée « envie du moment »' : 'Marquer « envie du moment »';
+        spark.textContent = marked ? '✨' : '☆';
+        spark.onclick = e => {
+          e.stopPropagation();
+          toggleEnvieDuMoment(item.id);
+          renderPlanPreview(proj);
+        };
+        row.appendChild(spark);
+      }
+      row.appendChild(mov); row.appendChild(del);
       list.appendChild(row);
     });
 
