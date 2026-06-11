@@ -344,6 +344,18 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .file-add-btn:hover { border-color: var(--accent); color: var(--accent); }
 .btn-delete-project { display: block; width: 100%; border: 1.5px solid rgba(252,92,125,.25); border-radius: 14px; background: none; color: rgba(252,92,125,.6); font-size: 13px; padding: 13px; cursor: pointer; margin-top: 10px; transition: border-color .2s, color .2s; }
 .btn-delete-project:hover { border-color: #fc5c7d; color: #fc5c7d; }
+/* ── SAS AVANT D'AGIR (suppression de projet, flag ft_flag_sas_suppression) ── */
+.sas-overlay { position:fixed; inset:0; background:rgba(10,10,15,.75); display:flex; align-items:center; justify-content:center; z-index:9200; padding:20px; }
+.sas-sheet { background:var(--card); border-radius:24px; padding:28px 22px; width:100%; max-width:380px; }
+.sas-sheet h2 { font-family:'Syne',sans-serif; font-size:19px; font-weight:800; margin:0 0 10px; }
+.sas-sheet p { font-size:14px; color:var(--muted); line-height:1.5; margin:0 0 20px; }
+.sas-actions { display:flex; flex-direction:column; gap:10px; }
+.sas-btn { padding:14px 12px; border-radius:14px; border:1.5px solid var(--border); background:var(--soft); cursor:pointer; font:700 14px 'DM Sans',sans-serif; color:var(--text); text-align:center; transition:border-color .15s, background .15s; }
+.sas-btn:hover, .sas-btn:focus-visible { border-color:var(--accent); background:rgba(124,92,252,.08); outline:2px solid var(--accent); outline-offset:2px; }
+.sas-btn.danger { border-color:rgba(252,92,125,.3); color:#fc5c7d; }
+.sas-btn.danger:hover, .sas-btn.danger:focus-visible { border-color:#fc5c7d; background:rgba(252,92,125,.08); outline-color:#fc5c7d; }
+.sas-hint { font-size:12px; color:var(--muted); text-align:center; margin-top:14px; opacity:0; transition:opacity .3s; }
+.sas-hint.visible { opacity:1; }
 .edit-btn { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 6px; flex: 0 0 auto; opacity: .45; transition: opacity .2s, color .2s; line-height: 1; }
 .edit-btn:hover { opacity: 1; color: var(--accent); }
 .inline-input { background: transparent; border: none; border-bottom: 1.5px solid var(--accent); color: var(--text); font: inherit; outline: none; padding: 1px 0; min-width: 40px; max-width: 100%; }
@@ -5391,15 +5403,118 @@ document.getElementById('pp-files-input').onchange = function() {
   this.value = '';
   showFileOptions(fileList, 'pp');
 };
-document.getElementById('btn-delete-project').onclick = () => {
-  if (!currentProject) return;
-  if (!confirm('Supprimer "' + currentProject.name + '" ? Cette action est irréversible.')) return;
-  addDeletedId(currentProject.id); // tombstone : empêche la résurrection cloud
-  saveProjects(getProjects().filter(p => p.id !== currentProject.id));
-  if (getActiveId() === currentProject.id) setActiveId(null);
+// ─── SAS AVANT D'AGIR (suppression de projet) ───
+// Test reversible derriere flag localStorage ft_flag_sas_suppression === '1'.
+// Flag absent/different de '1' -> comportement confirm() inchange (zero regression).
+const getEnAttenteProjects  = () => loadJSON('ft_projets_en_attente', []);
+const saveEnAttenteProjects = list => saveJSON('ft_projets_en_attente', list);
+
+function projectStepCount(p) {
+  if (p.categories && p.categories.length > 0) {
+    return p.categories.reduce((sum, c) => sum + ((c.steps && c.steps.length) || 0), 0);
+  }
+  return (p.steps && p.steps.length) || 0;
+}
+
+function deleteProjectNow(proj) {
+  addDeletedId(proj.id); // tombstone : empeche la resurrection cloud
+  saveProjects(getProjects().filter(p => p.id !== proj.id));
+  if (getActiveId() === proj.id) setActiveId(null);
   currentProject = null;
   renderHome();
   show('landing');
+}
+
+// Deplace le projet vers un espace local "en attente" (cle ft_projets_en_attente,
+// jamais synchronisee) plutot que de le supprimer. Tombstone ajoute quand meme
+// (addDeletedId) pour rester compatible avec la fusion Firestore par timestamp
+// du lot 2 (commit 36cc14a) : sans lui, le projet reapparaitrait dans tache_v3
+// au prochain merge cloud (cf. revue Vex, point 4). Restauration cross-device
+// non couverte par ce test reversible : voir livrable Forge pour la suite.
+function setAsideProject(proj) {
+  const list = getEnAttenteProjects();
+  list.unshift(Object.assign({}, proj, { setAsideAt: Date.now() }));
+  saveEnAttenteProjects(list);
+  addDeletedId(proj.id);
+  saveProjects(getProjects().filter(p => p.id !== proj.id));
+  if (getActiveId() === proj.id) setActiveId(null);
+  currentProject = null;
+  renderHome();
+  show('landing');
+}
+
+function showSasSuppression(proj) {
+  if (document.getElementById('sas-overlay')) return;
+  const stepCount = projectStepCount(proj);
+  const stepsLabel = stepCount + (stepCount === 1 ? ' étape' : ' étapes');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'sas-overlay';
+  overlay.className = 'sas-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'sas-title');
+  overlay.setAttribute('aria-describedby', 'sas-desc');
+  overlay.innerHTML = '<div class="sas-sheet">'
+    + '<h2 id="sas-title">Avant de continuer</h2>'
+    + '<p id="sas-desc" aria-live="polite">Le projet « ' + esc(proj.name) + ' » (' + stepsLabel + ') va être supprimé.</p>'
+    + '<div class="sas-actions">'
+    + '<button class="sas-btn" id="sas-set-aside" type="button">Mettre de côté pour l\'instant</button>'
+    + '<button class="sas-btn danger" id="sas-continue" type="button">Continuer maintenant</button>'
+    + '</div>'
+    + '<div class="sas-hint" id="sas-hint" aria-hidden="true">Toujours d\'accord ?</div>'
+    + '</div>';
+  document.body.appendChild(overlay);
+
+  const previouslyFocused = document.activeElement;
+  const setAsideBtn = overlay.querySelector('#sas-set-aside');
+  const continueBtn = overlay.querySelector('#sas-continue');
+  const focusables  = [setAsideBtn, continueBtn];
+
+  function close() {
+    overlay.remove();
+    document.removeEventListener('keydown', onKeydown);
+    if (previouslyFocused && previouslyFocused.focus) previouslyFocused.focus();
+  }
+  function onKeydown(e) {
+    if (e.key === 'Escape') {
+      // Echap = annuler (option la plus sure pour une action irreversible) :
+      // ferme le sas sans rien supprimer ni deplacer.
+      e.preventDefault();
+      close();
+      return;
+    }
+    if (e.key === 'Tab') {
+      // Focus trap minimal : seuls les deux boutons sont atteignables.
+      e.preventDefault();
+      const idx = focusables.indexOf(document.activeElement);
+      const next = e.shiftKey
+        ? focusables[(idx <= 0 ? focusables.length : idx) - 1]
+        : focusables[(idx + 1) % focusables.length];
+      next.focus();
+    }
+  }
+
+  setAsideBtn.onclick = () => { overlay.remove(); document.removeEventListener('keydown', onKeydown); setAsideProject(proj); };
+  continueBtn.onclick = () => { overlay.remove(); document.removeEventListener('keydown', onKeydown); deleteProjectNow(proj); };
+
+  document.addEventListener('keydown', onKeydown);
+  setAsideBtn.focus(); // focus initial sur l'option non destructive
+
+  setTimeout(() => {
+    const hint = document.getElementById('sas-hint');
+    if (hint) { hint.classList.add('visible'); hint.removeAttribute('aria-hidden'); }
+  }, 4000);
+}
+
+document.getElementById('btn-delete-project').onclick = () => {
+  if (!currentProject) return;
+  if (localStorage.getItem('ft_flag_sas_suppression') === '1') {
+    showSasSuppression(currentProject);
+    return;
+  }
+  if (!confirm('Supprimer "' + currentProject.name + '" ? Cette action est irréversible.')) return;
+  deleteProjectNow(currentProject);
 };
 
 document.getElementById('btn-start-project').onclick = () => {
