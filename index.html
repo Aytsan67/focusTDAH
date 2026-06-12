@@ -83,6 +83,16 @@ main {
   --accent2: #b05cfc;
   --green: #5cfca0;
 }
+/* ── MODE SOBRE (réduction stimuli, flag ft_flag_mode_sobre) ── */
+body.mode-sobre {
+  --accent: #8a8a92;
+  --accent2: #9a9aa2;
+  --green: #9a9aa0;
+}
+body.mode-sobre, body.mode-sobre * {
+  animation: none !important;
+  transition: none !important;
+}
 html { background: var(--bg); }
 body {
   min-height: 100vh;
@@ -719,6 +729,21 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   padding: 0; flex-shrink: 0;
 }
 .bestiary-fab:active { transform: scale(.9); border-color: var(--accent); }
+
+.mode-sobre-fab {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 14px rgba(0,0,0,.4);
+  transition: border-color .2s, background .2s, transform .15s;
+  padding: 0; flex-shrink: 0;
+}
+.mode-sobre-fab:active { transform: scale(.9); }
+.mode-sobre-fab.active { border-color: var(--accent); background: rgba(124,92,252,.15); }
 
 /* Stats panel */
 .stats-panel {
@@ -3288,6 +3313,7 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
   <button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
   <button class="stats-fab" id="stats-fab" title="Stats du jour">📊</button>
   <button class="bestiary-fab" id="bestiary-fab" title="Bestiaire">🐉</button>
+  <button class="mode-sobre-fab" id="mode-sobre-fab" title="Mode Sobre" style="display:none">🔇</button>
 </div>
 <div class="stats-panel" id="stats-panel" style="display:none"></div>
 </main>
@@ -3781,6 +3807,7 @@ function checkReboundAlert() {
   }
 }
 function _showReboundBanner(slot, isRebound, minLeft) {
+  if (document.body.classList.contains('mode-sobre')) return;
   if (slot.dataset.dismissed === '1') return;
   if (slot.querySelector('.rebound-banner')) return;
   const div = document.createElement('div');
@@ -9842,6 +9869,7 @@ function showFrictionStrategies(ft) {
 }
 
 function showDopamineToast(msg, duration) {
+  if (document.body.classList.contains('mode-sobre')) return;
   const existing = document.querySelector('.dopamine-toast');
   if (existing) existing.remove();
   const toast = document.createElement('div');
@@ -12129,6 +12157,43 @@ document.getElementById('back-sons').onclick = () => show('landing');
       document.body.removeEventListener('click', restoreSnd);
     }, { once: true });
   }
+})();
+
+// ─── MODE SOBRE (réduction d'urgence des stimuli, flag ft_flag_mode_sobre) ───
+// Test reversible derriere flag localStorage ft_flag_mode_sobre === '1'.
+// Flag absent/different de '1' -> bouton invisible, zero regression.
+// Etat (classe body.mode-sobre) jamais ecrit en localStorage : repart "normal"
+// a chaque ouverture (garde-fou Cass, pas de persistance silencieuse).
+let _modeSobreSavedSound = null;
+
+function isModeSobreEnabled() {
+  return localStorage.getItem('ft_flag_mode_sobre') === '1';
+}
+
+function toggleModeSobre() {
+  const active = document.body.classList.toggle('mode-sobre');
+  const fab = document.getElementById('mode-sobre-fab');
+  if (fab) fab.classList.toggle('active', active);
+  if (active) {
+    // Suspend (pas désactive) le son d'ambiance en cours, pour le relancer à la sortie
+    _modeSobreSavedSound = _soundCtx.current;
+    if (_modeSobreSavedSound) _stopSound();
+    const slot = document.getElementById('rebound-banner-slot');
+    if (slot) slot.innerHTML = '';
+  } else {
+    if (_modeSobreSavedSound && _modeSobreSavedSound !== 'off') {
+      playAmbientSound(_modeSobreSavedSound);
+    }
+    _modeSobreSavedSound = null;
+    if (typeof checkReboundAlert === 'function') checkReboundAlert();
+  }
+}
+
+(function setupModeSobre() {
+  const fab = document.getElementById('mode-sobre-fab');
+  if (!fab || !isModeSobreEnabled()) return;
+  fab.style.display = '';
+  fab.onclick = toggleModeSobre;
 })();
 
 // ── 5. RITUEL DE TRANSITION ───────────────────
