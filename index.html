@@ -2170,10 +2170,96 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     scroll-behavior: auto !important;
   }
 }
+
+/* ══════════ MODE CERVEAU — bascule + hub ══════════ */
+.brain-toggle-fab {
+  position: fixed; top: calc(env(safe-area-inset-top) + 12px); right: 14px; z-index: 700;
+  display: flex; align-items: center; gap: 6px;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 999px;
+  padding: 7px 14px 7px 10px; font: 700 12px 'DM Sans', sans-serif; color: var(--text);
+  box-shadow: 0 2px 14px rgba(0,0,0,.35); cursor: pointer; transition: transform .12s, border-color .15s;
+}
+.brain-toggle-fab:active { transform: scale(.95); }
+.brain-toggle-fab.mode-brain { border-color: var(--accent); color: var(--accent); }
+
+.brain-return-fab {
+  position: fixed; bottom: calc(env(safe-area-inset-bottom) + 90px); right: 14px; z-index: 650;
+  width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: #fff;
+  border: none; font-size: 22px; display: none; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 4px 18px rgba(124,92,252,.45); transition: transform .12s;
+}
+.brain-return-fab.visible { display: flex; }
+.brain-return-fab:active { transform: scale(.92); }
+
+/* ── Écran hub ── */
+#brain-hub { padding-top: calc(env(safe-area-inset-top) + 64px); }
+.bh-disclaimer {
+  background: rgba(124,92,252,.08); border: 1px solid rgba(124,92,252,.25); border-radius: 14px;
+  padding: 12px 14px; margin-bottom: 16px; font-size: 12.5px; line-height: 1.5; color: var(--muted);
+}
+.bh-disclaimer strong { color: var(--text); }
+.bh-svg-wrap { background: var(--card); border: 1.5px solid var(--border); border-radius: 20px; padding: 6px; margin-bottom: 14px; }
+svg.bh-schema { display: block; width: 100%; height: auto; }
+.bh-link { stroke: var(--border); stroke-width: 2; fill: none; opacity: .6; }
+.bh-node { cursor: pointer; }
+.bh-node .bh-blob { transition: opacity .2s ease; }
+.bh-node .bh-core { stroke: var(--border); stroke-width: 2; transition: stroke .15s ease, stroke-width .15s ease; }
+.bh-node:hover .bh-core, .bh-node:focus-visible .bh-core, .bh-node[aria-pressed="true"] .bh-core { stroke: var(--text); stroke-width: 3; }
+.bh-node:focus { outline: none; }
+.bh-node .bh-emoji { font-size: 26px; text-anchor: middle; dominant-baseline: central; }
+.bh-node .bh-label { fill: var(--text); font-size: 13px; font-weight: 700; text-anchor: middle; font-family: 'DM Sans', sans-serif; }
+.bh-node .bh-sub   { fill: var(--muted); font-size: 9.5px; text-anchor: middle; font-family: 'DM Sans', sans-serif; }
+@media (prefers-reduced-motion: no-preference) {
+  body[data-bh-anim="on"] .bh-link.hot { stroke: var(--accent); opacity: 1; stroke-dasharray: 6 8; animation: bhFlow 1.6s linear infinite; }
+  @keyframes bhFlow { to { stroke-dashoffset: -28; } }
+}
+.bh-mirror-note { font-size: 11.5px; color: var(--muted); text-align: center; margin: -4px 0 16px; }
+.bh-textlink { display: block; text-align: center; color: var(--accent); font: 600 13px 'DM Sans', sans-serif; text-decoration: none; margin-bottom: 8px; }
+
+/* ── Bottom sheet zone ── */
+.bh-sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 9000; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn .2s ease; }
+.bh-sheet { background: var(--card); border-radius: 24px 24px 0 0; padding: 22px 20px calc(env(safe-area-inset-bottom) + 24px); width: 100%; max-width: 480px; max-height: 82vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.bh-sheet-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.bh-sheet-emoji { font-size: 28px; }
+.bh-sheet-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 19px; }
+.bh-sheet-sub { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
+.bh-sheet-mech { font-size: 13.5px; line-height: 1.6; color: var(--text); background: var(--soft); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; }
+.bh-sheet-mech .src { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }
+.bh-sit-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.bh-sit-item { background: var(--soft); border: 1.5px solid var(--border); border-radius: 14px; padding: 10px 12px; font-size: 13px; cursor: pointer; transition: border-color .15s; }
+.bh-sit-item:active { transform: scale(.99); }
+.bh-sit-item:hover, .bh-sit-item:focus-visible { border-color: var(--accent); }
+.bh-sheet-actions { display: flex; flex-direction: column; gap: 8px; }
+.bh-sheet-close { display: block; width: 100%; text-align: center; background: none; border: none; color: var(--muted); font: 600 13px 'DM Sans', sans-serif; padding: 10px 0 0; }
+
+/* ── Bibliothèque des réactions ── */
+#situations-lib .sl-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 16px; }
+.sl-chip { background: var(--soft); border: 1.5px solid var(--border); border-radius: 999px; padding: 6px 12px; font: 600 12px 'DM Sans', sans-serif; color: var(--muted); cursor: pointer; }
+.sl-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(124,92,252,.1); }
+.sl-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+.sl-zone-intro { background: var(--soft); border-radius: 14px; padding: 12px 14px; margin: 18px 0 10px; }
+.sl-zone-intro:first-child { margin-top: 0; }
+.sl-zone-intro-head { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+.sl-zone-intro-sub { font-weight: 600; font-size: 12px; color: var(--muted); text-transform: none; letter-spacing: normal; }
+.sl-zone-intro-mech { font-size: 13px; line-height: 1.6; color: var(--text); }
+.sl-zone-intro-mech .src { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }
+.sl-card-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; margin-bottom: 6px; }
+.sl-card-mech { font-size: 13px; line-height: 1.55; color: var(--text); margin-bottom: 6px; }
+.sl-card-norm { font-size: 12.5px; color: var(--accent2); font-style: italic; margin-bottom: 10px; }
+.sl-card-strategy { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+.sl-card-strategy strong { color: var(--text); }
+.sl-card-action { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: none; border-radius: 999px; padding: 8px 16px; font: 700 12.5px 'DM Sans', sans-serif; cursor: pointer; }
+.sl-card-action:active { transform: scale(.96); }
 </style>
 </head>
 <body>
 <main>
+
+<!-- MODE CERVEAU — bascule persistante + retour au hub -->
+<button class="brain-toggle-fab" id="brain-toggle-fab" type="button" aria-pressed="false">
+  <span id="brain-toggle-icon">🧠</span><span id="brain-toggle-label">Cerveau</span>
+</button>
+<button class="brain-return-fab" id="brain-return-fab" type="button" aria-label="Retour au hub cerveau" title="Retour au hub cerveau">🧠</button>
 
 <!-- SPLASH -->
 <section class="screen active" id="splash">
@@ -2316,6 +2402,35 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
   </div><!-- /.landing-right -->
 
+</section>
+
+<!-- MODE CERVEAU — hub de navigation -->
+<section class="screen" id="brain-hub">
+  <div class="bh-disclaimer" role="note">
+    <strong>Modèle pédagogique, ni diagnostic ni mesure.</strong> Ce schéma montre 6 réseaux qui
+    se coordonnent dans un cerveau TDAH — pas une carte anatomique, pas un examen de ton cerveau.
+    Touche une zone pour explorer ce qui s'y passe.
+  </div>
+  <div class="bh-svg-wrap">
+    <svg class="bh-schema" id="bh-schema" viewBox="0 0 320 380" role="group"
+         aria-label="Schéma des 6 réseaux du cerveau TDAH, vue conceptuelle et non anatomique">
+      <g id="bh-edges" aria-hidden="true"></g>
+      <g id="bh-nodes"></g>
+    </svg>
+  </div>
+  <p class="bh-mirror-note">🪞 La couleur des zones reflète ton activité dans l'app en ce moment —
+    pas une mesure de ton cerveau.</p>
+  <a href="#" class="bh-textlink" id="bh-link-situations">📖 Voir tout en texte → Bibliothèque des réactions</a>
+</section>
+
+<!-- BIBLIOTHÈQUE DES RÉACTIONS — repli 2D total, accessible depuis les deux modes -->
+<section class="screen" id="situations-lib">
+  <button class="back" id="back-situations-lib">← Retour</button>
+  <h1>Ça t'est déjà <em>arrivé</em> ?</h1>
+  <p class="sub">24 situations TDAH du quotidien — pourquoi ça arrive, et quoi faire maintenant.
+    Tu n'es pas cassé·e : c'est ton cerveau qui fonctionne différemment.</p>
+  <div class="sl-filters" id="sl-filters"></div>
+  <div id="sl-list"></div>
 </section>
 
 <!-- CREATE -->
@@ -2678,6 +2793,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="block-btn block-reset" id="aide-btn-reset">
     <span class="b-title">🧘 Reset cognitif</span>
     <span class="b-sub">Respiration · Étirement · Eau · Mini victoire</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-situations">
+    <span class="b-title">📖 Ça t'est déjà arrivé ?</span>
+    <span class="b-sub">24 situations TDAH du quotidien, leur mécanisme, et quoi faire maintenant</span>
   </button>
 </section>
 
@@ -13220,6 +13339,423 @@ function applyAdaptiveUI() {
       }
     } catch(e) {}
   }, 3 * 60 * 1000);
+})();
+
+// K — Mode Cerveau : hub de navigation, miroir cognitif, bibliothèque des réactions
+(function() {
+  const SVGNS = 'http://www.w3.org/2000/svg';
+
+  // ── Les 6 zones (1:1 avec calcSubScores) ──
+  const ZONES = [
+    { id: 'phare', emoji: '🔭', label: 'Le Phare', sub: 'Alerte & temps', x: 160, y: 50,
+      scoreKey: 'focusBrut', invert: false,
+      mechanism: "En TDAH, la perception du temps est moins fiable : le cerveau a du mal à « sentir » que le temps passe, à estimer une durée, ou à anticiper une échéance qui n'est pas encore là. On parle de cécité temporelle (time blindness) — un vrai phénomène neurologique qui dure toute la vie, pas un manque de volonté.",
+      source: 'Source : tdahfocus.com — gestion du temps et cécité temporelle' },
+    { id: 'starter', emoji: '🚀', label: 'Le Starter', sub: 'Motivation & démarrage', x: 264, y: 120,
+      scoreKey: ['dopamine','momentum'], invert: false,
+      mechanism: "Le circuit de la dopamine (striatum) est moins actif chez les TDAH. Démarrer une tâche qui n'est pas immédiatement intéressante ou urgente demande un effort neurologique réel, pas juste « un coup de volonté ». C'est pour ça que l'urgence débloque soudain l'action : elle fournit le carburant dopaminergique qui manquait.",
+      source: 'Source : Recherche-neurobiologie (vault TDAH)' },
+    { id: 'frein', emoji: '🛑', label: 'Le Frein', sub: 'Impulsivité', x: 264, y: 260,
+      scoreKey: 'friction', invert: true,
+      mechanism: "L'inhibition TDAH a un délai plus court : l'écart entre « avoir une impulsion » et « agir » est réduit. Ce n'est pas un manque de self-control — c'est un frein neurologique qui répond avec un léger retard, encore moins réactif sous fatigue ou stress.",
+      source: 'Source : Recherche-neurobiologie (vault TDAH)' },
+    { id: 'tiroir', emoji: '🗂️', label: 'Le Tiroir', sub: 'Mémoire de travail', x: 56, y: 120,
+      scoreKey: 'surcharge', invert: true,
+      mechanism: "La mémoire de travail TDAH tient en moyenne 3 à 5 éléments à la fois, contre 7 pour la moyenne. Quand elle est pleine, tout ce qui sort du champ de vision ou de pensée immédiat disparaît littéralement — c'est la « permanence de l'objet » qui flanche. L'hypersensibilité aux stimuli (bruit, lumière, texture) sature encore plus vite cet espace déjà limité.",
+      source: "Sources : laminicoachtdah.fr — permanence de l'objet & surcharge sensorielle" },
+    { id: 'alarme', emoji: '🚨', label: "L'Alarme", sub: 'Émotions & RSD', x: 56, y: 260,
+      scoreKey: null, invert: false,
+      mechanism: "Le lien entre l'amygdale (émotions) et le cortex préfrontal (régulation) est plus lâche en TDAH : les émotions arrivent à pleine puissance, sans le filtre qui les module avant la conscience. La Dysrégulation Émotionnelle Sensible au Rejet (RSD) amplifie la douleur du rejet ou de la critique jusqu'à 10× — biologique, pas une question de sensibilité excessive. La honte chronique fait souvent partie du tableau, comme symptôme à part entière.",
+      source: 'Sources : Recherche-neurobiologie + laminicoachtdah.fr — honte TDAH' },
+    { id: 'carburant', emoji: '🔋', label: 'Le Carburant', sub: 'Énergie & sommeil', x: 160, y: 330,
+      scoreKey: 'energie', invert: false,
+      mechanism: "Le TDAH dérègle souvent l'horloge interne (retard de phase de sommeil) : dormir tard, se réveiller difficilement. L'hyperfocus — cette capacité à se plonger des heures dans une tâche captivante sans « sentir » la fatigue ni les besoins du corps — se paie en énergie, parfois brutalement, une fois la tâche terminée.",
+      source: 'Source : Recherche-neurobiologie (vault TDAH)' },
+  ];
+
+  const EDGES = [
+    ['phare','starter'], ['starter','frein'], ['frein','carburant'],
+    ['carburant','alarme'], ['alarme','tiroir'], ['tiroir','phare'],
+  ];
+
+  // ── Bibliothèque des réactions : 24 situations, 4 par zone ──
+  const BH_ACTIONS = {
+    timer:  { label: '⏱ Lancer un minuteur', run: () => { show('landing'); setTimeout(() => openWorkModeSheet(), 250); } },
+    agenda: { label: '📅 Ouvrir l’agenda', run: () => show('agenda') },
+    pickTask: { label: '🎲 Choisis pour moi', run: () => { show('landing'); setTimeout(() => pickTaskForMe(), 250); } },
+    panic:  { label: '🔥 Mode panique', run: () => showModePanique() },
+    reset:  { label: '🧘 Reset cognitif', run: () => show('reset-cognitif') },
+    dump:   { label: '🧠 Vider mon cerveau', run: () => show('brain-dump') },
+    sons:   { label: '🎵 Sons d’ambiance', run: () => show('sons') },
+    rsd:    { label: '💔 Je suis submergé(e)', run: () => showRSDMode() },
+  };
+
+  const SITUATIONS = [
+    // 🔭 Le Phare
+    { id: 'phare-1', zone: 'phare', title: "2h ont disparu sans que je m'en rende compte",
+      mech: "Quand une tâche capte ton attention, ton cerveau TDAH peut perdre toute notion du temps qui passe — l'horloge interne ne « sonne » pas. C'est l'hyperfocus, pas de la négligence.",
+      norm: "Tu n'es pas cassé·e : ton cerveau efface le temps quand il est absorbé, c'est neurologique.",
+      strategy: "<strong>Stratégie :</strong> pose une alarme sonore (pas silencieuse) avant de commencer, réglée sur l'heure où tu DOIS t'arrêter.",
+      action: 'timer' },
+    { id: 'phare-2', zone: 'phare', title: "Je suis « juste 5 minutes » en retard… depuis 40 minutes",
+      mech: "Estimer combien de temps il reste est une fonction qui flanche en TDAH — 5 minutes ressenties peuvent être 30 minutes réelles. C'est la cécité temporelle.",
+      norm: "Tu n'es pas cassé·e : ton horloge interne tourne différemment, pas plus lentement par paresse.",
+      strategy: "<strong>Stratégie :</strong> remplace « dans X minutes » par une heure fixe (« départ à 14h32 ») et programme une alarme à ce moment précis.",
+      action: 'agenda' },
+    { id: 'phare-3', zone: 'phare', title: "Je n'arrive pas à évaluer combien de temps une tâche va prendre",
+      mech: "La cécité temporelle touche aussi la planification : le cerveau TDAH a du mal à se projeter dans une durée future. Les estimations sont souvent à côté, dans un sens ou l'autre.",
+      norm: "Tu n'es pas cassé·e : ce n'est pas un manque d'expérience, c'est la perception du temps qui est en cause.",
+      strategy: "<strong>Stratégie :</strong> lance un minuteur dès le début (même sans limite) pour avoir une mesure réelle, et réutilise cette donnée la prochaine fois.",
+      action: 'timer' },
+    { id: 'phare-4', zone: 'phare', title: "Le matin, je ne « sens » pas qu'il faut partir",
+      mech: "Sans signal interne fiable pour « il est temps de », le cerveau TDAH a besoin de signaux externes — sinon rien ne déclenche le passage à l'action.",
+      norm: "Tu n'es pas cassé·e : ton corps n'envoie juste pas l'alerte « départ imminent » comme chez d'autres.",
+      strategy: "<strong>Stratégie :</strong> programme 2-3 alarmes en cascade (réveil, « 15 min restantes », « départ maintenant ») reliées à des actions concrètes.",
+      action: 'agenda' },
+    // 🚀 Le Starter
+    { id: 'starter-1', zone: 'starter', title: "Je remets une tâche simple depuis des jours",
+      mech: "Sans intérêt immédiat ni urgence, le circuit de la dopamine ne s'active pas assez pour déclencher l'action — même si la tâche est facile et courte.",
+      norm: "Tu n'es pas cassé·e ni paresseux·se : ton cerveau attend un signal de récompense qui ne vient pas tout seul pour les tâches « neutres ».",
+      strategy: "<strong>Stratégie :</strong> rends la tâche ridiculement petite (2 minutes) pour court-circuiter le besoin de motivation initiale — l'action crée souvent l'élan, pas l'inverse.",
+      action: 'pickTask' },
+    { id: 'starter-2', zone: 'starter', title: "Je ne fais que les trucs urgents, au dernier moment",
+      mech: "L'urgence génère une poussée d'adrénaline et de dopamine qui pallie temporairement le déficit — c'est pour ça que « la pression » débloque soudain ce que rien d'autre ne débloquait.",
+      norm: "Tu n'es pas cassé·e : ton cerveau a juste trouvé le seul levier qui fonctionne de façon fiable. Le problème, c'est le coût (stress, qualité).",
+      strategy: "<strong>Stratégie :</strong> recrée artificiellement un peu d'urgence plus tôt — un faux deadline, un minuteur visible, un mode panique « pour de faux ».",
+      action: 'panic' },
+    { id: 'starter-3', zone: 'starter', title: "Rien ne m'attire sauf quand c'est la panique",
+      mech: "Le circuit de récompense TDAH répond peu aux récompenses lointaines ou abstraites — seules les récompenses immédiates, intenses ou risquées le font réagir fort.",
+      norm: "Tu n'es pas cassé·e : c'est une histoire de câblage de la récompense, pas de manque d'intérêt pour ta vie.",
+      strategy: "<strong>Stratégie :</strong> associe une micro-récompense immédiate à chaque petite étape pour donner au cerveau quelque chose à « attraper » tout de suite.",
+      action: 'timer' },
+    { id: 'starter-4', zone: 'starter', title: "J'ai créé un plan parfait… et je n'ai rien commencé",
+      mech: "Planifier est créatif et gratifiant en soi pour le cerveau. Exécuter le plan, beaucoup moins. Le cerveau a eu sa récompense avant même de commencer.",
+      norm: "Tu n'es pas cassé·e ni procrastinateur·rice : tu as juste eu ta dose de dopamine au mauvais endroit du processus.",
+      strategy: "<strong>Stratégie :</strong> limite la planification à 2 minutes, puis choisis UNE première action concrète et minuscule — laisse l'app choisir si besoin.",
+      action: 'pickTask' },
+    // 🛑 Le Frein
+    { id: 'frein-1', zone: 'frein', title: "J'ai dit un truc que je regrette avant même d'y penser",
+      mech: "Le frein inhibiteur TDAH a un délai plus court entre « penser » et « dire » — la parole peut sortir avant que le filtre habituel n'ait eu le temps d'agir.",
+      norm: "Tu n'es pas cassé·e ni impoli·e par nature : ton cerveau a un frein un peu plus lent à mordre, pas absent.",
+      strategy: "<strong>Stratégie :</strong> dans les moments à enjeu, instaure un micro-rituel (respirer, compter jusqu'à 3, poser les mains) qui ajoute artificiellement le délai manquant.",
+      action: 'reset' },
+    { id: 'frein-2', zone: 'frein', title: "J'ai acheté un truc sur un coup de tête",
+      mech: "L'impulsivité TDAH touche aussi les décisions financières : l'envie immédiate court-circuite l'évaluation « est-ce que j'en ai vraiment besoin ».",
+      norm: "Tu n'es pas cassé·e ni irresponsable : c'est le même frein un peu lent que pour les mots, appliqué aux décisions d'achat.",
+      strategy: "<strong>Stratégie :</strong> règle « la liste d'attente de 24h » — note l'envie dans le brain dump au lieu d'acheter, et relis-la le lendemain.",
+      action: 'dump' },
+    { id: 'frein-3', zone: 'frein', title: "J'ai coupé la parole sans m'en rendre compte",
+      mech: "Attendre son tour demande de retenir une pensée en mémoire de travail ET d'inhiber l'envie de la dire tout de suite — deux fonctions qui flanchent en TDAH, en même temps.",
+      norm: "Tu n'es pas cassé·e ni malpoli·e : deux systèmes qui doivent coopérer ont juste du mal à le faire en même temps.",
+      strategy: "<strong>Stratégie :</strong> garde un petit carnet pour « parquer » tes idées pendant que l'autre parle — ça soulage la mémoire de travail ET le frein.",
+      action: 'reset' },
+    { id: 'frein-4', zone: 'frein', title: "J'ai cliqué/scrollé/ouvert 10 onglets sans décider de le faire",
+      mech: "Les micro-impulsions (clic, scroll, swipe) sont les plus difficiles à freiner car elles ne « passent » presque jamais par une décision consciente — quasi automatiques.",
+      norm: "Tu n'es pas cassé·e ni accro : c'est l'inhibition la plus fine et la plus rapide, et c'est elle qui est la plus touchée.",
+      strategy: "<strong>Stratégie :</strong> retire les déclencheurs (notifications, app à portée), pas la volonté — change l'environnement plutôt que de compter sur le frein.",
+      action: 'reset' },
+    // 🗂️ Le Tiroir
+    { id: 'tiroir-1', zone: 'tiroir', title: "Entré·e dans une pièce, oublié pourquoi",
+      mech: "La mémoire de travail TDAH tient peu d'éléments et les perd vite dès qu'un nouveau contexte arrive — l'intention initiale est « écrasée » par les nouvelles infos.",
+      norm: "Tu n'es pas cassé·e ni distrait·e par choix : ta mémoire de travail a une capacité plus petite, point.",
+      strategy: "<strong>Stratégie :</strong> dis l'intention à voix haute juste avant de bouger (« je vais chercher mes clés ») — l'externalisation auditive aide à la garder active.",
+      action: 'dump' },
+    { id: 'tiroir-2', zone: 'tiroir', title: "Hors de vue = hors de l'esprit, même les choses importantes",
+      mech: "C'est la « permanence de l'objet » qui flanche : si une chose n'est pas visible ou rappelée, elle cesse littéralement d'exister pour le cerveau, même si elle est importante.",
+      norm: "Tu n'es pas cassé·e ni négligent·e : ton cerveau ne garde en mémoire « active » que ce qui est sous tes yeux ou rappelé activement.",
+      strategy: "<strong>Stratégie :</strong> rends visible ce qui compte (post-it, objet posé en travers du chemin, rappel programmé) — la mémoire externe remplace la mémoire de travail.",
+      action: 'agenda' },
+    { id: 'tiroir-3', zone: 'tiroir', title: "Trop de pensées en même temps, je n'arrive à rien trier",
+      mech: "Quand la mémoire de travail est saturée (3-5 éléments max), de nouvelles pensées continuent d'arriver — elles s'entassent sans qu'aucune ne puisse être traitée correctement.",
+      norm: "Tu n'es pas cassé·e ni désorganisé·e par nature : c'est un espace limité qui déborde, comme un bureau trop petit pour tous les dossiers.",
+      strategy: "<strong>Stratégie :</strong> vide tout sur « papier » (brain dump) sans trier — sortir les pensées de la tête libère de l'espace, le tri vient après.",
+      action: 'dump' },
+    { id: 'tiroir-4', zone: 'tiroir', title: "Le bruit/la lumière/l'étiquette me rend dingue alors que personne ne le remarque",
+      mech: "L'hypersensibilité sensorielle TDAH fait que des stimuli « normaux » pour d'autres prennent une place disproportionnée dans une mémoire de travail déjà limitée — et finissent par saturer le système.",
+      norm: "Tu n'es pas cassé·e ni hypersensible « pour rien » : ton système nerveux traite réellement ces stimuli plus fort que la moyenne.",
+      strategy: "<strong>Stratégie :</strong> réduis activement les stimuli que tu PEUX contrôler (casque, lumière tamisée, vêtements sans étiquette) — ce n'est pas un luxe, c'est de la régulation.",
+      action: 'sons' },
+    // 🚨 L'Alarme
+    { id: 'alarme-1', zone: 'alarme', title: "Une remarque anodine m'a gâché ma journée",
+      mech: "La RSD (Dysrégulation Émotionnelle Sensible au Rejet) amplifie la douleur d'une critique ou d'un rejet perçu — parfois jusqu'à 10× plus intensément que pour un cerveau neurotypique.",
+      norm: "Tu n'es pas cassé·e ni susceptible : ton cerveau traite littéralement cette douleur à un volume plus fort.",
+      strategy: "<strong>Stratégie :</strong> nomme ce qui se passe (« c'est de la RSD, pas la réalité de la situation ») — nommer le mécanisme aide à reprendre du recul.",
+      action: 'rsd' },
+    { id: 'alarme-2', zone: 'alarme', title: "J'ai explosé/pleuré pour « pas grand chose » et je m'en veux",
+      mech: "Le lien entre l'amygdale (émotions) et le cortex préfrontal (régulation) est plus lâche en TDAH : l'émotion arrive à pleine puissance avant que la régulation n'ait eu le temps d'intervenir.",
+      norm: "Tu n'es pas cassé·e ni « trop émotif·ve » : c'est un délai de régulation, pas un manque de maturité émotionnelle.",
+      strategy: "<strong>Stratégie :</strong> remplace « je suis nul·le de réagir comme ça » par « mon cerveau a réagi avant que je puisse intervenir, c'est neurologique ».",
+      action: 'reset' },
+    { id: 'alarme-3', zone: 'alarme', title: "La peur du jugement m'empêche d'envoyer ce message",
+      mech: "L'anticipation d'un rejet ou d'une critique active la même alarme que le rejet réel, en RSD — le cerveau réagit à une menace imaginée comme si elle était déjà arrivée.",
+      norm: "Tu n'es pas cassé·e ni lâche : ton système d'alarme se déclenche sur une menace anticipée, pas confirmée — c'est épuisant, pas un défaut de courage.",
+      strategy: "<strong>Stratégie :</strong> sépare « écrire le message » et « l'envoyer » en deux étapes distinctes, à des moments différents — ça réduit la charge de la décision finale.",
+      action: 'dump' },
+    { id: 'alarme-4', zone: 'alarme', title: "Je rumine une erreur d'il y a 3 ans à 2h du matin",
+      mech: "La honte chronique liée au TDAH n'est pas qu'une réaction à un événement précis — c'est un fond émotionnel qui ressurgit facilement la nuit, quand les distractions diurnes ne le couvrent plus.",
+      norm: "Tu n'es pas cassé·e ni « obsédé·e » : la honte chronique est documentée comme un symptôme TDAH à part entière, pas une faiblesse de caractère.",
+      strategy: "<strong>Stratégie :</strong> écris la pensée pour la sortir de la boucle mentale (même 2 mots), puis utilise un son d'ambiance pour occuper l'espace qu'elle prenait.",
+      action: 'dump' },
+    // 🔋 Le Carburant
+    { id: 'carburant-1', zone: 'carburant', title: "J'ai bossé 4h sans pause, maintenant je suis HS",
+      mech: "L'hyperfocus TDAH désactive les signaux internes de faim, fatigue ou besoin de bouger — le cerveau reste « branché » sur la tâche jusqu'à ce qu'elle s'arrête, puis la facture arrive d'un coup.",
+      norm: "Tu n'es pas cassé·e ni en train de « mal gérer ton temps » : c'est le même mécanisme qui te rend hyper-productif·ve qui te coupe aussi des signaux du corps.",
+      strategy: "<strong>Stratégie :</strong> programme des pauses-minuteur PENDANT la session (pas seulement à la fin) — l'hyperfocus ne te laissera pas les sentir venir seul.",
+      action: 'reset' },
+    { id: 'carburant-2', zone: 'carburant', title: "Je n'arrive pas à dormir même épuisé·e",
+      mech: "Le TDAH est associé à un retard de phase du sommeil — l'horloge interne est décalée, donc le cerveau n'est « prêt à dormir » que plus tard, même si le corps est fatigué.",
+      norm: "Tu n'es pas cassé·e ni en train de mal faire « l'hygiène de sommeil » : ton horloge biologique est juste réglée différemment.",
+      strategy: "<strong>Stratégie :</strong> utilise un rituel sensoriel descendant (son d'ambiance, lumière tamisée) plutôt que de « forcer » le sommeil.",
+      action: 'sons' },
+    { id: 'carburant-3', zone: 'carburant', title: "Je suis à plat sans raison apparente",
+      mech: "L'énergie TDAH varie fortement avec le sommeil, le rythme circadien et l'activité récente — une « baisse sans raison » a souvent une cause réelle, juste pas évidente dans l'instant.",
+      norm: "Tu n'es pas cassé·e ni « feignant·e » : l'énergie TDAH fluctue plus fort et moins prévisiblement que la moyenne.",
+      strategy: "<strong>Stratégie :</strong> avant de te juger, vérifie 3 choses — sommeil de la nuit, dernière pause, dernier repas/eau. Souvent l'une des trois explique tout.",
+      action: 'reset' },
+    { id: 'carburant-4', zone: 'carburant', title: "Après une journée « normale » je suis épuisé·e comme après un marathon",
+      mech: "Une journée « normale » pour un cerveau TDAH implique souvent un effort constant de compensation (filtrer les distractions, forcer le démarrage, gérer les émotions) — un travail invisible mais réel.",
+      norm: "Tu n'es pas cassé·e ni « pas endurant·e » : tu fournis un travail cognitif supplémentaire que les autres ne fournissent pas, toute la journée.",
+      strategy: "<strong>Stratégie :</strong> compte ce travail invisible comme du « vrai » travail dans ton repos — ta fatigue est légitime, pas disproportionnée.",
+      action: 'reset' },
+  ];
+
+  // ── Utilitaires SVG ──
+  function svgEl(tag, attrs, text) {
+    const e = document.createElementNS(SVGNS, tag);
+    Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v));
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  // ── Miroir cognitif : score 0-100 par zone (null = pas de donnée) ──
+  function bhAlarmeScore() {
+    const { events = [] } = getBehaviorData();
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const relevant = events.filter(e => e.ts >= cutoff && (e.type === 'fedup' || e.type === 'selfassess'));
+    if (!relevant.length) return null;
+    const alerts = relevant.filter(e => e.type === 'fedup' || (e.type === 'selfassess' && e.value <= 1));
+    return Math.max(0, 100 - alerts.length * 25);
+  }
+  // « Le Starter » = (dopamine + momentum) / 2 — momentum démarre à 0 par
+  // construction, donc sans aucun événement aujourd'hui le score tombe à ~20
+  // (rouge) au tout premier lancement. C'est un artefact de l'échelle, pas un
+  // vrai signal : on le traite comme "pas encore de donnée" (null), pareil
+  // que L'Alarme.
+  function bhStarterHasSignal() {
+    const { events = [] } = getBehaviorData();
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return events.some(e => e.ts >= cutoff &&
+      ['complete', '10min', 'transition_good', 'phenix_sol', 'fedup'].includes(e.type));
+  }
+  function zoneScore(z) {
+    if (z.id === 'alarme') return bhAlarmeScore();
+    if (z.id === 'starter' && !bhStarterHasSignal()) return null;
+    const s = calcSubScores();
+    let val;
+    if (Array.isArray(z.scoreKey)) val = z.scoreKey.reduce((a, k) => a + s[k], 0) / z.scoreKey.length;
+    else val = s[z.scoreKey];
+    return z.invert ? 100 - val : val;
+  }
+
+  // ── Rendu du hub (schéma SVG) ──
+  function renderHub() {
+    const edgesG = document.getElementById('bh-edges');
+    const nodesG = document.getElementById('bh-nodes');
+    if (!edgesG || !nodesG) return;
+    edgesG.innerHTML = '';
+    nodesG.innerHTML = '';
+    EDGES.forEach(([a, b]) => {
+      const za = ZONES.find(z => z.id === a), zb = ZONES.find(z => z.id === b);
+      edgesG.appendChild(svgEl('line', { class: 'bh-link', x1: za.x, y1: za.y, x2: zb.x, y2: zb.y }));
+    });
+    ZONES.forEach(z => {
+      const score = zoneScore(z);
+      const color = score === null ? 'var(--border)' : focusScoreColor(score);
+      const g = svgEl('g', {
+        class: 'bh-node', tabindex: '0', role: 'button', 'data-zone': z.id,
+        'aria-label': z.label + ' — ' + z.sub + '. Activer pour en savoir plus.'
+      });
+      g.appendChild(svgEl('title', {}, z.label));
+      const blob = svgEl('circle', { class: 'bh-blob', cx: z.x, cy: z.y, r: 44 });
+      blob.style.fill = color;
+      blob.style.opacity = score === null ? '0.16' : '0.30';
+      g.appendChild(blob);
+      g.appendChild(svgEl('circle', { class: 'bh-core', cx: z.x, cy: z.y, r: 30, fill: 'var(--card)' }));
+      g.appendChild(svgEl('text', { class: 'bh-emoji', x: z.x, y: z.y - 1 }, z.emoji));
+      g.appendChild(svgEl('text', { class: 'bh-label', x: z.x, y: z.y + 56 }, z.label));
+      g.appendChild(svgEl('text', { class: 'bh-sub', x: z.x, y: z.y + 70 }, z.sub));
+      g.addEventListener('click', () => openZoneSheet(z.id));
+      g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openZoneSheet(z.id); } });
+      nodesG.appendChild(g);
+    });
+  }
+
+  // ── Bottom sheet d'une zone ──
+  function openZoneSheet(zoneId) {
+    const z = ZONES.find(zz => zz.id === zoneId);
+    if (!z) return;
+    document.getElementById('bh-sheet-bd')?.remove();
+    const trigger = document.activeElement;
+    const sits = SITUATIONS.filter(s => s.zone === zoneId);
+    const bd = document.createElement('div');
+    bd.className = 'bh-sheet-backdrop';
+    bd.id = 'bh-sheet-bd';
+    bd.innerHTML = `
+      <div class="bh-sheet" role="dialog" aria-modal="true" aria-labelledby="bh-sheet-title-el" tabindex="-1">
+        <div class="bh-sheet-head">
+          <span class="bh-sheet-emoji">${z.emoji}</span>
+          <div>
+            <div class="bh-sheet-title" id="bh-sheet-title-el">${z.label}</div>
+            <div class="bh-sheet-sub">${z.sub}</div>
+          </div>
+        </div>
+        <div class="bh-sheet-mech">${z.mechanism}<span class="src">${z.source}</span></div>
+        <div class="bh-sit-list">
+          ${sits.map(s => `<div class="bh-sit-item" data-sit="${s.id}" role="button" tabindex="0">${s.title}</div>`).join('')}
+        </div>
+        <div class="bh-sheet-actions">
+          <button class="sl-card-action" id="bh-sheet-textlink" style="width:100%;justify-content:center">📖 Voir tout en texte</button>
+          <button class="bh-sheet-close" id="bh-sheet-close">Fermer</button>
+        </div>
+      </div>`;
+    document.body.appendChild(bd);
+    const onKey = e => { if (e.key === 'Escape') closeSheet(); };
+    function closeSheet(restoreFocus) {
+      bd.remove();
+      document.removeEventListener('keydown', onKey);
+      if (restoreFocus !== false && typeof trigger?.focus === 'function') trigger.focus();
+    }
+    bd.addEventListener('click', e => { if (e.target === bd) closeSheet(); });
+    bd.querySelector('#bh-sheet-close').onclick = closeSheet;
+    bd.querySelector('#bh-sheet-textlink').onclick = () => { closeSheet(false); window.__bhSituationsFilter = zoneId; show('situations-lib'); };
+    bd.querySelectorAll('.bh-sit-item').forEach(item => {
+      const goSit = () => {
+        closeSheet(false);
+        window.__bhSituationsFilter = zoneId;
+        show('situations-lib');
+        setTimeout(() => { document.getElementById('sl-' + item.dataset.sit)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+      };
+      item.addEventListener('click', goSit);
+      item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goSit(); } });
+    });
+    document.addEventListener('keydown', onKey);
+    bd.querySelector('.bh-sheet').focus();
+  }
+
+  // ── Bibliothèque des réactions (repli 2D total) ──
+  function renderSituationsLib(filterZone) {
+    const filters = document.getElementById('sl-filters');
+    const list = document.getElementById('sl-list');
+    if (!filters || !list) return;
+    const active = filterZone || window.__bhSituationsFilter || 'all';
+    window.__bhSituationsFilter = active;
+    filters.innerHTML = '';
+    [{ id: 'all', emoji: '✨', label: 'Tout' }].concat(ZONES.map(z => ({ id: z.id, emoji: z.emoji, label: z.label }))).forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'sl-chip' + (c.id === active ? ' active' : '');
+      chip.type = 'button';
+      chip.textContent = c.emoji + ' ' + c.label;
+      chip.onclick = () => renderSituationsLib(c.id);
+      filters.appendChild(chip);
+    });
+    list.innerHTML = '';
+    const zonesToShow = active === 'all' ? ZONES : ZONES.filter(z => z.id === active);
+    zonesToShow.forEach(z => {
+      const sits = SITUATIONS.filter(s => s.zone === z.id);
+      if (!sits.length) return;
+      const intro = document.createElement('div');
+      intro.className = 'sl-zone-intro';
+      intro.innerHTML = `
+        <div class="sl-zone-intro-head">${z.emoji} ${z.label} <span class="sl-zone-intro-sub">— ${z.sub}</span></div>
+        <div class="sl-zone-intro-mech">${z.mechanism}<span class="src">${z.source}</span></div>`;
+      list.appendChild(intro);
+      sits.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'sl-card';
+        card.id = 'sl-' + s.id;
+        card.innerHTML = `
+          <div class="sl-card-title">${s.title}</div>
+          <div class="sl-card-mech">${s.mech}</div>
+          <div class="sl-card-norm">${s.norm}</div>
+          <div class="sl-card-strategy">${s.strategy}</div>
+          <button class="sl-card-action" type="button">${BH_ACTIONS[s.action].label}</button>`;
+        card.querySelector('.sl-card-action').onclick = () => goToAction(s.action);
+        list.appendChild(card);
+      });
+    });
+  }
+
+  function goToAction(key) {
+    const a = BH_ACTIONS[key];
+    if (!a) return;
+    document.getElementById('bh-sheet-bd')?.remove();
+    if (localStorage.getItem('ft_brain_mode') === 'on') localStorage.setItem('ft_brain_mode', 'off');
+    a.run();
+  }
+
+  // ── Bascule Mode Cerveau / Mode Classique ──
+  function currentScreenId() {
+    return document.querySelector('.screen.active')?.id || 'landing';
+  }
+  function updateBrainUI(id) {
+    const mode = localStorage.getItem('ft_brain_mode') === 'on';
+    const fab = document.getElementById('brain-toggle-fab');
+    const icon = document.getElementById('brain-toggle-icon');
+    const label = document.getElementById('brain-toggle-label');
+    const returnFab = document.getElementById('brain-return-fab');
+    if (!fab) return;
+    fab.setAttribute('aria-pressed', mode ? 'true' : 'false');
+    fab.classList.toggle('mode-brain', mode);
+    icon.textContent = mode ? '📋' : '🧠';
+    label.textContent = mode ? 'Classique' : 'Cerveau';
+    returnFab.classList.toggle('visible', mode && id !== 'brain-hub');
+  }
+
+  // ── Évite la collision avec la pile #top-right-stack (⚙️/📵/📊) ──
+  // Le FAB cerveau partage le coin haut-droit avec cette pile ; on le replace
+  // dynamiquement juste sous elle (sa hauteur varie selon le badge utilisateur).
+  function positionBrainFab() {
+    const fab = document.getElementById('brain-toggle-fab');
+    const stack = document.getElementById('top-right-stack');
+    if (!fab || !stack) return;
+    const r = stack.getBoundingClientRect();
+    fab.style.top = Math.round(r.bottom + 8) + 'px';
+  }
+  positionBrainFab();
+  window.addEventListener('resize', positionBrainFab);
+  const topRightStackEl = document.getElementById('top-right-stack');
+  if (topRightStackEl && window.ResizeObserver) {
+    new ResizeObserver(positionBrainFab).observe(topRightStackEl);
+  }
+
+  document.getElementById('brain-toggle-fab').onclick = () => {
+    const mode = localStorage.getItem('ft_brain_mode') === 'on';
+    if (mode) {
+      localStorage.setItem('ft_brain_mode', 'off');
+      show(localStorage.getItem('ft_brain_return_screen') || 'landing');
+    } else {
+      localStorage.setItem('ft_brain_return_screen', currentScreenId());
+      localStorage.setItem('ft_brain_mode', 'on');
+      show('brain-hub');
+    }
+  };
+  document.getElementById('brain-return-fab').onclick = () => show('brain-hub');
+  document.getElementById('bh-link-situations').onclick = e => { e.preventDefault(); window.__bhSituationsFilter = 'all'; show('situations-lib'); };
+  document.getElementById('back-situations-lib').onclick = () => {
+    show(localStorage.getItem('ft_brain_mode') === 'on' ? 'brain-hub' : 'aide-menu');
+  };
+  document.getElementById('aide-btn-situations').onclick = () => { window.__bhSituationsFilter = 'all'; show('situations-lib'); };
+
+  // ── Branchement sur la navigation existante ──
+  const _origShow = show;
+  show = function(id) {
+    _origShow(id);
+    updateBrainUI(id);
+    if (id === 'brain-hub') renderHub();
+    if (id === 'situations-lib') renderSituationsLib();
+  };
+
+  updateBrainUI(currentScreenId());
 })();
 
 </script>
