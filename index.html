@@ -1736,6 +1736,12 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .pause-timer-num { font: 700 64px 'Syne', sans-serif; text-align: center; color: var(--green); margin-bottom: 16px; }
 .pause-timer-track { height: 10px; border-radius: 10px; background: var(--soft); overflow: hidden; margin-bottom: 20px; }
 .pause-timer-bar { height: 100%; background: linear-gradient(90deg, var(--green), #3de88a); transition: width 1s linear; border-radius: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .pause-timer-bar { transition: none; }
+}
+.pause-idea-wrap { margin-top: 20px; }
+.pause-idea-result { margin-top: 12px; padding: 14px 16px; background: var(--soft); border: 1px solid var(--border); border-radius: 12px; font-size: 14px; color: var(--text); line-height: 1.5; }
+.pause-idea-result:empty { display: none; padding: 0; border: none; margin-top: 0; }
 
 /* ── VICTOIRES CARNET ── */
 .victoires-today {
@@ -3032,7 +3038,7 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <span class="b-title">📖 Ça t'est déjà arrivé ?</span>
     <span class="b-sub">28 situations TDAH du quotidien, leur mécanisme, et quoi faire maintenant</span>
   </button>
-  <button class="block-btn block-secondary" id="aide-btn-pause">
+  <button class="block-btn block-secondary" id="aide-btn-pause" style="display:none">
     <span class="b-title">✋ Permission de pause</span>
     <span class="b-sub">Tu as le droit de t'arrêter — même sans finir</span>
   </button>
@@ -3282,7 +3288,11 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
   <div class="pause-timer" id="pause-timer" style="display:none">
     <div class="pause-timer-num" id="pause-timer-num">5:00</div>
     <div class="pause-timer-track"><div class="pause-timer-bar" id="pause-timer-bar"></div></div>
-    <button class="btn" id="btn-pause-done">✓ C'est bon, je reprends</button>
+    <p class="sub" style="margin-top:8px">Tu peux quitter cet écran quand tu veux — la pause continue à ton rythme, pas au sien.</p>
+  </div>
+  <div class="pause-idea-wrap">
+    <button class="btn-outline" id="btn-pause-idea">🎲 Une idée pour ce temps-là</button>
+    <div class="pause-idea-result" id="pause-idea-result" role="status" aria-live="polite"></div>
   </div>
 </section>
 
@@ -14444,9 +14454,28 @@ function _reorderProjectCards() {
   };
 
   // ─── PERMISSION DE PAUSE ───
+// Test reversible derriere flag localStorage ft_flag_permission_pause === '1'.
+// Flag absent/different de '1' -> bouton aide-menu invisible, zero regression.
 (function setupPausePerm() {
   const screen = document.getElementById('pause-perm');
   if (!screen) return;
+
+  if (localStorage.getItem('ft_flag_permission_pause') === '1') {
+    const aideBtn = document.getElementById('aide-btn-pause');
+    if (aideBtn) aideBtn.style.display = '';
+  }
+
+  const PAUSE_IDEES = [
+    'Regarder par la fenêtre, sans but particulier.',
+    'Écouter une chanson, sans écran allumé.',
+    'Étirer doucement le cou et les épaules.',
+    'Griffonner ou dessiner sans objectif.',
+    'Boire un verre d’eau, lentement.',
+    'Fermer les yeux et respirer quelques fois.',
+    'Faire quelques pas, dans la pièce ou dehors.',
+    'Caresser un animal, ou un tissu doux.',
+    'Ne rien faire, juste s’asseoir un moment.'
+  ];
 
   let pauseInterval = null;
   function formatTime(sec) {
@@ -14454,7 +14483,10 @@ function _reorderProjectCards() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  document.getElementById('back-pause-perm').onclick = () => show('landing');
+  document.getElementById('back-pause-perm').onclick = () => {
+    if (pauseInterval) clearInterval(pauseInterval);
+    show('landing');
+  };
 
   document.querySelectorAll('#pause-perm .pause-btn').forEach(btn => {
     btn.onclick = () => {
@@ -14472,17 +14504,15 @@ function _reorderProjectCards() {
         document.getElementById('pause-timer-bar').style.width = pct + '%';
         if (remaining <= 0) {
           clearInterval(pauseInterval);
-          playTone();
+          if (!document.body.classList.contains('mode-sobre')) playTimerEndSound();
         }
       }, 1000);
     };
   });
 
-  document.getElementById('btn-pause-done').onclick = () => {
-    if (pauseInterval) clearInterval(pauseInterval);
-    document.querySelector('#pause-perm .pause-opts').style.display = 'grid';
-    document.getElementById('pause-timer').style.display = 'none';
-    show('landing');
+  document.getElementById('btn-pause-idea').onclick = () => {
+    const pick = PAUSE_IDEES[Math.floor(Math.random() * PAUSE_IDEES.length)];
+    document.getElementById('pause-idea-result').textContent = pick;
   };
 })();
 
