@@ -1715,6 +1715,84 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   transition: border-color .13s;
 }
 .focus-btn-no:active { border-color: var(--accent); color: var(--text); }
+/* ── PAUSE PERMISSION ── */
+.pause-perm-card {
+  background: rgba(92,252,160,.1); border: 1.5px solid rgba(92,252,160,.3);
+  border-radius: 22px; padding: 28px 22px; text-align: center; margin: 24px 0;
+}
+.pause-perm-emoji { font-size: 48px; margin-bottom: 14px; }
+.pause-perm-msg strong { display: block; font: 700 18px 'Syne', sans-serif; color: var(--green); margin-bottom: 10px; }
+.pause-perm-msg p { font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 8px; }
+.pause-opts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+.pause-btn {
+  padding: 18px 10px; border: 1.5px solid var(--border); border-radius: 16px;
+  background: var(--card); color: var(--text); text-align: center; cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.pause-btn:active { border-color: var(--green); background: rgba(92,252,160,.08); }
+.pause-min { display: block; font: 700 24px 'Syne', sans-serif; color: var(--green); }
+.pause-label { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.pause-timer { margin-top: 20px; }
+.pause-timer-num { font: 700 64px 'Syne', sans-serif; text-align: center; color: var(--green); margin-bottom: 16px; }
+.pause-timer-track { height: 10px; border-radius: 10px; background: var(--soft); overflow: hidden; margin-bottom: 20px; }
+.pause-timer-bar { height: 100%; background: linear-gradient(90deg, var(--green), #3de88a); transition: width 1s linear; border-radius: 10px; }
+
+/* ── VICTOIRES CARNET ── */
+.victoires-today {
+  background: linear-gradient(135deg, rgba(124,92,252,.12), rgba(176,92,252,.08));
+  border: 1.5px solid rgba(124,92,252,.3); border-radius: 22px; padding: 20px; margin: 20px 0; text-align: center;
+}
+.victoires-count { font: 700 20px 'Syne', sans-serif; color: var(--accent); }
+.victoires-add { margin-bottom: 24px; }
+.victoires-input {
+  width: 100%; min-height: 100px; padding: 14px; border: 1.5px solid var(--border);
+  border-radius: 16px; background: var(--card); color: var(--text); font: 14px 'DM Sans', sans-serif;
+  resize: none; outline: none; transition: border-color .2s;
+}
+.victoires-input:focus { border-color: var(--accent); }
+.victoires-list { display: flex; flex-direction: column; gap: 8px; }
+.victoire-item {
+  padding: 14px 16px; background: var(--soft); border: 1px solid var(--border); border-radius: 12px;
+  font-size: 14px; color: var(--text); line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start;
+}
+.victoire-text { flex: 1; }
+.victoire-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0; line-height: 1; opacity: .5; transition: opacity .2s, color .2s; }
+.victoire-del:active { opacity: 1; color: #fc5c7d; }
+
+/* ── ACHAT IMPULSIF ── */
+.achat-card {
+  background: rgba(252,92,125,.08); border: 1.5px solid rgba(252,92,125,.25);
+  border-radius: 22px; padding: 28px 22px; text-align: center; margin: 24px 0;
+}
+.achat-emoji { font-size: 48px; margin-bottom: 14px; }
+.achat-msg strong { display: block; font: 700 18px 'Syne', sans-serif; color: #fc5c7d; margin-bottom: 10px; }
+.achat-msg p { font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 8px; }
+.achat-timer { margin-top: 20px; }
+.achat-timer-num { font: 700 64px 'Syne', sans-serif; text-align: center; color: #fc5c7d; margin-bottom: 16px; }
+.achat-timer-track { height: 10px; border-radius: 10px; background: var(--soft); overflow: hidden; margin-bottom: 24px; }
+.achat-timer-bar { height: 100%; background: linear-gradient(90deg, #fc5c7d, #fc875c); transition: width 1s linear; border-radius: 10px; }
+.achat-question { margin-bottom: 20px; }
+.achat-question p { margin-bottom: 4px; }
+.achat-sub { font-size: 13px; color: var(--muted); }
+.achat-opts { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── ROUTINES MINIMALES ── */
+.routines-list { display: flex; flex-direction: column; gap: 8px; margin: 18px 0; }
+.routine-row {
+  display: flex; align-items: center; gap: 12px; padding: 14px 14px;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+  transition: border-color .2s, background .2s;
+}
+.routine-check {
+  width: 20px; height: 20px; min-width: 20px; border: 1.5px solid var(--border);
+  border-radius: 6px; background: none; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+  transition: all .15s;
+}
+.routine-check.checked { background: var(--green); border-color: var(--green); color: #0b1f0b; }
+.routine-text { flex: 1; font-size: 14px; color: var(--text); user-select: none; }
+.routine-text.checked { text-decoration: line-through; color: var(--muted); }
+
 .focus-btn-setup {
   width: 100%; border: none; background: none; color: var(--accent);
   font: 600 13px 'DM Sans', sans-serif; cursor: pointer; padding: 6px 0;
@@ -2954,6 +3032,22 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <span class="b-title">📖 Ça t'est déjà arrivé ?</span>
     <span class="b-sub">28 situations TDAH du quotidien, leur mécanisme, et quoi faire maintenant</span>
   </button>
+  <button class="block-btn block-secondary" id="aide-btn-pause">
+    <span class="b-title">✋ Permission de pause</span>
+    <span class="b-sub">Tu as le droit de t'arrêter — même sans finir</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-victoires">
+    <span class="b-title">🌟 Petites victoires</span>
+    <span class="b-sub">Note tes victoires du jour — contre la rumination</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-achat">
+    <span class="b-title">🛍️ Pause avant d'acheter</span>
+    <span class="b-sub">5 minutes pour réfléchir vraiment</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-routines">
+    <span class="b-title">📋 Routines minimales</span>
+    <span class="b-sub">Checklist rapide : clés, téléphone, etc.</span>
+  </button>
 </section>
 
 <!-- RACCOURCIS SETUP (rendu dynamique étape par étape) -->
@@ -3164,6 +3258,95 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <button class="btn-dump-sort" id="btn-dump-sort">🧹 Trier automatiquement</button>
     <button class="btn-outline" id="btn-brain-dump-clear">🗑 Effacer tout</button>
   </div>
+</section>
+
+<!-- PERMISSION DE PAUSE -->
+<section class="screen" id="pause-perm">
+  <button class="back" id="back-pause-perm">← Retour</button>
+  <h1>Permission de <em>pause</em></h1>
+  <div class="pause-perm-card">
+    <div class="pause-perm-emoji">✋</div>
+    <div class="pause-perm-msg">
+      <strong>Tu as le droit de t'arrêter.</strong>
+      <p>Même si tu n'as pas fini. Même si tu étais censée bosser plus. C'est OK.</p>
+      <p>Ton cerveau TDAH a ses limites : respecte-les, et tu en auras plus demain.</p>
+    </div>
+  </div>
+  <p class="sub" style="margin-top:24px">Combien de temps pour vraiment t'arrêter ?</p>
+  <div class="pause-opts">
+    <button class="pause-btn" data-min="5"><span class="pause-min">5</span><span class="pause-label">min</span></button>
+    <button class="pause-btn" data-min="10"><span class="pause-min">10</span><span class="pause-label">min</span></button>
+    <button class="pause-btn" data-min="15"><span class="pause-min">15</span><span class="pause-label">min</span></button>
+    <button class="pause-btn" data-min="20"><span class="pause-min">20</span><span class="pause-label">min</span></button>
+  </div>
+  <div class="pause-timer" id="pause-timer" style="display:none">
+    <div class="pause-timer-num" id="pause-timer-num">5:00</div>
+    <div class="pause-timer-track"><div class="pause-timer-bar" id="pause-timer-bar"></div></div>
+    <button class="btn" id="btn-pause-done">✓ C'est bon, je reprends</button>
+  </div>
+</section>
+
+<!-- CARNET DE PETITES VICTOIRES -->
+<section class="screen" id="victoires-carnet">
+  <button class="back" id="back-victoires-carnet">← Retour</button>
+  <h1>Petites <em>victoires</em></h1>
+  <p class="sub">Chaque pas compte. Noter les victoires t'aide à voir que tu avances — même si ça paraît minuscule.</p>
+
+  <div class="victoires-today" id="victoires-today">
+    <div class="victoires-count">0 victoires</div>
+  </div>
+
+  <div class="victoires-add">
+    <textarea class="victoires-input" id="victoires-input" placeholder="Ex: j'ai bu un verre d'eau&#10;J'ai envoyé ce message qu'j'repoussais&#10;J'ai pas abandonné malgré l'envie"></textarea>
+    <button class="btn" id="btn-victoires-add">➕ Noter cette victoire</button>
+  </div>
+
+  <div class="section-label" style="margin-top:24px">Aujourd'hui</div>
+  <div class="victoires-list" id="victoires-list"></div>
+</section>
+
+<!-- PAUSE ANTI-ACHAT IMPULSIF -->
+<section class="screen" id="pause-achat">
+  <button class="back" id="back-pause-achat">← Retour</button>
+  <h1>Pause <em>avant d'acheter</em></h1>
+  <p class="sub">L'impulsif a besoin de réfléchir 5 minutes. C'est pas de la frustration, c'est de l'autonomie.</p>
+
+  <div class="achat-card">
+    <div class="achat-emoji">🛍️</div>
+    <div class="achat-msg">
+      <strong>Je te donne 5 minutes avant d'acheter.</strong>
+      <p>Pas pour te convaincre — juste pour voir ce que tu décides en vrai.</p>
+    </div>
+  </div>
+
+  <div class="achat-timer" id="achat-timer" style="display:none">
+    <div class="achat-timer-num" id="achat-timer-num">5:00</div>
+    <div class="achat-timer-track"><div class="achat-timer-bar" id="achat-timer-bar"></div></div>
+    <div class="achat-question">
+      <p><strong>Tu en as vraiment besoin ?</strong></p>
+      <p class="achat-sub">Pas de jugement — juste honnête.</p>
+    </div>
+    <div class="achat-opts">
+      <button class="btn" id="btn-achat-oui">Oui, j'achète</button>
+      <button class="btn-outline" id="btn-achat-non">Non, j'oublie</button>
+    </div>
+  </div>
+
+  <div class="achat-start" id="achat-start">
+    <button class="btn" id="btn-achat-start">⏱ Lancer le minuteur</button>
+  </div>
+</section>
+
+<!-- ROUTINES MINIMALES -->
+<section class="screen" id="routines-mini">
+  <button class="back" id="back-routines-mini">← Retour</button>
+  <h1>Routines <em>minimales</em></h1>
+  <p class="sub">Les trucs basiques qu'on oublie et qu'on regrette après. Checklist rapide avant de sortir — ou n'importe quand.</p>
+
+  <div class="section-label">Avant de partir</div>
+  <div class="routines-list" id="routines-list"></div>
+
+  <button class="btn-outline" id="btn-routines-reset" style="margin-top:16px">🔄 Réinitialiser pour demain</button>
 </section>
 
 <!-- TIMER SETUP -->
@@ -14246,6 +14429,10 @@ function _reorderProjectCards() {
     show(localStorage.getItem('ft_brain_mode') === 'on' ? 'brain-hub' : 'aide-menu');
   };
   document.getElementById('aide-btn-situations').onclick = () => { window.__bhSituationsFilter = 'all'; show('situations-lib'); };
+  document.getElementById('aide-btn-pause').onclick = () => show('pause-perm');
+  document.getElementById('aide-btn-victoires').onclick = () => show('victoires-carnet');
+  document.getElementById('aide-btn-achat').onclick = () => show('pause-achat');
+  document.getElementById('aide-btn-routines').onclick = () => show('routines-mini');
 
   // ── Branchement sur la navigation existante ──
   const _origShow = show;
@@ -14256,7 +14443,173 @@ function _reorderProjectCards() {
     if (id === 'situations-lib') renderSituationsLib();
   };
 
-  updateBrainUI(currentScreenId());
+  // ─── PERMISSION DE PAUSE ───
+(function setupPausePerm() {
+  const screen = document.getElementById('pause-perm');
+  if (!screen) return;
+
+  let pauseInterval = null;
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  document.getElementById('back-pause-perm').onclick = () => show('landing');
+
+  document.querySelectorAll('#pause-perm .pause-btn').forEach(btn => {
+    btn.onclick = () => {
+      const min = parseInt(btn.dataset.min);
+      const sec = min * 60;
+      btn.parentElement.style.display = 'none';
+      document.getElementById('pause-timer').style.display = 'block';
+      document.getElementById('pause-timer-num').textContent = formatTime(sec);
+      let remaining = sec;
+      if (pauseInterval) clearInterval(pauseInterval);
+      pauseInterval = setInterval(() => {
+        remaining--;
+        document.getElementById('pause-timer-num').textContent = formatTime(remaining);
+        const pct = 100 * (1 - remaining / sec);
+        document.getElementById('pause-timer-bar').style.width = pct + '%';
+        if (remaining <= 0) {
+          clearInterval(pauseInterval);
+          playTone();
+        }
+      }, 1000);
+    };
+  });
+
+  document.getElementById('btn-pause-done').onclick = () => {
+    if (pauseInterval) clearInterval(pauseInterval);
+    document.querySelector('#pause-perm .pause-opts').style.display = 'grid';
+    document.getElementById('pause-timer').style.display = 'none';
+    show('landing');
+  };
+})();
+
+// ─── CARNET DE PETITES VICTOIRES ───
+(function setupVictoires() {
+  const screen = document.getElementById('victoires-carnet');
+  if (!screen) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  const key = 'ft_victoires_' + today;
+
+  function renderVictoires() {
+    const list = document.getElementById('victoires-list');
+    const items = JSON.parse(localStorage.getItem(key) || '[]');
+    list.innerHTML = '';
+    document.querySelector('#victoires-today .victoires-count').textContent = items.length + ' victoire' + (items.length !== 1 ? 's' : '');
+    items.forEach((v, i) => {
+      const el = document.createElement('div');
+      el.className = 'victoire-item';
+      el.innerHTML = `<div class="victoire-text">${v}</div><button class="victoire-del">✕</button>`;
+      el.querySelector('.victoire-del').onclick = () => {
+        items.splice(i, 1);
+        localStorage.setItem(key, JSON.stringify(items));
+        renderVictoires();
+      };
+      list.appendChild(el);
+    });
+  }
+
+  document.getElementById('back-victoires-carnet').onclick = () => show('landing');
+  document.getElementById('btn-victoires-add').onclick = () => {
+    const txt = document.getElementById('victoires-input').value.trim();
+    if (!txt) return;
+    const items = JSON.parse(localStorage.getItem(key) || '[]');
+    items.push(txt);
+    localStorage.setItem(key, JSON.stringify(items));
+    document.getElementById('victoires-input').value = '';
+    renderVictoires();
+  };
+
+  renderVictoires();
+})();
+
+// ─── PAUSE ANTI-ACHAT IMPULSIF ───
+(function setupAchatPause() {
+  const screen = document.getElementById('pause-achat');
+  if (!screen) return;
+
+  let achatInterval = null;
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  document.getElementById('back-pause-achat').onclick = () => show('landing');
+  document.getElementById('btn-achat-start').onclick = () => {
+    const sec = 300; // 5 min
+    document.querySelector('#pause-achat .achat-start').style.display = 'none';
+    document.getElementById('achat-timer').style.display = 'block';
+    document.getElementById('achat-timer-num').textContent = formatTime(sec);
+    let remaining = sec;
+    if (achatInterval) clearInterval(achatInterval);
+    achatInterval = setInterval(() => {
+      remaining--;
+      document.getElementById('achat-timer-num').textContent = formatTime(remaining);
+      const pct = 100 * (1 - remaining / sec);
+      document.getElementById('achat-timer-bar').style.width = pct + '%';
+      if (remaining <= 0) {
+        clearInterval(achatInterval);
+        playTone();
+      }
+    }, 1000);
+  };
+
+  document.getElementById('btn-achat-oui').onclick = () => {
+    if (achatInterval) clearInterval(achatInterval);
+    show('landing');
+  };
+
+  document.getElementById('btn-achat-non').onclick = () => {
+    if (achatInterval) clearInterval(achatInterval);
+    show('landing');
+  };
+})();
+
+// ─── ROUTINES MINIMALES ───
+(function setupRoutines() {
+  const screen = document.getElementById('routines-mini');
+  if (!screen) return;
+
+  const routinesData = [
+    'Clés 🔑', 'Téléphone 📱', 'Portefeuille 💳',
+    'Masque 😷', 'Lunettes 👓', 'Bouteille 💧'
+  ];
+  const today = new Date().toISOString().split('T')[0];
+  const key = 'ft_routines_' + today;
+
+  function renderRoutines() {
+    const list = document.getElementById('routines-list');
+    list.innerHTML = '';
+    const checked = JSON.parse(localStorage.getItem(key) || '{}');
+    routinesData.forEach((name, i) => {
+      const isChecked = checked[i];
+      const el = document.createElement('div');
+      el.className = 'routine-row';
+      el.innerHTML = `
+        <button class="routine-check${isChecked ? ' checked' : ''}"></button>
+        <div class="routine-text${isChecked ? ' checked' : ''}">${name}</div>`;
+      el.querySelector('.routine-check').onclick = () => {
+        checked[i] = !checked[i];
+        localStorage.setItem(key, JSON.stringify(checked));
+        renderRoutines();
+      };
+      list.appendChild(el);
+    });
+  }
+
+  document.getElementById('back-routines-mini').onclick = () => show('landing');
+  document.getElementById('btn-routines-reset').onclick = () => {
+    localStorage.removeItem(key);
+    renderRoutines();
+  };
+
+  renderRoutines();
+})();
+
+updateBrainUI(currentScreenId());
 })();
 </script>
 </body>
