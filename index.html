@@ -1756,7 +1756,17 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   resize: none; outline: none; transition: border-color .2s;
 }
 .victoires-input:focus { border-color: var(--accent); }
+.victoires-confirm { font-size: 12px; color: var(--green); margin-top: 8px; min-height: 16px; opacity: 0; transition: opacity .25s; }
+.victoires-confirm.visible { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .victoires-confirm { transition: none; }
+}
 .victoires-list { display: flex; flex-direction: column; gap: 8px; }
+.victoire-recall {
+  background: var(--soft); border: 1.5px solid var(--border); border-radius: 14px;
+  padding: 12px 14px; margin: 10px 0 4px; font-size: 13.5px; line-height: 1.6; color: var(--text);
+}
+.victoire-recall strong { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
 .victoire-item {
   padding: 14px 16px; background: var(--soft); border: 1px solid var(--border); border-radius: 12px;
   font-size: 14px; color: var(--text); line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start;
@@ -3042,7 +3052,7 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <span class="b-title">✋ Permission de pause</span>
     <span class="b-sub">Tu as le droit de t'arrêter — même sans finir</span>
   </button>
-  <button class="block-btn block-secondary" id="aide-btn-victoires">
+  <button class="block-btn block-secondary" id="aide-btn-victoires" style="display:none">
     <span class="b-title">🌟 Petites victoires</span>
     <span class="b-sub">Note tes victoires du jour — contre la rumination</span>
   </button>
@@ -3202,6 +3212,7 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
   <button class="back" id="back-reset-cognitif">← Retour</button>
   <h1>Reset <em>cognitif</em></h1>
   <p class="sub">3 minutes pour toi. Ton cerveau en a besoin avant de continuer.</p>
+  <div id="reset-victoire-recall"></div>
   <div id="reset-steps-wrap">
     <div class="reset-step" id="rs-breath">
       <div class="reset-step-num">1</div>
@@ -3307,8 +3318,10 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
   </div>
 
   <div class="victoires-add">
+    <label for="victoires-input" class="section-label">Nouvelle victoire</label>
     <textarea class="victoires-input" id="victoires-input" placeholder="Ex: j'ai bu un verre d'eau&#10;J'ai envoyé ce message qu'j'repoussais&#10;J'ai pas abandonné malgré l'envie"></textarea>
     <button class="btn" id="btn-victoires-add">➕ Noter cette victoire</button>
+    <div class="victoires-confirm" id="victoires-confirm" role="status" aria-live="polite"></div>
   </div>
 
   <div class="section-label" style="margin-top:24px">Aujourd'hui</div>
@@ -10345,6 +10358,26 @@ function showResetCognitif() {
   if (btn) btn.style.display = 'block';
   document.getElementById('reset-steps-wrap').style.display = 'block';
   document.getElementById('reset-active-content').style.display = 'none';
+
+  const recall = document.getElementById('reset-victoire-recall');
+  if (recall) {
+    recall.innerHTML = '';
+    if (localStorage.getItem('ft_flag_carnet_victoires') === '1' && typeof window.getRandomVictoire === 'function') {
+      const victoire = window.getRandomVictoire();
+      if (victoire) {
+        const box = document.createElement('div');
+        box.className = 'victoire-recall';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Une victoire récente :';
+        const text = document.createElement('div');
+        text.textContent = victoire;
+        box.appendChild(strong);
+        box.appendChild(text);
+        recall.appendChild(box);
+      }
+    }
+  }
+
   show('reset-cognitif');
 }
 
@@ -11254,12 +11287,20 @@ function showRSDMode() {
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
 
   function step1() {
+    let victoireHtml = '';
+    if (localStorage.getItem('ft_flag_carnet_victoires') === '1' && typeof window.getRandomVictoire === 'function') {
+      const victoire = window.getRandomVictoire();
+      if (victoire) {
+        victoireHtml = `<div class="victoire-recall"><strong>Une victoire récente :</strong>${victoire.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</div>`;
+      }
+    }
     bd.innerHTML = `
       <div class="cat-modal-sheet">
         <div class="cat-modal-handle"></div>
         <div style="font-size:28px;text-align:center;margin-bottom:8px">💙</div>
         <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;text-align:center;margin-bottom:10px">Ce que tu ressens est réel.</div>
         <div class="rsd-card">Le RSD (Dysrégulation Émotionnelle Sensible au Rejet) est neurologique — pas une faiblesse. Ton cerveau TDAH amplifie la douleur du rejet jusqu'à 10×. Ce n'est pas exagéré. C'est biologique.</div>
+        ${victoireHtml}
         <button class="btn" id="rsd-next1">Je comprends → ancrage</button>
         <button style="background:none;border:none;color:var(--muted);font:600 13px 'DM Sans',sans-serif;width:100%;padding:8px;cursor:pointer;margin-top:4px" onclick="document.getElementById('rsd-bd').remove()">Fermer</button>
       </div>`;
@@ -14517,9 +14558,16 @@ function _reorderProjectCards() {
 })();
 
 // ─── CARNET DE PETITES VICTOIRES ───
+// Test reversible derriere flag localStorage ft_flag_carnet_victoires === '1'.
+// Flag absent/different de '1' -> bouton aide-menu invisible, zero regression.
 (function setupVictoires() {
   const screen = document.getElementById('victoires-carnet');
   if (!screen) return;
+
+  if (localStorage.getItem('ft_flag_carnet_victoires') === '1') {
+    const aideBtn = document.getElementById('aide-btn-victoires');
+    if (aideBtn) aideBtn.style.display = '';
+  }
 
   const today = new Date().toISOString().split('T')[0];
   const key = 'ft_victoires_' + today;
@@ -14532,29 +14580,60 @@ function _reorderProjectCards() {
     items.forEach((v, i) => {
       const el = document.createElement('div');
       el.className = 'victoire-item';
-      el.innerHTML = `<div class="victoire-text">${v}</div><button class="victoire-del">✕</button>`;
-      el.querySelector('.victoire-del').onclick = () => {
+      const text = document.createElement('div');
+      text.className = 'victoire-text';
+      text.textContent = v;
+      const del = document.createElement('button');
+      del.className = 'victoire-del';
+      del.setAttribute('aria-label', 'Supprimer cette victoire');
+      del.textContent = '✕';
+      del.onclick = () => {
         items.splice(i, 1);
         localStorage.setItem(key, JSON.stringify(items));
         renderVictoires();
       };
+      el.appendChild(text);
+      el.appendChild(del);
       list.appendChild(el);
     });
   }
 
   document.getElementById('back-victoires-carnet').onclick = () => show('landing');
   document.getElementById('btn-victoires-add').onclick = () => {
-    const txt = document.getElementById('victoires-input').value.trim();
+    const input = document.getElementById('victoires-input');
+    const txt = input.value.trim();
     if (!txt) return;
     const items = JSON.parse(localStorage.getItem(key) || '[]');
     items.push(txt);
     localStorage.setItem(key, JSON.stringify(items));
-    document.getElementById('victoires-input').value = '';
+    input.value = '';
     renderVictoires();
+    const confirm = document.getElementById('victoires-confirm');
+    confirm.textContent = 'Victoire notée.';
+    confirm.classList.add('visible');
+    clearTimeout(confirm._t);
+    confirm._t = setTimeout(() => confirm.classList.remove('visible'), 2500);
   };
 
   renderVictoires();
 })();
+
+// Pioche une victoire au hasard parmi toutes les journées enregistrées
+// (ft_victoires_AAAA-MM-JJ). Retourne null si rien n'est encore noté.
+window.getRandomVictoire = function() {
+  const all = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf('ft_victoires_') === 0) {
+      try {
+        const arr = JSON.parse(localStorage.getItem(k) || '[]');
+        arr.forEach(v => { if (v) all.push(v); });
+      } catch(e) {}
+    }
+  }
+  if (!all.length) return null;
+  return all[Math.floor(Math.random() * all.length)];
+};
 
 // ─── PAUSE ANTI-ACHAT IMPULSIF ───
 (function setupAchatPause() {
