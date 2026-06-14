@@ -3056,11 +3056,11 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <span class="b-title">🌟 Petites victoires</span>
     <span class="b-sub">Note tes victoires du jour — contre la rumination</span>
   </button>
-  <button class="block-btn block-secondary" id="aide-btn-achat">
+  <button class="block-btn block-secondary" id="aide-btn-achat" style="display:none">
     <span class="b-title">🛍️ Pause avant d'acheter</span>
     <span class="b-sub">5 minutes pour réfléchir vraiment</span>
   </button>
-  <button class="block-btn block-secondary" id="aide-btn-routines">
+  <button class="block-btn block-secondary" id="aide-btn-routines" style="display:none">
     <span class="b-title">📋 Routines minimales</span>
     <span class="b-sub">Checklist rapide : clés, téléphone, etc.</span>
   </button>
@@ -14636,9 +14636,16 @@ window.getRandomVictoire = function() {
 };
 
 // ─── PAUSE ANTI-ACHAT IMPULSIF ───
+// Test reversible derriere flag localStorage ft_flag_pause_achat === '1'.
+// Flag absent/different de '1' -> bouton aide-menu invisible, zero regression.
 (function setupAchatPause() {
   const screen = document.getElementById('pause-achat');
   if (!screen) return;
+
+  if (localStorage.getItem('ft_flag_pause_achat') === '1') {
+    const aideBtn = document.getElementById('aide-btn-achat');
+    if (aideBtn) aideBtn.style.display = '';
+  }
 
   let achatInterval = null;
   function formatTime(sec) {
@@ -14678,9 +14685,16 @@ window.getRandomVictoire = function() {
 })();
 
 // ─── ROUTINES MINIMALES ───
+// Test reversible derriere flag localStorage ft_flag_routines_minimales === '1'.
+// Flag absent/different de '1' -> bouton aide-menu invisible, zero regression.
 (function setupRoutines() {
   const screen = document.getElementById('routines-mini');
   if (!screen) return;
+
+  if (localStorage.getItem('ft_flag_routines_minimales') === '1') {
+    const aideBtn = document.getElementById('aide-btn-routines');
+    if (aideBtn) aideBtn.style.display = '';
+  }
 
   const routinesData = [
     'Clés 🔑', 'Téléphone 📱', 'Portefeuille 💳',
