@@ -2528,6 +2528,13 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
 .sl-card-strategy strong { color: var(--text); }
 .sl-card-action { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: none; border-radius: 999px; padding: 8px 16px; font: 700 12.5px 'DM Sans', sans-serif; cursor: pointer; }
 .sl-card-action:active { transform: scale(.96); }
+/* ── SEUIL POUR CETTE FOIS (flag ft_flag_seuil_tache) ── */
+#seuil-tache-block { margin: 6px 0 12px; }
+#seuil-tache-block details summary { font-size: 13px; color: var(--muted); cursor: pointer; user-select: none; padding: 2px 0; }
+#seuil-texte { width: 100%; min-height: 60px; resize: vertical; background: var(--soft); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font: 13px 'DM Sans',sans-serif; padding: 8px 12px; outline: none; margin-top: 8px; box-sizing: border-box; }
+#seuil-texte:focus { border-color: var(--accent); }
+#seuil-atteint-msg { font-size: 13px; color: var(--muted); margin: 4px 0 8px; }
+.seuil-marker { font-size: 12px; color: var(--muted); font-weight: normal; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -2866,6 +2873,15 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <div class="step-dots" id="s-dots"></div>
   </div>
   <div class="task-name" id="s-task-name"></div>
+  <!-- Seuil pour cette fois — ft_flag_seuil_tache -->
+  <div id="seuil-tache-block" role="group" aria-label="Seuil pour cette tâche" style="display:none">
+    <details id="seuil-details">
+      <summary>Fixer un seuil pour cette tâche</summary>
+      <textarea id="seuil-texte" aria-label="Écrire ce qui compte comme assez, pour cette fois" rows="3"></textarea>
+    </details>
+    <div id="seuil-atteint-msg" aria-live="polite" style="display:none">Seuil atteint. Tu peux passer à la suite.</div>
+    <button class="btn-ghost" id="btn-seuil-suffisant">✓ C'est suffisant pour cette fois</button>
+  </div>
   <!-- Temps cumulé + % déclaré sur cette tâche -->
   <div id="s-task-progress" style="display:none;margin:-6px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
   <div class="micro-box" id="micro-box">
@@ -5947,6 +5963,11 @@ function renderStepsList(steps, container, saveFn, seanceMode, _openNames) {
     const nameSpan = document.createElement('span');
     nameSpan.className = 'plan-step-name';
     nameSpan.textContent = step.name;
+    if (localStorage.getItem('ft_flag_seuil_tache') === '1' && step.seuilAtteint) {
+      var _sm = document.createElement('span');
+      _sm.className = 'seuil-marker'; _sm.textContent = '(✓ seuil)';
+      nameSpan.appendChild(_sm);
+    }
     const eb = document.createElement('button');
     eb.className = 'edit-btn'; eb.textContent = '✎'; eb.title = 'Renommer';
     (function(st, ns, btn) {
@@ -7719,6 +7740,23 @@ function renderSession() {
   const activeSteps = getActiveSteps(p);
   document.getElementById('s-step-label').textContent = 'Étape ' + (idx + 1) + ' / ' + activeSteps.length;
   document.getElementById('s-task-name').textContent = step.name;
+  // Seuil pour cette fois (ft_flag_seuil_tache)
+  (function() {
+    var seuilBlock = document.getElementById('seuil-tache-block');
+    if (localStorage.getItem('ft_flag_seuil_tache') === '1') {
+      seuilBlock.style.display = '';
+      document.getElementById('seuil-texte').value = step.seuilTexte || '';
+      document.getElementById('seuil-atteint-msg').style.display = step.seuilAtteint ? '' : 'none';
+      if (step.seuilAtteint) {
+        var marker = document.createElement('span');
+        marker.className = 'seuil-marker';
+        marker.textContent = '(✓ seuil)';
+        document.getElementById('s-task-name').appendChild(marker);
+      }
+    } else {
+      seuilBlock.style.display = 'none';
+    }
+  })();
   const microBox = document.getElementById('micro-box');
   if (step.micros.length) {
     microBox.style.display = '';
@@ -14736,6 +14774,41 @@ window.getRandomVictoire = function() {
 })();
 
 updateBrainUI(currentScreenId());
+})();
+
+// ─── SEUIL POUR CETTE FOIS ───
+// Test reversible derriere flag localStorage ft_flag_seuil_tache === '1'.
+// Flag absent/different de '1' -> bloc #seuil-tache-block masque, zero regression.
+(function setupSeuilTache() {
+  function _saveSeuilTexte() {
+    if (localStorage.getItem('ft_flag_seuil_tache') !== '1') return;
+    var projects = getProjects();
+    var p = projects.find(function(x) { return x.id === (currentProject && currentProject.id); });
+    if (!p) return;
+    var step = getCurrentStep(p);
+    if (!step) return;
+    var val = document.getElementById('seuil-texte').value.trim();
+    step.seuilTexte = val;
+    saveProjects(projects);
+    currentProject = p;
+  }
+
+  document.getElementById('seuil-texte').addEventListener('blur', _saveSeuilTexte);
+
+  document.getElementById('btn-seuil-suffisant').onclick = function() {
+    if (localStorage.getItem('ft_flag_seuil_tache') !== '1') return;
+    var projects = getProjects();
+    var p = projects.find(function(x) { return x.id === (currentProject && currentProject.id); });
+    if (!p) return;
+    var step = getCurrentStep(p);
+    if (!step) return;
+    var val = document.getElementById('seuil-texte').value.trim();
+    if (val) step.seuilTexte = val;
+    step.seuilAtteint = true;
+    saveProjects(projects);
+    currentProject = p;
+    renderSession();
+  };
 })();
 </script>
 </body>
