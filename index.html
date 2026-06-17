@@ -1082,6 +1082,75 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   50%      { transform: translateX(-50%) translateY(5px); }
 }
 
+/* Zone overlay buttons */
+#brain-hotspots { position: absolute; inset: 0; pointer-events: none; }
+.brain-zone-btn {
+  position: absolute;
+  background: none;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transform: translate(-50%, -50%);
+  padding: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+.brain-zone-btn .bzb-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor, 0 0 22px currentColor;
+  animation: dotPulse 2.2s ease-in-out infinite;
+  transition: transform .15s;
+}
+.brain-zone-btn:active .bzb-dot { transform: scale(2); }
+.brain-zone-btn .bzb-label {
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: rgba(255,255,255,.55);
+  font-family: 'Share Tech Mono', monospace;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+/* Zone indicator (shown when zoomed in) */
+#zoneIndicator {
+  position: absolute;
+  top: 60px; left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s;
+}
+#zoneIndicator.visible { opacity: 1; }
+#ziName {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: 3px;
+  text-transform: uppercase;
+}
+/* Back button (shown when zoomed in) */
+#btnBack {
+  position: absolute;
+  bottom: 32px; left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  background: rgba(0,0,0,.6);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 20px;
+  color: rgba(255,255,255,.75);
+  font: 12px 'Share Tech Mono', monospace;
+  letter-spacing: 2px;
+  padding: 8px 22px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 10;
+  -webkit-tap-highlight-color: transparent;
+}
+#btnBack.visible { display: block; }
+
 /* Hint "tape une zone" (inside brain-section) */
 .brain-tap-hint {
   position: absolute;
@@ -2601,6 +2670,8 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
   <div id="brain-section">
     <canvas id="brain-canvas"></canvas>
     <div id="brain-hotspots"></div>
+    <div id="zoneIndicator"><div id="ziName"></div></div>
+    <button id="btnBack" onclick="if(window.BrainEngine)BrainEngine.zoomOut()">← retour</button>
     <div class="brain-section-logo">✦ focusTDAH</div>
     <div class="brain-tap-hint">tape une zone · navigue</div>
     <div class="brain-scroll-hint">↓ &nbsp; outils &nbsp; ↓</div>
@@ -14085,6 +14156,29 @@ function _reorderProjectCards() {
       BrainEngine.highlightLobe(zoneId, 1.5, 500);
       setTimeout(nav, 350);
     });
+
+    // Populate zone overlay buttons in #brain-hotspots
+    const ZONE_UI = {
+      frontal:    { label: 'Focus',   x: '36%', y: '36%', color: '#00f5ff' },
+      parietal:   { label: 'Plan',    x: '52%', y: '20%', color: '#4488ff' },
+      temporal:   { label: 'Sons',    x: '19%', y: '50%', color: '#00ccbb' },
+      occipital:  { label: 'Projet',  x: '66%', y: '42%', color: '#88ccff' },
+      cerebellum: { label: 'Reset',   x: '54%', y: '68%', color: '#2266ff' },
+      brainstem:  { label: 'Urgence', x: '50%', y: '80%', color: '#ff4455' },
+    };
+    const hotspots = document.getElementById('brain-hotspots');
+    if (hotspots) {
+      Object.entries(ZONE_UI).forEach(([zoneId, ui]) => {
+        const btn = document.createElement('button');
+        btn.className = 'brain-zone-btn';
+        btn.style.cssText = `left:${ui.x};top:${ui.y};color:${ui.color}`;
+        btn.innerHTML = `<span class="bzb-dot"></span><span class="bzb-label">${ui.label}</span>`;
+        btn.addEventListener('click', () => {
+          if (window.BrainEngine) BrainEngine.zoomToLobe(zoneId);
+        });
+        hotspots.appendChild(btn);
+      });
+    }
 
     // Button grid → highlight corresponding brain zone
     document.querySelectorAll('.landing-action-btn[data-zone]').forEach(btn => {
