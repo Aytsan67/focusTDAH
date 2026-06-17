@@ -3916,52 +3916,78 @@ function renderUserPill(user) {
 }
 
 function maybeShowOnboarding() {
-  if (localStorage.getItem('ft_onboarded_v2')) {
+  // Forcer le replay du nouveau voyage éducatif v3
+  if (localStorage.getItem('ft_onboarded_v2') && !localStorage.getItem('ft_onboarded_v3')) {
+    localStorage.removeItem('ft_onboarded_v2');
+  }
+  if (localStorage.getItem('ft_onboarded_v3')) {
     // Déjà vu : révéler les zones immédiatement
     if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
     return;
   }
 
   const STEPS = [
+    // 0 — Le cerveau entier (intro)
     {
-      label: 'Ton cerveau',
+      label: 'Bienvenue',
       title: 'Bienvenue dans ton cerveau.',
       text: 'Ton cerveau ne fonctionne pas mal.\nIl fonctionne <em>différemment</em>.',
-      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.45); } },
+      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.4); BrainEngine.zoomOut(); } },
       cta: 'Découvrir →'
     },
+    // 1 — Les neurones
     {
-      label: 'Les neurones',
+      label: 'Étape 1 · Les neurones',
       title: 'Tes neurones parlent en permanence.',
-      text: 'Des signaux électriques voyagent à travers les synapses.\nCes impulsions <em>sont</em> tes pensées.',
+      text: 'Ils communiquent entre eux via des <em>neurotransmetteurs</em>.\nCes signaux te permettent de te concentrer, planifier, passer à l\'action.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#00f5ff'); BrainEngine.setEnergy(0.75); } },
       cta: 'Continuer →'
     },
+    // 2 — La dopamine
     {
-      label: 'La dopamine',
+      label: 'Étape 2 · La dopamine',
       title: 'La dopamine : ton carburant.',
-      text: 'Elle aide à démarrer, maintenir l\'attention, ressentir la récompense.\nDans le TDAH, ce circuit fonctionne <em>autrement</em> — c\'est neurologique.',
+      text: 'Elle t\'aide à <em>démarrer</em>, <em>maintenir l\'attention</em>, ressentir la récompense.\nDans le TDAH, ce système fonctionne <em>différemment</em>.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#ffd700'); BrainEngine.setEnergy(0.95); } },
       cta: 'Continuer →'
     },
+    // 3 — Comparaison neurotypique vs TDAH
     {
-      label: 'Pas ta faute',
+      label: 'Étape 3 · Ton cerveau est unique',
       title: 'Ce n\'est pas un manque de volonté.',
-      text: 'Les signaux sont plus irréguliers.\nTon cerveau cherche naturellement plus de stimulation pour s\'activer.',
+      text: 'Cerveau neurotypique : les signaux circulent facilement.\nCerveau TDAH : les signaux sont plus <em>irréguliers</em>, il cherche plus de stimulation.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#6688aa'); BrainEngine.setEnergy(0.25); } },
       cta: 'Continuer →'
     },
+    // 4 — Le cortex préfrontal
     {
-      label: 'L\'hyperfocus',
-      title: 'Et pourtant, tu peux te concentrer intensément.',
-      text: 'Quand quelque chose est suffisamment stimulant, l\'attention explose.\nLe problème n\'est pas la capacité — c\'est la <em>régulation</em>.',
+      label: 'Étape 4 · Cortex préfrontal',
+      title: 'Le chef d\'orchestre.',
+      text: 'Planification, mémoire de travail, organisation, démarrage des tâches.\nIl n\'est pas <em>cassé</em> — il reçoit juste moins efficacement certains signaux.',
+      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#00f5ff'); BrainEngine.setEnergy(0.55); if(BrainEngine.highlightLobe) BrainEngine.highlightLobe('frontal', 2.0, 1500); } },
+      cta: 'Continuer →'
+    },
+    // 5 — L'hyperfocus
+    {
+      label: 'Étape 5 · L\'hyperfocus',
+      title: 'Tu peux te concentrer intensément.',
+      text: 'Quand quelque chose est suffisamment stimulant, l\'attention <em>explose</em>.\nLe problème n\'est pas la capacité — c\'est la <em>régulation</em>.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#b05cfc'); BrainEngine.setEnergy(1.0); } },
       cta: 'Continuer →'
     },
+    // 6 — Pourquoi les méthodes classiques échouent
     {
-      label: 'FocusTDAH',
-      title: 'FocusTDAH travaille avec ton cerveau.',
-      text: 'Chaque outil correspond à une réalité neurologique.\nPas pour lutter contre ton TDAH — pour travailler <em>avec lui</em>.',
+      label: 'Étape 6 · Découper, pas forcer',
+      title: 'Pourquoi les méthodes classiques échouent.',
+      text: 'Grosse tâche → ton cerveau se <em>surcharge</em>, les connexions ralentissent.\nMicro-étapes → les réseaux <em>se réactivent</em>. C\'est la base de FocusTDAH.',
+      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#ff8855'); BrainEngine.setEnergy(0.35); } },
+      cta: 'Continuer →'
+    },
+    // 7 — Transition vers l'application
+    {
+      label: 'Étape 7 · Travailler avec ton cerveau',
+      title: 'On y va.',
+      text: 'Maintenant que tu comprends comment ton cerveau fonctionne, apprenons à travailler <em>avec lui</em>, pas contre lui.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#7c5cfc'); BrainEngine.setEnergy(0.85); } },
       cta: 'Entrer dans mon cerveau →'
     },
@@ -3992,7 +4018,9 @@ function maybeShowOnboarding() {
   }
 
   function finishOnboarding() {
+    localStorage.setItem('ft_onboarded_v3', '1');
     localStorage.setItem('ft_onboarded_v2', '1');
+    localStorage.setItem('ft_onboarded', '1');
     ov.style.transition = 'opacity .7s ease';
     ov.style.opacity = '0';
     setTimeout(() => {
