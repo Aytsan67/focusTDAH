@@ -1830,6 +1830,101 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   .bon-cinematic-tools { grid-template-columns: 1fr; }
 }
 
+
+/* Onboarding v10: le vrai cerveau 3D existant redevient le sujet principal. */
+body.brain-onboarding-uses-3d {
+  background: #000008;
+  overflow: hidden;
+}
+body.brain-onboarding-uses-3d main {
+  z-index: 1990;
+}
+body.brain-onboarding-uses-3d #brain-section {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  z-index: 1995 !important;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(0,245,255,.20), transparent 32%),
+    radial-gradient(circle at 50% 52%, rgba(124,92,252,.16), transparent 42%),
+    #000008 !important;
+  pointer-events: none !important;
+  opacity: 1 !important;
+  filter: contrast(1.08) saturate(1.18) brightness(1.05);
+}
+body.brain-onboarding-uses-3d #brain-section::before {
+  opacity: .08;
+}
+body.brain-onboarding-uses-3d #brain-canvas {
+  width: 100vw !important;
+  height: 100dvh !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 60px color-mix(in srgb, var(--accent, #00f5ff) 24%, transparent));
+}
+body.brain-onboarding-uses-3d #brain-intro,
+body.brain-onboarding-uses-3d #brain-hotspots,
+body.brain-onboarding-uses-3d #zoneIndicator,
+body.brain-onboarding-uses-3d #btnBack,
+body.brain-onboarding-uses-3d .brain-section-logo,
+body.brain-onboarding-uses-3d #brain-state-badge,
+body.brain-onboarding-uses-3d .brain-tap-hint,
+body.brain-onboarding-uses-3d .brain-scroll-hint,
+body.brain-onboarding-uses-3d .landing-left {
+  display: none !important;
+}
+body.brain-onboarding-uses-3d #brain-onboarding {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,255,255,.025), transparent 18%),
+    radial-gradient(circle at 78% 16%, rgba(124,92,252,.09), transparent 32%),
+    radial-gradient(circle at 20% 80%, rgba(0,245,255,.06), transparent 30%),
+    linear-gradient(180deg, rgba(0,0,4,.28), rgba(0,0,10,.38));
+}
+body.brain-onboarding-uses-3d #brain-onboarding::before {
+  opacity: .14;
+}
+body.brain-onboarding-uses-3d .bon-3d-view {
+  background: radial-gradient(circle at 50% 46%, rgba(0,245,255,.015), rgba(0,0,8,.03) 42%, rgba(0,0,8,.10));
+  border-color: rgba(255,255,255,.10);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,245,255,.10),
+    inset 0 0 120px rgba(0,0,0,.18),
+    0 38px 130px rgba(0,0,0,.28),
+    0 0 120px color-mix(in srgb, var(--accent) 17%, transparent);
+}
+body.brain-onboarding-uses-3d .bon-cartoon-brain,
+body.brain-onboarding-uses-3d .bon-cartoon-label {
+  display: none !important;
+}
+.bon-real-3d-anchor {
+  position: absolute;
+  inset: 11% 7% 15%;
+  z-index: 2;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.08);
+  background:
+    radial-gradient(circle at 50% 46%, transparent 0 36%, rgba(0,245,255,.08) 44%, transparent 62%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.035), transparent 58%);
+  box-shadow: inset 0 0 55px rgba(0,245,255,.08), 0 0 80px rgba(0,245,255,.05);
+  pointer-events: none;
+  animation: bonReal3dBreath 4.8s ease-in-out infinite;
+}
+@keyframes bonReal3dBreath { 50% { transform: scale(1.035); opacity: .72; } }
+body.brain-onboarding-uses-3d .bon-depth-label::before {
+  content: 'vrai ';
+}
+body.brain-onboarding-uses-3d .bon-synapse-zoom {
+  background: radial-gradient(circle at 50% 50%, rgba(0,0,8,.28), transparent 68%);
+  border-radius: 32px;
+}
+body.brain-onboarding-uses-3d #brain-onboarding[data-scene="synapse"] .bon-synapse-zoom,
+body.brain-onboarding-uses-3d #brain-onboarding[data-scene="dopamine"] .bon-synapse-zoom {
+  opacity: .92;
+}
+
 @media (min-width: 700px) {
   .bon-content { max-width: 560px; align-self: center; border: 1px solid rgba(255,255,255,.08); border-radius: 26px 26px 0 0; }
 }
@@ -4642,11 +4737,12 @@ function renderUserPill(user) {
 function maybeShowOnboarding() {
   const existingOnboarding = document.getElementById('brain-onboarding');
   if (existingOnboarding) existingOnboarding.remove();
-  const ONBOARDING_VERSION = 'v9';
+  document.body.classList.remove('brain-onboarding-uses-3d');
+  const ONBOARDING_VERSION = 'v10';
   const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
   // L'introduction est volontairement rejouée à chaque chargement/refresh.
   // On garde la clé seulement comme trace de version, jamais pour skipper le voyage.
-  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', 'ft_onboarded_v5', 'ft_onboarded_v6', 'ft_onboarded_v7', 'ft_onboarded_v8', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
+  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', 'ft_onboarded_v5', 'ft_onboarded_v6', 'ft_onboarded_v7', 'ft_onboarded_v8', 'ft_onboarded_v9', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
 
   const STEPS = [
     {
@@ -4735,6 +4831,7 @@ function maybeShowOnboarding() {
       cta: 'Commencer →'
     },
   ];
+  document.body.classList.add('brain-onboarding-uses-3d');
   const ov = document.createElement('div');
   ov.id = 'brain-onboarding';
   document.body.appendChild(ov);
@@ -4906,15 +5003,15 @@ function maybeShowOnboarding() {
         <div class="bon-film-grain"></div>
         <div class="bon-3d-glass"></div>
         <div class="bon-scanline"></div>
-        ${cartoonBrainSvg(s)}
+        <div class="bon-real-3d-anchor" aria-hidden="true"></div>
         ${synapseZoom(s)}
         ${zoneReveals(s)}
         ${distractionCloud(s)}
         <div class="bon-camera-rail"><span>cerveau</span><span>zoom</span><span>synapse</span><span>zones</span></div>
         <div class="bon-cinema-titlecard">FocusTDAH · intro film</div>
         <div class="bon-shot-label"><strong>${s.shot || 'Plan guidé'}</strong><span>${s.director || 'voyage cerveau 3D'}</span></div>
-        <div class="bon-3d-badge">court-métrage éducatif · ${modeLabel}</div>
-        <div class="bon-depth-label">le cerveau 3D continue de bouger derrière</div>
+        <div class="bon-3d-badge">cerveau 3D original · ${modeLabel}</div>
+        <div class="bon-depth-label">cerveau 3D existant · piloté en direct</div>
         <div class="bon-cartoon-label one">zones du cerveau</div>
         <div class="bon-cartoon-label two">messages électriques</div>
         <div class="bon-cartoon-label three">synapses + dopamine</div>
@@ -4995,6 +5092,7 @@ function maybeShowOnboarding() {
     ov.style.transform = 'scale(1.02)';
     setTimeout(() => {
       ov.remove();
+      document.body.classList.remove('brain-onboarding-uses-3d');
       clearTimeout(brainSceneTimer);
       clearTimeout(bonTypeTimer);
       window._bonCurrentScene = null;
