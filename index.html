@@ -1124,9 +1124,9 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   inset: 0;
   z-index: 2000;
   background:
-    radial-gradient(circle at 50% 28%, rgba(0,245,255,.16), transparent 34%),
-    radial-gradient(circle at 70% 18%, rgba(124,92,252,.18), transparent 30%),
-    linear-gradient(180deg, rgba(0,0,8,.97), rgba(6,6,18,.94));
+    radial-gradient(circle at 50% 28%, rgba(0,245,255,.12), transparent 34%),
+    radial-gradient(circle at 70% 18%, rgba(124,92,252,.14), transparent 30%),
+    linear-gradient(180deg, rgba(0,0,8,.70), rgba(6,6,18,.82));
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1368,6 +1368,70 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .bon-node { cursor: pointer; }
 .bon-node.popped { animation: bonPop .45s ease; }
 @keyframes bonPop { 50% { transform: scale(1.35); filter: brightness(1.7); } }
+
+/* Onboarding v6: the visual is the real 3D brain canvas underneath.
+   These elements are a transparent scanner HUD, not fake circles/neurons. */
+.bon-3d-view {
+  width: min(92vw, 720px);
+  height: min(60vh, 620px);
+  min-height: 340px;
+  border-radius: 34px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 46%, rgba(0,245,255,.08), rgba(0,0,8,.08) 42%, rgba(0,0,8,.34));
+  border: 1px solid rgba(255,255,255,.13);
+  box-shadow: inset 0 0 0 1px rgba(0,245,255,.08), 0 28px 90px rgba(0,0,0,.35);
+  backdrop-filter: blur(1px) saturate(1.08);
+  -webkit-backdrop-filter: blur(1px) saturate(1.08);
+}
+.bon-3d-glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(0,245,255,.08) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(0,245,255,.055) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: .32;
+  pointer-events: none;
+}
+.bon-scanline {
+  position: absolute;
+  left: 0; right: 0; top: -18%; height: 24%;
+  background: linear-gradient(180deg, transparent, rgba(0,245,255,.18), transparent);
+  filter: blur(3px);
+  animation: bonScan3d 4.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes bonScan3d { 0%{transform:translateY(0);opacity:0} 18%{opacity:1} 100%{transform:translateY(520%);opacity:0} }
+.bon-3d-badge,
+.bon-depth-label {
+  position: absolute;
+  left: 18px;
+  z-index: 2;
+  border: 1px solid rgba(0,245,255,.22);
+  background: rgba(0,0,8,.48);
+  color: rgba(0,245,255,.78);
+  border-radius: 999px;
+  padding: 7px 11px;
+  font: 800 10px 'DM Sans', sans-serif;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+.bon-3d-badge { top: 16px; }
+.bon-depth-label { bottom: 16px; color: rgba(255,255,255,.58); border-color: rgba(255,255,255,.14); }
+.bon-real-callout {
+  max-width: 210px;
+  animation: bonCalloutIn .7s ease both;
+  animation-delay: var(--d,0s);
+}
+.bon-real-callout strong { display:block; color:#fff; font:800 12px 'Syne', sans-serif; margin-bottom:4px; letter-spacing:.2px; }
+.bon-real-callout span { display:block; color:rgba(255,255,255,.66); font-weight:600; }
+@keyframes bonCalloutIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+#brain-onboarding[data-scene="dopamine"] .bon-3d-view { box-shadow: inset 0 0 0 1px rgba(255,215,0,.18), 0 28px 90px rgba(255,215,0,.10); }
+#brain-onboarding[data-scene="hyperfocus"] .bon-3d-view { background: radial-gradient(circle at 50% 46%, rgba(176,92,252,.18), rgba(0,0,8,.10) 46%, rgba(0,0,8,.34)); }
+#brain-onboarding[data-scene="overload"] .bon-3d-view { animation: bonOverloadFrame 1.2s steps(2) infinite; }
+@keyframes bonOverloadFrame { 50% { filter: saturate(1.4) contrast(1.08); box-shadow: inset 0 0 0 1px rgba(255,136,85,.28), 0 28px 90px rgba(255,92,92,.14); } }
 @media (min-width: 700px) {
   .bon-content { max-width: 560px; align-self: center; border: 1px solid rgba(255,255,255,.08); border-radius: 26px 26px 0 0; }
 }
@@ -4180,47 +4244,47 @@ function renderUserPill(user) {
 function maybeShowOnboarding() {
   const existingOnboarding = document.getElementById('brain-onboarding');
   if (existingOnboarding) existingOnboarding.remove();
-  const ONBOARDING_VERSION = 'v5';
+  const ONBOARDING_VERSION = 'v6';
   const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
   // L'introduction est volontairement rejouée à chaque chargement/refresh.
   // On garde la clé seulement comme trace de version, jamais pour skipper le voyage.
-  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
+  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', 'ft_onboarded_v5', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
 
   const STEPS = [
     {
-      scene: 'whole', accent: '#ffffff', tint: null, energy: 0.38,
+      scene: 'whole', accent: '#ffffff', tint: null, energy: 0.45, rhythm: 58, lobes: [],
       label: 'Écran 1 · Le cerveau entier',
       title: 'Bienvenue dans ton cerveau.',
       text: 'Ton cerveau ne fonctionne pas mal.\nIl fonctionne <em>différemment</em>. On commence par voir l’ensemble, puis on va plonger dedans.',
-      chips: ['cerveau entier', 'zoom progressif', 'sans culpabilité'],
+      chips: ['modèle 3D', 'réseau réel', 'sans culpabilité'],
       cta: 'Plonger dans le cerveau →'
     },
     {
-      scene: 'neurons', accent: '#00f5ff', tint: '#00f5ff', energy: 0.78,
+      scene: 'neurons', accent: '#00f5ff', tint: '#00f5ff', energy: 0.78, rhythm: 86, lobes: ['corpus', 'frontal', 'parietal'],
       label: 'Écran 2 · Les neurones',
       title: 'Tes neurones se parlent.',
       text: 'Chaque pensée, chaque action, chaque retour au calme passe par des messages. Les impulsions voyagent, sautent de neurone en neurone, et construisent ton attention.',
-      chips: ['impulsions électriques', 'messages', 'réseaux'],
+      chips: ['potentiels d’action', 'synapses', 'réseaux'],
       cta: 'Suivre le signal →'
     },
     {
-      scene: 'dopamine', accent: '#ffd700', tint: '#ffd700', energy: 1,
+      scene: 'dopamine', accent: '#ffd700', tint: '#ffd700', energy: 1, rhythm: 112, lobes: ['frontal', 'brainstem'],
       label: 'Écran 3 · Dopamine & récompense',
       title: 'La dopamine est ton carburant de démarrage.',
       text: 'Elle aide à commencer, maintenir l’attention et sentir la récompense. Dans le TDAH, ce système répond souvent moins aux tâches lointaines ou peu stimulantes.',
-      chips: ['démarrage', 'récompense', 'motivation'],
+      chips: ['voie récompense', 'démarrage', 'motivation'],
       cta: 'Voir la différence →'
     },
     {
-      scene: 'compare', accent: '#fcba5c', tint: '#6688aa', energy: 0.32,
+      scene: 'compare', accent: '#fcba5c', tint: '#6688aa', energy: 0.32, rhythm: 42, lobes: ['frontal', 'parietal'], pattern: 'irregular',
       label: 'Écran 4 · Typique vs TDAH',
       title: 'Ce n’est pas un manque de volonté.',
       text: 'Dans un cerveau neurotypique, les signaux circulent plus régulièrement. Dans un cerveau TDAH, ils peuvent être irréguliers : le cerveau cherche alors plus de stimulation pour relancer le circuit.',
-      chips: ['signal irrégulier', 'besoin de stimulation', 'biologique'],
+      chips: ['signal irrégulier', 'recherche de stimulation', 'biologique'],
       cta: 'Entrer dans le préfrontal →'
     },
     {
-      scene: 'prefrontal', accent: '#7c5cfc', tint: '#7c5cfc', energy: 0.62, lobe: 'frontal',
+      scene: 'prefrontal', accent: '#7c5cfc', tint: '#7c5cfc', energy: 0.62, rhythm: 64, lobe: 'frontal', lobes: ['frontal'],
       label: 'Écran 5 · Cortex préfrontal',
       title: 'Le chef d’orchestre reçoit moins bien certains signaux.',
       text: 'Planifier, organiser, garder une idée en tête, démarrer : tout ça dépend beaucoup du cortex préfrontal. Il n’est pas cassé — il a besoin d’appuis externes plus visibles.',
@@ -4229,7 +4293,7 @@ function maybeShowOnboarding() {
       cta: 'Observer l’hyperfocus →'
     },
     {
-      scene: 'hyperfocus', accent: '#b05cfc', tint: '#b05cfc', energy: 1,
+      scene: 'hyperfocus', accent: '#b05cfc', tint: '#b05cfc', energy: 1, rhythm: 128, lobes: ['frontal', 'parietal', 'temporal'], pattern: 'hyperfocus',
       label: 'Écran 6 · Hyperfocus',
       title: 'La capacité est là. La régulation est le défi.',
       text: 'Quand une tâche devient assez stimulante, les connexions peuvent s’illuminer très fort. Le problème n’est donc pas “se concentrer”, mais choisir quand l’attention s’allume et quand elle s’arrête.',
@@ -4238,7 +4302,7 @@ function maybeShowOnboarding() {
       cta: 'Voir la surcharge →'
     },
     {
-      scene: 'overload', accent: '#ff8855', tint: '#ff8855', energy: 0.28,
+      scene: 'overload', accent: '#ff8855', tint: '#ff8855', energy: 0.28, rhythm: 38, lobes: ['frontal', 'parietal', 'brainstem'], pattern: 'overload',
       label: 'Écran 7 · Découper, pas forcer',
       title: 'Une grosse tâche surcharge le réseau.',
       text: 'Quand tout arrive d’un bloc, la mémoire de travail déborde et les connexions ralentissent. Découper en micro-actions redonne au cerveau un chemin clair, action par action.',
@@ -4247,7 +4311,7 @@ function maybeShowOnboarding() {
       cta: 'Revenir à l’application →'
     },
     {
-      scene: 'transition', accent: '#00f5ff', tint: '#00f5ff', energy: 0.72,
+      scene: 'transition', accent: '#00f5ff', tint: '#00f5ff', energy: 0.72, rhythm: 72, lobes: ['frontal', 'parietal', 'temporal', 'cerebellum'],
       label: 'Écran 8 · Travailler avec ton cerveau',
       title: 'Maintenant, on travaille avec lui.',
       text: 'FocusTDAH n’est pas une app pour te forcer. C’est une interface qui traduit ce fonctionnement en outils concrets : rendre visible, réduire la friction, créer du démarrage et protéger ton énergie.',
@@ -4264,100 +4328,79 @@ function maybeShowOnboarding() {
 
   function safeBrain(fn) { try { if (window.BrainEngine) fn(); } catch(e) {} }
 
+  let brainSceneTimer = null;
   function setBrainForStep(s) {
+    clearTimeout(brainSceneTimer);
     safeBrain(() => {
+      if (BrainEngine.resume) BrainEngine.resume();
       if (BrainEngine.setColorTint) BrainEngine.setColorTint(s.tint || null);
       if (BrainEngine.setEnergy) BrainEngine.setEnergy(s.energy);
-      if (s.lobe && BrainEngine.highlightLobe) BrainEngine.highlightLobe(s.lobe, 2, 1600);
-      else if (BrainEngine.zoomOut) BrainEngine.zoomOut();
+      if (BrainEngine.setNeuronRhythm) BrainEngine.setNeuronRhythm(s.rhythm || 60);
+      if (BrainEngine.zoomOut) BrainEngine.zoomOut();
+      const lobes = s.lobes || (s.lobe ? [s.lobe] : []);
+      lobes.forEach((lobe, i) => {
+        setTimeout(() => safeBrain(() => BrainEngine.highlightLobe && BrainEngine.highlightLobe(lobe, 1.25, 1300)), 220 + i * 170);
+      });
+      if (s.lobe && BrainEngine.zoomToLobe) {
+        brainSceneTimer = setTimeout(() => safeBrain(() => BrainEngine.zoomToLobe(s.lobe)), 420);
+      }
     });
   }
 
-  function particles(n, colors) {
-    return Array.from({ length: n }, (_, i) => {
-      const left = 18 + Math.random() * 64;
-      const top = 25 + Math.random() * 46;
-      const dx = (Math.random() * 70 - 35).toFixed(0) + 'px';
-      const dy = (Math.random() * 48 - 34).toFixed(0) + 'px';
-      const col = colors[i % colors.length];
-      return `<span class="bon-particle bon-node" style="left:${left}%;top:${top}%;--dx:${dx};--dy:${dy};--pcol:${col};animation-delay:${(i*.13).toFixed(2)}s"></span>`;
-    }).join('');
+  function sceneCallouts(s) {
+    const byScene = {
+      whole: [
+        ['Modèle 3D du cerveau', 'La forme complète reste visible : on part du réseau global.', 'left:6%;top:10%'],
+        ['Activité de base', 'Les points lumineux représentent des groupes neuronaux actifs.', 'right:4%;bottom:16%']
+      ],
+      neurons: [
+        ['Signal électrique', 'Les impulsions circulent le long des connexions, pas en ligne droite.', 'left:5%;top:14%'],
+        ['Synapses', 'Chaque message dépend de la force du réseau et du contexte.', 'right:4%;bottom:12%']
+      ],
+      dopamine: [
+        ['Circuit récompense', 'La dopamine aide le cerveau à démarrer et à maintenir l’effort.', 'left:6%;bottom:16%'],
+        ['TDAH', 'Le carburant arrive moins régulièrement pour les tâches peu stimulantes.', 'right:5%;top:12%']
+      ],
+      compare: [
+        ['Flux régulier', 'Quand le signal est stable, l’action se lance plus facilement.', 'left:5%;top:12%'],
+        ['Flux TDAH', 'Le réseau cherche plus d’intensité pour relancer la transmission.', 'right:4%;bottom:14%']
+      ],
+      prefrontal: [
+        ['Cortex préfrontal', 'Planifier, inhiber, garder le fil : ici l’appui externe aide beaucoup.', 'left:5%;top:16%'],
+        ['Zoom réel', 'La caméra entre sur la zone frontale du cerveau 3D.', 'right:5%;bottom:14%']
+      ],
+      hyperfocus: [
+        ['Hyperfocus', 'Le réseau peut s’illuminer très fort quand la stimulation est suffisante.', 'left:5%;bottom:14%'],
+        ['Régulation', 'La difficulté : allumer, arrêter, puis rediriger l’attention.', 'right:5%;top:14%']
+      ],
+      overload: [
+        ['Surcharge', 'Trop d’informations ralentit le préfrontal et fatigue le système.', 'left:5%;top:13%'],
+        ['Micro-actions', 'Découper baisse la charge et redonne un chemin au signal.', 'right:5%;bottom:14%']
+      ],
+      transition: [
+        ['Interface = appui', 'Les outils rendent visibles le temps, les étapes et l’énergie.', 'left:5%;top:14%'],
+        ['Avec le cerveau', 'On ne force pas le réseau : on lui donne des rails.', 'right:5%;bottom:14%']
+      ]
+    };
+    return (byScene[s.scene] || byScene.whole).map(([title, desc, pos], i) => `
+      <div class="bon-callout bon-real-callout" style="${pos};--d:${i * .18}s">
+        <strong>${title}</strong><span>${desc}</span>
+      </div>`).join('');
   }
 
   function renderScene(s) {
-    const commonBrain = '<div class="bon-brain-silhouette"></div>';
-    if (s.scene === 'whole') return `
-      <div class="bon-visual">
-        ${commonBrain}<div class="bon-zoom-ring"></div><div class="bon-zoom-ring" style="animation-delay:.8s"></div>
-        <div class="bon-callout" style="left:8%;top:12%">fond noir · cerveau blanc</div>
-        <div class="bon-callout" style="right:4%;bottom:22%">la caméra approche doucement</div>
-      </div>`;
-    if (s.scene === 'neurons') return `
-      <div class="bon-visual">
-        <span class="bon-neuron bon-node" style="left:18%;top:31%;--rot:18deg;--wire:132px"></span>
-        <span class="bon-neuron bon-node" style="left:55%;top:28%;--rot:118deg;--wire:95px;animation-delay:.3s"></span>
-        <span class="bon-neuron bon-node" style="left:37%;top:62%;--rot:-24deg;--wire:120px;animation-delay:.6s"></span>
-        <span class="bon-signal" style="left:22%;top:34%;--tx:34vw;--ty:-8vh;animation-delay:.1s"></span>
-        <span class="bon-signal" style="left:57%;top:32%;--tx:-20vw;--ty:24vh;animation-delay:.7s"></span>
-        <span class="bon-signal" style="left:35%;top:67%;--tx:34vw;--ty:-16vh;animation-delay:1.2s"></span>
-        <div class="bon-callout" style="left:4%;bottom:11%">tape les neurones ✦</div>
-      </div>`;
-    if (s.scene === 'dopamine') return `
-      <div class="bon-visual">
-        <div class="bon-synapse-gap"></div>
-        <span class="bon-neuron" style="left:18%;top:42%;--rot:4deg;--wire:95px"></span>
-        <span class="bon-neuron" style="right:18%;top:42%;--rot:184deg;--wire:95px"></span>
-        ${particles(26, ['#ffd700', '#fcba5c', '#fff4a8'])}
-        <div class="bon-callout" style="left:7%;top:12%">dopamine = démarrage</div>
-        <div class="bon-callout" style="right:4%;bottom:12%">récompense immédiate</div>
-      </div>`;
-    if (s.scene === 'compare') return `
-      <div class="bon-visual">
-        <div class="bon-split">
-          <div class="bon-half good">
-            <div class="bon-callout" style="left:10px;top:10px">Neurotypique</div>
-            ${[26,42,58,74].map((t,i)=>`<span class="bon-pathline" style="left:8%;right:8%;top:${t}%;--line:#5cfca0;animation-delay:${i*.18}s"></span>`).join('')}
-          </div>
-          <div class="bon-half adhd">
-            <div class="bon-callout" style="left:10px;top:10px">TDAH</div>
-            ${[26,44,63,78].map((t,i)=>`<span class="bon-pathline" style="left:${i%2?20:8}%;right:${i%2?8:28}%;top:${t}%;--line:#fcba5c;animation-delay:${i*.31}s"></span>`).join('')}
-          </div>
-        </div>
-      </div>`;
-    if (s.scene === 'prefrontal') return `
-      <div class="bon-visual">
-        ${commonBrain}
-        <div class="bon-region bon-node" style="--rcol:#7c5cfc;left:18%;top:22%;width:34%;height:24%"></div>
-        <div class="bon-callout" style="left:10%;bottom:18%">cortex préfrontal</div>
-        <div class="bon-callout" style="right:6%;top:18%">planifier · organiser · démarrer</div>
-        ${particles(10, ['#7c5cfc', '#00f5ff'])}
-      </div>`;
-    if (s.scene === 'hyperfocus') return `
-      <div class="bon-visual">
-        ${commonBrain}
-        <div class="bon-region" style="--rcol:#b05cfc;left:21%;top:24%;width:58%;height:46%;animation-duration:1s"></div>
-        ${particles(34, ['#b05cfc', '#00f5ff', '#ffffff'])}
-        <div class="bon-callout" style="left:6%;top:12%">tout s’allume</div>
-        <div class="bon-callout" style="right:5%;bottom:12%">mais il faut un interrupteur</div>
-      </div>`;
-    if (s.scene === 'overload') return `
-      <div class="bon-visual">
-        ${commonBrain}
-        <div class="bon-task-block">GROSSE TÂCHE</div>
-        <div class="bon-micro-row">
-          <div class="bon-micro" style="--d:0s">ouvrir</div>
-          <div class="bon-micro" style="--d:.2s">2 min</div>
-          <div class="bon-micro" style="--d:.4s">cocher</div>
-        </div>
-        <div class="bon-callout" style="right:5%;top:54%">découper relance le réseau</div>
-      </div>`;
+    const modeLabel = s.pattern === 'hyperfocus' ? 'réseau intensifié'
+      : s.pattern === 'overload' ? 'surcharge cognitive'
+      : s.pattern === 'irregular' ? 'signal irrégulier'
+      : s.lobe ? 'zoom cortical'
+      : 'activité neuronale';
     return `
-      <div class="bon-visual">
-        ${commonBrain}<div class="bon-zoom-ring"></div>
-        <div class="bon-region" style="--rcol:#00f5ff;left:14%;top:16%;width:72%;height:60%"></div>
-        ${particles(18, ['#00f5ff', '#7c5cfc', '#5cfca0'])}
-        <div class="bon-callout" style="left:7%;top:12%">l’app devient la carte</div>
-        <div class="bon-callout" style="right:5%;bottom:13%">outils = appuis externes</div>
+      <div class="bon-visual bon-3d-view" data-scene="${s.scene}">
+        <div class="bon-3d-glass"></div>
+        <div class="bon-scanline"></div>
+        <div class="bon-3d-badge">cerveau 3D · ${modeLabel}</div>
+        <div class="bon-depth-label">activité synaptique simulée</div>
+        ${sceneCallouts(s)}
       </div>`;
   }
 
@@ -4365,6 +4408,10 @@ function maybeShowOnboarding() {
     const s = STEPS[step];
     setBrainForStep(s);
     ov.style.setProperty('--accent', s.accent);
+    ov.dataset.scene = s.scene;
+    window._bonCurrentScene = s;
+    window._bonApplyBrainScene = () => setBrainForStep(window._bonCurrentScene || s);
+    setTimeout(() => { if (window._bonApplyBrainScene) window._bonApplyBrainScene(); }, 250);
     ov.innerHTML = `
       <div class="bon-voyage-stage">${renderScene(s)}</div>
       <div class="bon-content">
@@ -4398,7 +4445,10 @@ function maybeShowOnboarding() {
     ov.style.transform = 'scale(1.02)';
     setTimeout(() => {
       ov.remove();
-      safeBrain(() => { BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.6); });
+      clearTimeout(brainSceneTimer);
+      window._bonCurrentScene = null;
+      window._bonApplyBrainScene = null;
+      safeBrain(() => { BrainEngine.zoomOut && BrainEngine.zoomOut(); BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.6); BrainEngine.setNeuronRhythm && BrainEngine.setNeuronRhythm(60); });
       if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
     }, 700);
   }
@@ -14835,6 +14885,9 @@ function _reorderProjectCards() {
     };
 
     BrainEngine.setMode('idle');
+    if (typeof window._bonApplyBrainScene === 'function') {
+      setTimeout(() => window._bonApplyBrainScene(), 120);
+    }
 
     // Energy mirror (every 60s — only when idle/not in a special state)
     function _updateEnergy() {
