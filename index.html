@@ -1335,6 +1335,52 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 @media (min-width: 700px) {
   .bon-content { max-width: 560px; align-self: center; border: 1px solid rgba(255,255,255,.08); border-radius: 26px 26px 0 0; }
 }
+
+/* Desktop safety: the brain voyage must be visible on computer screens too,
+   not hidden in a phone-sized bottom sheet. */
+#brain-onboarding {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  left: 0;
+  top: 0;
+  color: #fff;
+}
+#brain-onboarding::before { pointer-events: none; z-index: 0; }
+#brain-onboarding .bon-voyage-stage,
+#brain-onboarding .bon-content { z-index: 1; }
+@media (min-width: 900px) {
+  #brain-onboarding {
+    display: grid;
+    grid-template-columns: minmax(420px, 1.15fr) minmax(380px, 560px);
+    align-items: center;
+    gap: clamp(24px, 4vw, 64px);
+    padding: clamp(28px, 4vw, 56px);
+    overflow-y: auto;
+  }
+  #brain-onboarding .bon-voyage-stage {
+    min-height: min(760px, calc(100dvh - 112px));
+    padding: 0;
+  }
+  #brain-onboarding .bon-visual {
+    width: min(54vw, 680px);
+    height: min(72vh, 640px);
+    min-height: 420px;
+  }
+  #brain-onboarding .bon-content {
+    width: 100%;
+    max-width: 560px;
+    align-self: center;
+    border-radius: 30px;
+    padding: 28px;
+    background: rgba(0,0,8,.76);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 28px 90px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  #brain-onboarding .bon-title { font-size: clamp(34px, 4vw, 54px); }
+  #brain-onboarding .bon-text { font-size: 17px; }
+  #brain-onboarding .bon-btn { font-size: 16px; padding: 18px; }
+}
 /* ── Neurotransmitter state badge ── */
 #brain-state-badge {
   position: absolute;
@@ -4402,9 +4448,17 @@ function showRitalinModal() {
 function initAuth() {
   if (!FB_READY) {
     // Firebase pas configuré — mode local uniquement
-    show('landing'); initLanding(); renderHome();
+    goToApp(null);
     return;
   }
+
+  // Sécurité desktop : si Firebase ne répond pas (extension, popup, réseau),
+  // on ne laisse jamais l'utilisateur devant un splash noir/vide.
+  const authFallbackTimer = setTimeout(() => {
+    const splash = document.getElementById('splash');
+    const hasVisibleScreen = document.querySelector('.screen.active:not(#splash)');
+    if (splash && splash.classList.contains('active') && !hasVisibleScreen) show('auth');
+  }, 3500);
 
   const loadingEl  = document.getElementById('auth-loading');
   const googleBtn  = document.getElementById('btn-google-login');
