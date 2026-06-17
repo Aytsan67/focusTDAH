@@ -1082,6 +1082,83 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   50%      { transform: translateX(-50%) translateY(5px); }
 }
 
+/* ── Onboarding cerveau éducatif ── */
+#brain-onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,8,.88);
+  display: flex;
+  align-items: flex-end;
+  pointer-events: auto;
+}
+.bon-content {
+  width: 100%;
+  padding: 28px 24px calc(env(safe-area-inset-bottom) + 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bon-bar {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.bon-seg {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background: rgba(255,255,255,.15);
+  transition: background .3s;
+}
+.bon-seg.done   { background: rgba(0,245,255,.4); }
+.bon-seg.active { background: #00f5ff; }
+.bon-label {
+  font: 700 10px 'Share Tech Mono', monospace;
+  letter-spacing: 2px;
+  color: rgba(0,245,255,.55);
+  text-transform: uppercase;
+}
+.bon-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 23px;
+  color: #fff;
+  line-height: 1.2;
+}
+.bon-text {
+  font-size: 15px;
+  color: rgba(255,255,255,.62);
+  line-height: 1.65;
+}
+.bon-text em { color: rgba(0,245,255,.9); font-style: normal; }
+.bon-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 16px;
+  background: rgba(0,245,255,.1);
+  border: 1.5px solid rgba(0,245,255,.4);
+  border-radius: 14px;
+  color: #00f5ff;
+  font: 700 15px 'DM Sans', sans-serif;
+  letter-spacing: .5px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s, transform .1s;
+}
+.bon-btn:active { background: rgba(0,245,255,.22); transform: scale(.98); }
+.bon-skip {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.28);
+  font: 500 12px 'DM Sans', sans-serif;
+  cursor: pointer;
+  padding: 6px 0;
+  text-align: center;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ── Neurotransmitter state badge ── */
 #brain-state-badge {
   position: absolute;
@@ -2754,11 +2831,6 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <div class="brain-section-logo">✦ focusTDAH</div>
     <div id="brain-dive-flash"></div>
     <div id="brain-state-badge"></div>
-    <!-- Écran d'intro : visible au premier chargement, disparaît après "Commencer" -->
-    <div id="brain-intro">
-      <div class="brain-intro-tagline">Bienvenue dans<br>ton cerveau</div>
-      <button id="brain-intro-btn">Commencer →</button>
-    </div>
     <div class="brain-tap-hint" id="brain-tap-hint" style="opacity:0">tape une zone · navigue</div>
     <div class="brain-scroll-hint" id="brain-scroll-hint" style="opacity:0">↓ &nbsp; outils &nbsp; ↓</div>
   </div>
@@ -3844,34 +3916,93 @@ function renderUserPill(user) {
 }
 
 function maybeShowOnboarding() {
-  if (localStorage.getItem('ft_onboarded')) return;
-  const slides = [
-    { emoji: '⏱', title: 'Timer libre', desc: 'Lance un timer adapté à ton niveau de focus. Même 5 minutes comptent.' },
-    { emoji: '✦', title: 'Projets structurés', desc: 'Décris ton projet, l\'app génère un plan en micro-étapes. Tu n\'as plus qu\'à démarrer.' },
-    { emoji: '🧠', title: 'J\'ai besoin d\'aide', desc: 'Bloqué, en panique, submergé ? L\'app t\'accompagne selon ton état, pas selon un planning.' },
-  ];
-  let idx = 0;
-  const bd = document.createElement('div');
-  bd.className = 'cat-modal-backdrop';
-  bd.id = 'onboarding-bd';
-  document.body.appendChild(bd);
-
-  function render() {
-    const s = slides[idx];
-    bd.innerHTML = `
-      <div class="cat-modal-sheet" style="text-align:center">
-        <div style="font-size:56px;margin-bottom:12px">${s.emoji}</div>
-        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">${idx+1} / ${slides.length}</div>
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:12px">${s.title}</div>
-        <div style="font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:24px">${s.desc}</div>
-        <button class="btn" id="ob-next">${idx < slides.length-1 ? 'Suivant →' : 'C\'est parti ✓'}</button>
-      </div>`;
-    bd.querySelector('#ob-next').onclick = () => {
-      if (idx < slides.length - 1) { idx++; render(); }
-      else { localStorage.setItem('ft_onboarded', '1'); bd.remove(); }
-    };
+  if (localStorage.getItem('ft_onboarded_v2')) {
+    // Déjà vu : révéler les zones immédiatement
+    if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
+    return;
   }
-  render();
+
+  const STEPS = [
+    {
+      label: 'Ton cerveau',
+      title: 'Bienvenue dans ton cerveau.',
+      text: 'Ton cerveau ne fonctionne pas mal.\nIl fonctionne <em>différemment</em>.',
+      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.45); } },
+      cta: 'Découvrir →'
+    },
+    {
+      label: 'Les neurones',
+      title: 'Tes neurones parlent en permanence.',
+      text: 'Des signaux électriques voyagent à travers les synapses.\nCes impulsions <em>sont</em> tes pensées.',
+      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#00f5ff'); BrainEngine.setEnergy(0.75); } },
+      cta: 'Continuer →'
+    },
+    {
+      label: 'La dopamine',
+      title: 'La dopamine : ton carburant.',
+      text: 'Elle aide à démarrer, maintenir l\'attention, ressentir la récompense.\nDans le TDAH, ce circuit fonctionne <em>autrement</em> — c\'est neurologique.',
+      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#ffd700'); BrainEngine.setEnergy(0.95); } },
+      cta: 'Continuer →'
+    },
+    {
+      label: 'Pas ta faute',
+      title: 'Ce n\'est pas un manque de volonté.',
+      text: 'Les signaux sont plus irréguliers.\nTon cerveau cherche naturellement plus de stimulation pour s\'activer.',
+      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#6688aa'); BrainEngine.setEnergy(0.25); } },
+      cta: 'Continuer →'
+    },
+    {
+      label: 'L\'hyperfocus',
+      title: 'Et pourtant, tu peux te concentrer intensément.',
+      text: 'Quand quelque chose est suffisamment stimulant, l\'attention explose.\nLe problème n\'est pas la capacité — c\'est la <em>régulation</em>.',
+      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#b05cfc'); BrainEngine.setEnergy(1.0); } },
+      cta: 'Continuer →'
+    },
+    {
+      label: 'FocusTDAH',
+      title: 'FocusTDAH travaille avec ton cerveau.',
+      text: 'Chaque outil correspond à une réalité neurologique.\nPas pour lutter contre ton TDAH — pour travailler <em>avec lui</em>.',
+      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#7c5cfc'); BrainEngine.setEnergy(0.85); } },
+      cta: 'Entrer dans mon cerveau →'
+    },
+  ];
+
+  const ov = document.createElement('div');
+  ov.id = 'brain-onboarding';
+  document.body.appendChild(ov);
+  let step = 0;
+
+  function renderStep() {
+    const s = STEPS[step];
+    if (s.brainFn) s.brainFn();
+    ov.innerHTML = `
+      <div class="bon-content">
+        <div class="bon-bar">
+          ${STEPS.map((_, i) => `<div class="bon-seg${i < step ? ' done' : i === step ? ' active' : ''}"></div>`).join('')}
+        </div>
+        <div class="bon-label">${s.label}</div>
+        <div class="bon-title">${s.title}</div>
+        <div class="bon-text">${s.text.replace(/\n/g, '<br>')}</div>
+        <button class="bon-btn" id="bon-next">${s.cta}</button>
+        ${step > 0 ? `<button class="bon-skip" id="bon-skip">Passer l'intro</button>` : ''}
+      </div>`;
+    document.getElementById('bon-next').onclick = () => { step < STEPS.length - 1 ? (step++, renderStep()) : finishOnboarding(); };
+    const sk = document.getElementById('bon-skip');
+    if (sk) sk.onclick = finishOnboarding;
+  }
+
+  function finishOnboarding() {
+    localStorage.setItem('ft_onboarded_v2', '1');
+    ov.style.transition = 'opacity .7s ease';
+    ov.style.opacity = '0';
+    setTimeout(() => {
+      ov.remove();
+      if (window.BrainEngine) { BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.6); }
+      if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
+    }, 700);
+  }
+
+  renderStep();
 }
 
 function goToApp(user) {
