@@ -1051,10 +1051,46 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   height: 100svh;
   width: 100%;
   position: relative;
-  background: #000008;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(0,245,255,.18), transparent 30%),
+    radial-gradient(circle at 50% 52%, rgba(124,92,252,.14), transparent 38%),
+    #000008;
   overflow: hidden;
   cursor: grab;
 }
+#brain-section::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 47%;
+  width: min(72vw, 760px);
+  height: min(52vw, 520px);
+  min-width: 300px;
+  min-height: 220px;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid rgba(255,255,255,.32);
+  border-radius: 48% 52% 46% 54% / 38% 42% 58% 62%;
+  background:
+    radial-gradient(circle at 34% 34%, rgba(255,255,255,.28), transparent 8%),
+    radial-gradient(circle at 54% 28%, rgba(255,255,255,.18), transparent 11%),
+    radial-gradient(circle at 64% 55%, rgba(0,245,255,.16), transparent 13%),
+    radial-gradient(circle at 40% 62%, rgba(124,92,252,.20), transparent 15%),
+    rgba(255,255,255,.035);
+  box-shadow: 0 0 70px rgba(0,245,255,.22), inset 0 0 34px rgba(255,255,255,.08);
+  pointer-events: none;
+  z-index: 0;
+  animation: staticBrainFloat 5s ease-in-out infinite;
+}
+#brain-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,.12) 0 1px, transparent 1.5px);
+  background-size: 58px 58px;
+  opacity: .16;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes staticBrainFloat { 50% { transform: translate(-50%, calc(-50% - 10px)) scale(1.015); } }
 
 /* Section contenu (en bas, après scroll) */
 .landing-left {
@@ -3051,6 +3087,10 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <div id="zoneIndicator"><div id="ziName"></div></div>
     <button id="btnBack" onclick="if(window.BrainEngine)BrainEngine.zoomOut()">← retour</button>
     <div class="brain-section-logo">✦ focusTDAH</div>
+    <div id="brain-intro">
+      <div class="brain-intro-tagline">Bienvenue dans ton cerveau TDAH</div>
+      <button id="brain-intro-btn" type="button">Commencer l’introduction →</button>
+    </div>
     <div id="brain-dive-flash"></div>
     <div id="brain-state-badge"></div>
     <div class="brain-tap-hint" id="brain-tap-hint" style="opacity:0">tape une zone · navigue</div>
@@ -4138,6 +4178,8 @@ function renderUserPill(user) {
 }
 
 function maybeShowOnboarding() {
+  const existingOnboarding = document.getElementById('brain-onboarding');
+  if (existingOnboarding) existingOnboarding.remove();
   const ONBOARDING_VERSION = 'v5';
   const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
   // L'introduction est volontairement rejouée à chaque chargement/refresh.
@@ -4475,10 +4517,11 @@ function initAuth() {
   // (fallback quand popup est bloqué sur certains navigateurs)
   _auth.getRedirectResult().then(result => {
     localStorage.removeItem('ft_redirect_pending');
-    // Si pas de user via redirect ET onAuthStateChanged n'a pas encore rendu
-    // le user → montrer l'écran auth maintenant (ITP a bloqué le résultat)
+    // Si aucun compte n'arrive via redirect, on reste en expérience locale :
+    // l'introduction doit apparaître même sans connexion Google.
     if ((!result || !result.user) && !_auth.currentUser) {
-      show('auth');
+      clearTimeout(authFallbackTimer);
+      goToApp(null);
     }
   }).catch(e => {
     localStorage.removeItem('ft_redirect_pending');
@@ -4531,6 +4574,7 @@ function initAuth() {
     _fbUser = user;
     if (user) {
       localStorage.removeItem('ft_redirect_pending');
+      clearTimeout(authFallbackTimer);
       if (firstCall) {
         goToApp(user);
         loadFromFirestore(user.uid).then(() => { renderHome(); renderQT(); });
@@ -4539,9 +4583,11 @@ function initAuth() {
         goToApp(user);
       }
     } else {
-      // Ne pas interrompre un redirect en cours
+      // Pas connecté : entrer quand même dans l'expérience locale au lieu d'un écran noir/auth.
+      // Le bouton Google reste disponible via les options de compte si besoin, mais l'intro doit être visible.
       if (!localStorage.getItem('ft_redirect_pending')) {
-        show('auth');
+        clearTimeout(authFallbackTimer);
+        goToApp(null);
       }
     }
     firstCall = false;
@@ -14713,7 +14759,24 @@ function _reorderProjectCards() {
 <script>
 // ══ BRAIN ENGINE INIT ══
 (function initBrain() {
-  if (!window.THREE || !window.BrainEngine) return;
+  function enableBrainFallback() {
+    const introBtn = document.getElementById('brain-intro-btn');
+    const brainIntro = document.getElementById('brain-intro');
+    const tapHint = document.getElementById('brain-tap-hint');
+    const scrollHint = document.getElementById('brain-scroll-hint');
+    const reveal = () => {
+      if (brainIntro) brainIntro.classList.add('hidden');
+      if (tapHint) { tapHint.textContent = 'cerveau visible · moteur 3D indisponible'; tapHint.style.opacity = '1'; }
+      if (scrollHint) scrollHint.style.opacity = '1';
+    };
+    if (introBtn) introBtn.addEventListener('click', reveal);
+  }
+
+  if (!window.THREE || !window.BrainEngine) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enableBrainFallback);
+    else enableBrainFallback();
+    return;
+  }
 
   function doInit() {
     const canvas = document.getElementById('brain-canvas');
