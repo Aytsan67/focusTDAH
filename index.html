@@ -1039,37 +1039,14 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .user-popover-logout:hover { border-color: #fc5c7d; color: #fc5c7d; }
 
-/* ══ LANDING — deux sections empilées (contenu → cerveau) ══ */
+/* ══ LANDING — cerveau en haut (hero), outils en bas (scroll) ══ */
 #landing {
   display: none;
   background: var(--bg);
 }
 #landing.active { display: block; }
 
-/* Section contenu (haut) */
-.landing-left {
-  min-height: 100svh;
-  padding: 18px 14px calc(env(safe-area-inset-bottom) + 24px);
-  background: var(--bg);
-  position: relative;
-}
-
-/* Hint de scroll vers le cerveau */
-.brain-scroll-hint {
-  text-align: center;
-  color: rgba(0, 245, 255, .45);
-  font-size: 13px;
-  letter-spacing: 2px;
-  padding: 20px 0 6px;
-  pointer-events: none;
-  animation: hintBounce 2s ease-in-out infinite;
-}
-@keyframes hintBounce {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(5px); }
-}
-
-/* Cerveau = plein écran (section en bas) */
+/* Cerveau = hero plein écran (première vue) */
 #brain-section {
   height: 100svh;
   width: 100%;
@@ -1077,6 +1054,46 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   background: #000008;
   overflow: hidden;
   cursor: grab;
+}
+
+/* Section contenu (en bas, après scroll) */
+.landing-left {
+  min-height: 100svh;
+  padding: 18px 14px calc(env(safe-area-inset-bottom) + 24px);
+  background: var(--bg);
+  position: relative;
+}
+
+/* Hint de scroll (inside brain-section, positionné en bas) */
+.brain-scroll-hint {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(0, 245, 255, .45);
+  font-size: 13px;
+  letter-spacing: 2px;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: hintBounce 2s ease-in-out infinite;
+}
+@keyframes hintBounce {
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(5px); }
+}
+
+/* Hint "tape une zone" (inside brain-section) */
+.brain-tap-hint {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, .2);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: 'Share Tech Mono', monospace;
 }
 #brain-section:active { cursor: grabbing; }
 #brain-canvas {
@@ -2580,7 +2597,16 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
 <!-- ACCUEIL -->
 <section class="screen" id="landing">
 
-  <!-- ── Contenu (en haut, première vue) ── -->
+  <!-- ── Cerveau plein écran (en haut, première vue) ── -->
+  <div id="brain-section">
+    <canvas id="brain-canvas"></canvas>
+    <div id="brain-hotspots"></div>
+    <div class="brain-section-logo">✦ focusTDAH</div>
+    <div class="brain-tap-hint">tape une zone · navigue</div>
+    <div class="brain-scroll-hint">↓ &nbsp; outils &nbsp; ↓</div>
+  </div>
+
+  <!-- ── Contenu (en bas, scroll ↓) ── -->
   <div class="landing-left">
 
     <!-- Logo row + halt btn -->
@@ -2662,17 +2688,7 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
 
     <button id="btn-end-of-day" style="width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:12px 0 2px;cursor:pointer;text-align:left">🌙 Fin de journée</button>
 
-    <!-- Scroll hint vers le cerveau -->
-    <div class="brain-scroll-hint">↓ &nbsp; cerveau &nbsp; ↓</div>
-
   </div><!-- /.landing-left -->
-
-  <!-- ── Cerveau plein écran (en bas, scroll ↓) ── -->
-  <div id="brain-section">
-    <canvas id="brain-canvas"></canvas>
-    <div id="brain-hotspots"></div>
-    <div class="brain-section-logo">✦ focusTDAH</div>
-  </div>
 
   <!-- Panneau droit masqué (backward compat) -->
   <div class="landing-right" style="display:none!important"></div>
