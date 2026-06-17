@@ -1082,99 +1082,259 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   50%      { transform: translateX(-50%) translateY(5px); }
 }
 
-/* ── Onboarding cerveau éducatif ── */
+/* ── Onboarding cerveau éducatif : voyage immersif TDAH ── */
 #brain-onboarding {
   position: fixed;
   inset: 0;
   z-index: 2000;
-  background: rgba(0,0,8,.88);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(0,245,255,.16), transparent 34%),
+    radial-gradient(circle at 70% 18%, rgba(124,92,252,.18), transparent 30%),
+    linear-gradient(180deg, rgba(0,0,8,.97), rgba(6,6,18,.94));
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: space-between;
   pointer-events: auto;
+  overflow: hidden;
 }
+#brain-onboarding::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.16) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(0,245,255,.14) 0 1px, transparent 1.6px);
+  background-size: 44px 44px, 77px 77px;
+  opacity: .24;
+  animation: bonStarDrift 18s linear infinite;
+}
+@keyframes bonStarDrift { to { transform: translate3d(-44px, 32px, 0); } }
+.bon-voyage-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(env(safe-area-inset-top) + 24px) 18px 10px;
+  perspective: 900px;
+  isolation: isolate;
+}
+.bon-visual {
+  position: relative;
+  width: min(92vw, 430px);
+  height: min(54vh, 430px);
+  min-height: 300px;
+  transform-style: preserve-3d;
+  animation: bonFloat 5s ease-in-out infinite;
+}
+@keyframes bonFloat { 0%,100%{ transform: translateY(0) rotateX(0deg); } 50%{ transform: translateY(-8px) rotateX(2deg); } }
+.bon-brain-silhouette {
+  position: absolute;
+  inset: 7% 5% 9%;
+  border: 1.4px solid rgba(255,255,255,.45);
+  border-radius: 48% 52% 46% 54% / 38% 42% 58% 62%;
+  filter: drop-shadow(0 0 34px rgba(0,245,255,.25));
+  background:
+    radial-gradient(circle at 33% 35%, rgba(255,255,255,.24), transparent 9%),
+    radial-gradient(circle at 54% 29%, rgba(255,255,255,.16), transparent 11%),
+    radial-gradient(circle at 63% 55%, rgba(255,255,255,.11), transparent 12%),
+    radial-gradient(circle at 39% 61%, rgba(124,92,252,.18), transparent 14%),
+    rgba(255,255,255,.035);
+  box-shadow: inset 0 0 26px rgba(255,255,255,.12), inset 0 -20px 50px rgba(0,245,255,.08);
+}
+.bon-brain-silhouette::before,
+.bon-brain-silhouette::after {
+  content: '';
+  position: absolute;
+  inset: 13% 12%;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,.18);
+  clip-path: polygon(0 22%, 100% 5%, 96% 35%, 12% 46%, 6% 74%, 86% 68%, 80% 94%, 0 88%);
+}
+.bon-brain-silhouette::after {
+  inset: 19% 19%;
+  opacity: .55;
+  transform: rotate(-8deg);
+}
+.bon-zoom-ring {
+  position: absolute;
+  width: 72%; height: 72%; left: 14%; top: 14%;
+  border: 1px solid rgba(0,245,255,.35);
+  border-radius: 50%;
+  animation: bonZoomRing 2.6s ease-in-out infinite;
+}
+@keyframes bonZoomRing { 0%{transform:scale(.55);opacity:0} 35%{opacity:1} 100%{transform:scale(1.22);opacity:0} }
+.bon-neuron {
+  position: absolute;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 18px rgba(0,245,255,.9), 0 0 42px rgba(124,92,252,.35);
+  animation: bonNeuronPulse 1.8s ease-in-out infinite;
+}
+.bon-neuron::before, .bon-neuron::after {
+  content: '';
+  position: absolute;
+  left: 8px; top: 7px;
+  width: var(--wire, 108px); height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,.9), rgba(0,245,255,.2));
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: left center;
+  box-shadow: 0 0 12px rgba(0,245,255,.6);
+}
+.bon-neuron::after { transform: rotate(calc(var(--rot, 0deg) + 42deg)); opacity: .55; width: calc(var(--wire, 108px) * .62); }
+@keyframes bonNeuronPulse { 50% { transform: scale(1.35); background: #00f5ff; } }
+.bon-signal {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #00f5ff;
+  box-shadow: 0 0 18px #00f5ff;
+  animation: bonSignal 2.2s cubic-bezier(.22,.8,.2,1) infinite;
+}
+@keyframes bonSignal {
+  0%   { transform: translate(0,0) scale(.7); opacity: 0; }
+  18%  { opacity: 1; }
+  78%  { opacity: 1; }
+  100% { transform: translate(var(--tx,120px), var(--ty,0px)) scale(1.15); opacity: 0; }
+}
+.bon-particle {
+  position: absolute;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--pcol, #ffd700);
+  box-shadow: 0 0 18px var(--pcol, #ffd700);
+  animation: bonParticle 2.4s ease-in-out infinite;
+}
+@keyframes bonParticle { 0%,100%{transform:translate(0,0) scale(.8);opacity:.35} 50%{transform:translate(var(--dx,20px),var(--dy,-18px)) scale(1.25);opacity:1} }
+.bon-synapse-gap {
+  position: absolute;
+  left: 32%; right: 32%; top: 44%; height: 46px;
+  border-left: 2px solid rgba(255,255,255,.45);
+  border-right: 2px solid rgba(255,255,255,.45);
+  border-radius: 22px;
+  background: linear-gradient(90deg, rgba(255,215,0,.03), rgba(255,215,0,.13), rgba(255,215,0,.03));
+}
+.bon-split {
+  position: absolute;
+  inset: 11% 4% 12%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.bon-half {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 30px;
+  background: rgba(255,255,255,.035);
+  overflow: hidden;
+}
+.bon-half.good { box-shadow: inset 0 0 30px rgba(92,252,160,.13); }
+.bon-half.adhd { box-shadow: inset 0 0 30px rgba(252,186,92,.12); }
+.bon-pathline {
+  position: absolute;
+  height: 3px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, var(--line, #5cfca0), transparent);
+  box-shadow: 0 0 16px var(--line, #5cfca0);
+  animation: bonPath 1.25s linear infinite;
+}
+.bon-half.adhd .bon-pathline { animation: bonPath 1.8s steps(3) infinite; opacity: .72; }
+@keyframes bonPath { 0%{transform:translateX(-110%)} 100%{transform:translateX(150%)} }
+.bon-region {
+  position: absolute;
+  border: 1.5px solid var(--rcol, #00f5ff);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rcol, #00f5ff) 15%, transparent);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--rcol, #00f5ff) 65%, transparent);
+  animation: bonRegion 2s ease-in-out infinite;
+}
+@keyframes bonRegion { 50%{ transform: scale(1.08); filter: brightness(1.4); } }
+.bon-task-block {
+  position: absolute;
+  left: 12%; top: 20%; right: 12%;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(252,92,125,.12);
+  border: 1px solid rgba(252,92,125,.45);
+  color: #fff;
+  font: 800 18px 'Syne', sans-serif;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(252,92,125,.2);
+  animation: bonOverload 1.6s ease-in-out infinite;
+}
+@keyframes bonOverload { 50% { transform: scale(1.06) rotate(-1deg); } }
+.bon-micro-row {
+  position: absolute;
+  left: 8%; right: 8%; bottom: 16%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.bon-micro {
+  border-radius: 12px;
+  padding: 11px 7px;
+  background: rgba(92,252,160,.1);
+  border: 1px solid rgba(92,252,160,.35);
+  color: #5cfca0;
+  font: 800 11px 'DM Sans', sans-serif;
+  text-align: center;
+  animation: bonMicro 2.5s ease-in-out infinite;
+  animation-delay: var(--d,0s);
+}
+@keyframes bonMicro { 50% { transform: translateY(-7px); background: rgba(92,252,160,.18); } }
+.bon-callout {
+  position: absolute;
+  max-width: 160px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.52);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.78);
+  font: 700 11px 'DM Sans', sans-serif;
+  line-height: 1.25;
+  backdrop-filter: blur(10px);
+}
+.bon-chip-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+.bon-chip {
+  border: 1px solid rgba(0,245,255,.24);
+  border-radius: 999px;
+  background: rgba(0,245,255,.07);
+  color: rgba(0,245,255,.82);
+  font: 700 11px 'DM Sans', sans-serif;
+  padding: 6px 9px;
+}
+.bon-chip.tool { border-color: rgba(124,92,252,.35); background: rgba(124,92,252,.12); color: #b9a8ff; }
 .bon-content {
+  position: relative;
   width: 100%;
-  padding: 28px 24px calc(env(safe-area-inset-bottom) + 28px);
+  padding: 18px 20px calc(env(safe-area-inset-bottom) + 22px);
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: linear-gradient(180deg, transparent, rgba(0,0,8,.82) 18%, rgba(0,0,8,.96));
+  backdrop-filter: blur(12px);
 }
-.bon-bar {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 6px;
-}
-.bon-seg {
-  height: 3px;
-  flex: 1;
-  border-radius: 2px;
-  background: rgba(255,255,255,.15);
-  transition: background .3s;
-}
+.bon-bar { display: flex; gap: 5px; margin-bottom: 4px; }
+.bon-seg { height: 3px; flex: 1; border-radius: 2px; background: rgba(255,255,255,.15); transition: background .3s, box-shadow .3s; }
 .bon-seg.done   { background: rgba(0,245,255,.4); }
-.bon-seg.active { background: #00f5ff; }
-.bon-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+.bon-seg.active { background: #00f5ff; box-shadow: 0 0 12px rgba(0,245,255,.7); }
+.bon-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bon-label { font: 700 10px 'Share Tech Mono', monospace; letter-spacing: 2px; color: rgba(0,245,255,.62); text-transform: uppercase; }
+.bon-count { flex: 0 0 auto; font: 800 10px 'Share Tech Mono', monospace; letter-spacing: 1.4px; color: rgba(255,255,255,.68); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 4px 9px; background: rgba(255,255,255,.05); }
+.bon-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(24px, 7vw, 34px); color: #fff; line-height: 1.08; letter-spacing: -.03em; }
+.bon-text { font-size: 15px; color: rgba(255,255,255,.68); line-height: 1.55; }
+.bon-text em { color: rgba(0,245,255,.95); font-style: normal; font-weight: 800; }
+.bon-btn-row { display:grid; grid-template-columns: 1fr; gap:8px; margin-top: 4px; }
+.bon-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, rgba(0,245,255,.16), rgba(124,92,252,.18)); border: 1.5px solid rgba(0,245,255,.42); border-radius: 16px; color: #00f5ff; font: 800 15px 'DM Sans', sans-serif; letter-spacing: .5px; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background .15s, transform .1s; }
+.bon-btn:active { background: rgba(0,245,255,.24); transform: scale(.98); }
+.bon-skip { background: none; border: none; color: rgba(255,255,255,.34); font: 600 12px 'DM Sans', sans-serif; cursor: pointer; padding: 6px 0; text-align: center; width: 100%; -webkit-tap-highlight-color: transparent; }
+.bon-node { cursor: pointer; }
+.bon-node.popped { animation: bonPop .45s ease; }
+@keyframes bonPop { 50% { transform: scale(1.35); filter: brightness(1.7); } }
+@media (min-width: 700px) {
+  .bon-content { max-width: 560px; align-self: center; border: 1px solid rgba(255,255,255,.08); border-radius: 26px 26px 0 0; }
 }
-.bon-label {
-  font: 700 10px 'Share Tech Mono', monospace;
-  letter-spacing: 2px;
-  color: rgba(0,245,255,.55);
-  text-transform: uppercase;
-}
-.bon-count {
-  flex: 0 0 auto;
-  font: 800 10px 'Share Tech Mono', monospace;
-  letter-spacing: 1.4px;
-  color: rgba(255,255,255,.55);
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 999px;
-  padding: 4px 9px;
-  background: rgba(255,255,255,.05);
-}
-.bon-title {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 23px;
-  color: #fff;
-  line-height: 1.2;
-}
-.bon-text {
-  font-size: 15px;
-  color: rgba(255,255,255,.62);
-  line-height: 1.65;
-}
-.bon-text em { color: rgba(0,245,255,.9); font-style: normal; }
-.bon-btn {
-  margin-top: 10px;
-  width: 100%;
-  padding: 16px;
-  background: rgba(0,245,255,.1);
-  border: 1.5px solid rgba(0,245,255,.4);
-  border-radius: 14px;
-  color: #00f5ff;
-  font: 700 15px 'DM Sans', sans-serif;
-  letter-spacing: .5px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background .15s, transform .1s;
-}
-.bon-btn:active { background: rgba(0,245,255,.22); transform: scale(.98); }
-.bon-skip {
-  background: none;
-  border: none;
-  color: rgba(255,255,255,.28);
-  font: 500 12px 'DM Sans', sans-serif;
-  cursor: pointer;
-  padding: 6px 0;
-  text-align: center;
-  width: 100%;
-  -webkit-tap-highlight-color: transparent;
-}
-
 /* ── Neurotransmitter state badge ── */
 #brain-state-badge {
   position: absolute;
@@ -3932,18 +4092,16 @@ function renderUserPill(user) {
 }
 
 function maybeShowOnboarding() {
-  const ONBOARDING_VERSION = 'v4';
+  const ONBOARDING_VERSION = 'v5';
   const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
   const replayRequested = new URLSearchParams(window.location.search).has('intro');
 
-  // Forcer le replay du voyage éducatif v4 pour les personnes qui avaient déjà vu v2/v3.
-  // v4 rend le compteur 1/8 visible, donc le 8e écran est impossible à manquer.
-  ['ft_onboarded_v2', 'ft_onboarded_v3'].forEach(k => {
+  // v5 = vrai voyage animé dans le cerveau TDAH. On force le replay si l'ancienne intro avait déjà été vue.
+  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4'].forEach(k => {
     if (localStorage.getItem(k) && !localStorage.getItem(ONBOARDING_KEY)) localStorage.removeItem(k);
   });
 
   if (localStorage.getItem(ONBOARDING_KEY) && !replayRequested) {
-    // Déjà vu : révéler les zones immédiatement
     if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
     return;
   }
@@ -3954,68 +4112,72 @@ function maybeShowOnboarding() {
   }
 
   const STEPS = [
-    // 1/8 — Le cerveau entier (intro)
     {
-      label: 'Écran 1 · Bienvenue',
+      scene: 'whole', accent: '#ffffff', tint: null, energy: 0.38,
+      label: 'Écran 1 · Le cerveau entier',
       title: 'Bienvenue dans ton cerveau.',
-      text: 'Ton cerveau ne fonctionne pas mal.\nIl fonctionne <em>différemment</em>.',
-      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.4); BrainEngine.zoomOut(); } },
-      cta: 'Découvrir →'
+      text: 'Ton cerveau ne fonctionne pas mal.\nIl fonctionne <em>différemment</em>. On commence par voir l’ensemble, puis on va plonger dedans.',
+      chips: ['cerveau entier', 'zoom progressif', 'sans culpabilité'],
+      cta: 'Plonger dans le cerveau →'
     },
-    // 2/8 — Les neurones
     {
+      scene: 'neurons', accent: '#00f5ff', tint: '#00f5ff', energy: 0.78,
       label: 'Écran 2 · Les neurones',
-      title: 'Tes neurones parlent en permanence.',
-      text: 'Ils communiquent entre eux via des <em>neurotransmetteurs</em>.\nCes signaux te permettent de te concentrer, planifier, passer à l\'action.',
-      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#00f5ff'); BrainEngine.setEnergy(0.75); } },
-      cta: 'Continuer →'
+      title: 'Tes neurones se parlent.',
+      text: 'Chaque pensée, chaque action, chaque retour au calme passe par des messages. Les impulsions voyagent, sautent de neurone en neurone, et construisent ton attention.',
+      chips: ['impulsions électriques', 'messages', 'réseaux'],
+      cta: 'Suivre le signal →'
     },
-    // 3/8 — La dopamine
     {
-      label: 'Écran 3 · La dopamine',
-      title: 'La dopamine : ton carburant.',
-      text: 'Elle t\'aide à <em>démarrer</em>, <em>maintenir l\'attention</em>, ressentir la récompense.\nDans le TDAH, ce système fonctionne <em>différemment</em>.',
-      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#ffd700'); BrainEngine.setEnergy(0.95); } },
-      cta: 'Continuer →'
+      scene: 'dopamine', accent: '#ffd700', tint: '#ffd700', energy: 1,
+      label: 'Écran 3 · Dopamine & récompense',
+      title: 'La dopamine est ton carburant de démarrage.',
+      text: 'Elle aide à commencer, maintenir l’attention et sentir la récompense. Dans le TDAH, ce système répond souvent moins aux tâches lointaines ou peu stimulantes.',
+      chips: ['démarrage', 'récompense', 'motivation'],
+      cta: 'Voir la différence →'
     },
-    // 4/8 — Comparaison neurotypique vs TDAH
     {
-      label: 'Écran 4 · Ton cerveau est unique',
-      title: 'Ce n\'est pas un manque de volonté.',
-      text: 'Cerveau neurotypique : les signaux circulent facilement.\nCerveau TDAH : les signaux sont plus <em>irréguliers</em>, il cherche plus de stimulation.',
-      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#6688aa'); BrainEngine.setEnergy(0.25); } },
-      cta: 'Continuer →'
+      scene: 'compare', accent: '#fcba5c', tint: '#6688aa', energy: 0.32,
+      label: 'Écran 4 · Typique vs TDAH',
+      title: 'Ce n’est pas un manque de volonté.',
+      text: 'Dans un cerveau neurotypique, les signaux circulent plus régulièrement. Dans un cerveau TDAH, ils peuvent être irréguliers : le cerveau cherche alors plus de stimulation pour relancer le circuit.',
+      chips: ['signal irrégulier', 'besoin de stimulation', 'biologique'],
+      cta: 'Entrer dans le préfrontal →'
     },
-    // 5/8 — Le cortex préfrontal
     {
+      scene: 'prefrontal', accent: '#7c5cfc', tint: '#7c5cfc', energy: 0.62, lobe: 'frontal',
       label: 'Écran 5 · Cortex préfrontal',
-      title: 'Le chef d\'orchestre.',
-      text: 'Planification, mémoire de travail, organisation, démarrage des tâches.\nIl n\'est pas <em>cassé</em> — il reçoit juste moins efficacement certains signaux.',
-      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#00f5ff'); BrainEngine.setEnergy(0.55); if(BrainEngine.highlightLobe) BrainEngine.highlightLobe('frontal', 2.0, 1500); } },
-      cta: 'Continuer →'
+      title: 'Le chef d’orchestre reçoit moins bien certains signaux.',
+      text: 'Planifier, organiser, garder une idée en tête, démarrer : tout ça dépend beaucoup du cortex préfrontal. Il n’est pas cassé — il a besoin d’appuis externes plus visibles.',
+      chips: ['planification', 'mémoire de travail', 'démarrage'],
+      tools: ['Plan', 'Micro-étapes', 'Mémoire externe'],
+      cta: 'Observer l’hyperfocus →'
     },
-    // 6/8 — L'hyperfocus
     {
-      label: 'Écran 6 · L\'hyperfocus',
-      title: 'Tu peux te concentrer intensément.',
-      text: 'Quand quelque chose est suffisamment stimulant, l\'attention <em>explose</em>.\nLe problème n\'est pas la capacité — c\'est la <em>régulation</em>.',
-      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#b05cfc'); BrainEngine.setEnergy(1.0); } },
-      cta: 'Continuer →'
+      scene: 'hyperfocus', accent: '#b05cfc', tint: '#b05cfc', energy: 1,
+      label: 'Écran 6 · Hyperfocus',
+      title: 'La capacité est là. La régulation est le défi.',
+      text: 'Quand une tâche devient assez stimulante, les connexions peuvent s’illuminer très fort. Le problème n’est donc pas “se concentrer”, mais choisir quand l’attention s’allume et quand elle s’arrête.',
+      chips: ['intensité', 'stimulation', 'régulation'],
+      tools: ['Timer', 'Pause visible', 'Mode sobre'],
+      cta: 'Voir la surcharge →'
     },
-    // 7/8 — Pourquoi les méthodes classiques échouent
     {
+      scene: 'overload', accent: '#ff8855', tint: '#ff8855', energy: 0.28,
       label: 'Écran 7 · Découper, pas forcer',
-      title: 'Pourquoi les méthodes classiques échouent.',
-      text: 'Grosse tâche → ton cerveau se <em>surcharge</em>, les connexions ralentissent.\nMicro-étapes → les réseaux <em>se réactivent</em>. C\'est la base de FocusTDAH.',
-      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#ff8855'); BrainEngine.setEnergy(0.35); } },
-      cta: 'Continuer →'
+      title: 'Une grosse tâche surcharge le réseau.',
+      text: 'Quand tout arrive d’un bloc, la mémoire de travail déborde et les connexions ralentissent. Découper en micro-actions redonne au cerveau un chemin clair, action par action.',
+      chips: ['surcharge', 'micro-actions', 'réactivation'],
+      tools: ['Juste 2 minutes', 'Brain dump', 'Choix automatique'],
+      cta: 'Revenir à l’application →'
     },
-    // 8/8 — Transition vers l'application
     {
+      scene: 'transition', accent: '#00f5ff', tint: '#00f5ff', energy: 0.72,
       label: 'Écran 8 · Travailler avec ton cerveau',
-      title: 'On y va.',
-      text: 'Maintenant que tu comprends comment ton cerveau fonctionne, apprenons à travailler <em>avec lui</em>, pas contre lui.',
-      brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#7c5cfc'); BrainEngine.setEnergy(0.85); } },
+      title: 'Maintenant, on travaille avec lui.',
+      text: 'FocusTDAH n’est pas une app pour te forcer. C’est une interface qui traduit ce fonctionnement en outils concrets : rendre visible, réduire la friction, créer du démarrage et protéger ton énergie.',
+      chips: ['avec ton cerveau', 'pas contre lui', 'outils adaptés'],
+      tools: ['Démarrer', 'Plan', 'Reset', 'Sons'],
       cta: 'Entrer dans mon cerveau →'
     },
   ];
@@ -4025,36 +4187,143 @@ function maybeShowOnboarding() {
   document.body.appendChild(ov);
   let step = 0;
 
+  function safeBrain(fn) { try { if (window.BrainEngine) fn(); } catch(e) {} }
+
+  function setBrainForStep(s) {
+    safeBrain(() => {
+      if (BrainEngine.setColorTint) BrainEngine.setColorTint(s.tint || null);
+      if (BrainEngine.setEnergy) BrainEngine.setEnergy(s.energy);
+      if (s.lobe && BrainEngine.highlightLobe) BrainEngine.highlightLobe(s.lobe, 2, 1600);
+      else if (BrainEngine.zoomOut) BrainEngine.zoomOut();
+    });
+  }
+
+  function particles(n, colors) {
+    return Array.from({ length: n }, (_, i) => {
+      const left = 18 + Math.random() * 64;
+      const top = 25 + Math.random() * 46;
+      const dx = (Math.random() * 70 - 35).toFixed(0) + 'px';
+      const dy = (Math.random() * 48 - 34).toFixed(0) + 'px';
+      const col = colors[i % colors.length];
+      return `<span class="bon-particle bon-node" style="left:${left}%;top:${top}%;--dx:${dx};--dy:${dy};--pcol:${col};animation-delay:${(i*.13).toFixed(2)}s"></span>`;
+    }).join('');
+  }
+
+  function renderScene(s) {
+    const commonBrain = '<div class="bon-brain-silhouette"></div>';
+    if (s.scene === 'whole') return `
+      <div class="bon-visual">
+        ${commonBrain}<div class="bon-zoom-ring"></div><div class="bon-zoom-ring" style="animation-delay:.8s"></div>
+        <div class="bon-callout" style="left:8%;top:12%">fond noir · cerveau blanc</div>
+        <div class="bon-callout" style="right:4%;bottom:22%">la caméra approche doucement</div>
+      </div>`;
+    if (s.scene === 'neurons') return `
+      <div class="bon-visual">
+        <span class="bon-neuron bon-node" style="left:18%;top:31%;--rot:18deg;--wire:132px"></span>
+        <span class="bon-neuron bon-node" style="left:55%;top:28%;--rot:118deg;--wire:95px;animation-delay:.3s"></span>
+        <span class="bon-neuron bon-node" style="left:37%;top:62%;--rot:-24deg;--wire:120px;animation-delay:.6s"></span>
+        <span class="bon-signal" style="left:22%;top:34%;--tx:34vw;--ty:-8vh;animation-delay:.1s"></span>
+        <span class="bon-signal" style="left:57%;top:32%;--tx:-20vw;--ty:24vh;animation-delay:.7s"></span>
+        <span class="bon-signal" style="left:35%;top:67%;--tx:34vw;--ty:-16vh;animation-delay:1.2s"></span>
+        <div class="bon-callout" style="left:4%;bottom:11%">tape les neurones ✦</div>
+      </div>`;
+    if (s.scene === 'dopamine') return `
+      <div class="bon-visual">
+        <div class="bon-synapse-gap"></div>
+        <span class="bon-neuron" style="left:18%;top:42%;--rot:4deg;--wire:95px"></span>
+        <span class="bon-neuron" style="right:18%;top:42%;--rot:184deg;--wire:95px"></span>
+        ${particles(26, ['#ffd700', '#fcba5c', '#fff4a8'])}
+        <div class="bon-callout" style="left:7%;top:12%">dopamine = démarrage</div>
+        <div class="bon-callout" style="right:4%;bottom:12%">récompense immédiate</div>
+      </div>`;
+    if (s.scene === 'compare') return `
+      <div class="bon-visual">
+        <div class="bon-split">
+          <div class="bon-half good">
+            <div class="bon-callout" style="left:10px;top:10px">Neurotypique</div>
+            ${[26,42,58,74].map((t,i)=>`<span class="bon-pathline" style="left:8%;right:8%;top:${t}%;--line:#5cfca0;animation-delay:${i*.18}s"></span>`).join('')}
+          </div>
+          <div class="bon-half adhd">
+            <div class="bon-callout" style="left:10px;top:10px">TDAH</div>
+            ${[26,44,63,78].map((t,i)=>`<span class="bon-pathline" style="left:${i%2?20:8}%;right:${i%2?8:28}%;top:${t}%;--line:#fcba5c;animation-delay:${i*.31}s"></span>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    if (s.scene === 'prefrontal') return `
+      <div class="bon-visual">
+        ${commonBrain}
+        <div class="bon-region bon-node" style="--rcol:#7c5cfc;left:18%;top:22%;width:34%;height:24%"></div>
+        <div class="bon-callout" style="left:10%;bottom:18%">cortex préfrontal</div>
+        <div class="bon-callout" style="right:6%;top:18%">planifier · organiser · démarrer</div>
+        ${particles(10, ['#7c5cfc', '#00f5ff'])}
+      </div>`;
+    if (s.scene === 'hyperfocus') return `
+      <div class="bon-visual">
+        ${commonBrain}
+        <div class="bon-region" style="--rcol:#b05cfc;left:21%;top:24%;width:58%;height:46%;animation-duration:1s"></div>
+        ${particles(34, ['#b05cfc', '#00f5ff', '#ffffff'])}
+        <div class="bon-callout" style="left:6%;top:12%">tout s’allume</div>
+        <div class="bon-callout" style="right:5%;bottom:12%">mais il faut un interrupteur</div>
+      </div>`;
+    if (s.scene === 'overload') return `
+      <div class="bon-visual">
+        ${commonBrain}
+        <div class="bon-task-block">GROSSE TÂCHE</div>
+        <div class="bon-micro-row">
+          <div class="bon-micro" style="--d:0s">ouvrir</div>
+          <div class="bon-micro" style="--d:.2s">2 min</div>
+          <div class="bon-micro" style="--d:.4s">cocher</div>
+        </div>
+        <div class="bon-callout" style="right:5%;top:54%">découper relance le réseau</div>
+      </div>`;
+    return `
+      <div class="bon-visual">
+        ${commonBrain}<div class="bon-zoom-ring"></div>
+        <div class="bon-region" style="--rcol:#00f5ff;left:14%;top:16%;width:72%;height:60%"></div>
+        ${particles(18, ['#00f5ff', '#7c5cfc', '#5cfca0'])}
+        <div class="bon-callout" style="left:7%;top:12%">l’app devient la carte</div>
+        <div class="bon-callout" style="right:5%;bottom:13%">outils = appuis externes</div>
+      </div>`;
+  }
+
   function renderStep() {
     const s = STEPS[step];
-    if (s.brainFn) s.brainFn();
+    setBrainForStep(s);
+    ov.style.setProperty('--accent', s.accent);
     ov.innerHTML = `
+      <div class="bon-voyage-stage">${renderScene(s)}</div>
       <div class="bon-content">
-        <div class="bon-bar">
-          ${STEPS.map((_, i) => `<div class="bon-seg${i < step ? ' done' : i === step ? ' active' : ''}"></div>`).join('')}
-        </div>
-        <div class="bon-meta">
-          <div class="bon-label">${s.label}</div>
-          <div class="bon-count">${step + 1}/${STEPS.length}</div>
-        </div>
+        <div class="bon-bar">${STEPS.map((_, i) => `<div class="bon-seg${i < step ? ' done' : i === step ? ' active' : ''}"></div>`).join('')}</div>
+        <div class="bon-meta"><div class="bon-label">${s.label}</div><div class="bon-count">${step + 1}/${STEPS.length}</div></div>
         <div class="bon-title">${s.title}</div>
         <div class="bon-text">${s.text.replace(/\n/g, '<br>')}</div>
-        <button class="bon-btn" id="bon-next">${s.cta}</button>
-        ${step > 0 ? `<button class="bon-skip" id="bon-skip">Passer l'intro</button>` : ''}
+        <div class="bon-chip-row">
+          ${(s.chips || []).map(c => `<span class="bon-chip">${c}</span>`).join('')}
+          ${(s.tools || []).map(c => `<span class="bon-chip tool">${c}</span>`).join('')}
+        </div>
+        <div class="bon-btn-row">
+          <button class="bon-btn" id="bon-next">${s.cta}</button>
+          ${step > 0 ? `<button class="bon-skip" id="bon-skip">Passer le voyage</button>` : ''}
+        </div>
       </div>`;
-    document.getElementById('bon-next').onclick = () => { step < STEPS.length - 1 ? (step++, renderStep()) : finishOnboarding(); };
-    const sk = document.getElementById('bon-skip');
+    ov.querySelector('#bon-next').onclick = () => { step < STEPS.length - 1 ? (step++, renderStep()) : finishOnboarding(); };
+    const sk = ov.querySelector('#bon-skip');
     if (sk) sk.onclick = finishOnboarding;
+    ov.querySelectorAll('.bon-node').forEach(n => n.addEventListener('click', () => {
+      n.classList.remove('popped'); void n.offsetWidth; n.classList.add('popped');
+      safeBrain(() => BrainEngine.celebratePulse && BrainEngine.celebratePulse());
+    }));
   }
 
   function finishOnboarding() {
     localStorage.setItem(ONBOARDING_KEY, '1');
     localStorage.setItem('ft_onboarded', ONBOARDING_VERSION);
-    ov.style.transition = 'opacity .7s ease';
+    ov.style.transition = 'opacity .7s ease, transform .7s ease';
     ov.style.opacity = '0';
+    ov.style.transform = 'scale(1.02)';
     setTimeout(() => {
       ov.remove();
-      if (window.BrainEngine) { BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.6); }
+      safeBrain(() => { BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.6); });
       if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
     }, 700);
   }
