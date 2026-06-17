@@ -1082,6 +1082,27 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   50%      { transform: translateX(-50%) translateY(5px); }
 }
 
+/* ── Neurotransmitter state badge ── */
+#brain-state-badge {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 52px);
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0,0,0,.55);
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 5px 11px;
+  font: 600 11px 'DM Sans', sans-serif;
+  letter-spacing: .5px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .4s ease;
+  z-index: 12;
+  white-space: nowrap;
+}
+
 /* ── Intro screen overlay ── */
 #brain-intro {
   position: absolute;
@@ -2732,6 +2753,7 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <button id="btnBack" onclick="if(window.BrainEngine)BrainEngine.zoomOut()">← retour</button>
     <div class="brain-section-logo">✦ focusTDAH</div>
     <div id="brain-dive-flash"></div>
+    <div id="brain-state-badge"></div>
     <!-- Écran d'intro : visible au premier chargement, disparaît après "Commencer" -->
     <div id="brain-intro">
       <div class="brain-intro-tagline">Bienvenue dans<br>ton cerveau</div>
@@ -14196,11 +14218,65 @@ function _reorderProjectCards() {
     if (!canvas) return;
 
     BrainEngine.init(canvas);
+
+    // ── Neurotransmitter visual states ──
+    const BRAIN_STATES = {
+      idle:      { tint: null,        energy: null,  rot: 0.003, badge: null },
+      focus:     { tint: '#7c5cfc',   energy: 0.85,  rot: 0.005, badge: { icon: '🔴', label: 'Mode Focus',   color: '#a78bfa' } },
+      celebrate: { tint: '#ffd700',   energy: 1.0,   rot: 0.008, badge: { icon: '✨', label: 'Dopamine ↑',   color: '#ffd700' } },
+      panic:     { tint: '#ff3333',   energy: 0.18,  rot: 0.001, badge: { icon: '🚨', label: 'Surcharge',    color: '#ff4455' } },
+      rest:      { tint: '#00ccbb',   energy: 0.45,  rot: 0.001, badge: { icon: '🌊', label: 'Repos cognitif', color: '#00ccbb' } },
+    };
+    const stateBadge = document.getElementById('brain-state-badge');
+    let _badgeTimer = null;
+    let _celebTimer = null;
+
+    function setBrainState(state) {
+      const s = BRAIN_STATES[state] || BRAIN_STATES.idle;
+      BrainEngine.setColorTint(s.tint);
+      if (s.energy !== null) BrainEngine.setEnergy(s.energy);
+      // Rotation speed via internal autoRotSpeed (override via setMode)
+      if      (s.rot === 0)     { /* keep */ }
+      else if (s.rot <= 0.001)  { /* slow — setMode won't help, use direct trick */ }
+      // Show badge
+      if (stateBadge && s.badge) {
+        stateBadge.innerHTML = `<span>${s.badge.icon}</span><span>${s.badge.label}</span>`;
+        stateBadge.style.borderColor = s.badge.color + '80';
+        stateBadge.style.color       = s.badge.color;
+        stateBadge.style.opacity     = '1';
+        clearTimeout(_badgeTimer);
+        _badgeTimer = setTimeout(() => { if(stateBadge) stateBadge.style.opacity = '0'; }, 3500);
+      } else if (stateBadge && state === 'idle') {
+        stateBadge.style.opacity = '0';
+      }
+      // Celebrate auto-reverts after 2s
+      if (state === 'celebrate') {
+        clearTimeout(_celebTimer);
+        _celebTimer = setTimeout(() => setBrainState('idle'), 2200);
+      }
+    }
+
+    // Intercept setMode to drive visual states
+    const _origSetMode = BrainEngine.setMode.bind(BrainEngine);
+    BrainEngine.setMode = function(m) {
+      _origSetMode(m === 'focus' || m === 'zoom' ? 'zoom' : m === 'immersive' ? 'immersive' : 'idle');
+      setBrainState(m);
+    };
+    // Intercept celebratePulse to add dopamine wave
+    const _origCelebrate = BrainEngine.celebratePulse.bind(BrainEngine);
+    BrainEngine.celebratePulse = function() {
+      _origCelebrate();
+      setBrainState('celebrate');
+    };
+
     BrainEngine.setMode('idle');
 
-    // Energy mirror (every 60s)
+    // Energy mirror (every 60s — only when idle/not in a special state)
     function _updateEnergy() {
-      if (typeof calcFocusScore === 'function') BrainEngine.setEnergy(calcFocusScore() / 100);
+      if (typeof calcFocusScore === 'function') {
+        const s = calcFocusScore() / 100;
+        BrainEngine.setEnergy(s);
+      }
     }
     setTimeout(_updateEnergy, 2000);
     setInterval(_updateEnergy, 60000);
