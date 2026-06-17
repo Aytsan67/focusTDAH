@@ -1082,6 +1082,64 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   50%      { transform: translateX(-50%) translateY(5px); }
 }
 
+/* ── Intro screen overlay ── */
+#brain-intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  z-index: 20;
+  pointer-events: auto;
+  transition: opacity .8s ease;
+}
+#brain-intro.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.brain-intro-tagline {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  line-height: 1.25;
+  letter-spacing: .5px;
+  text-shadow: 0 0 40px rgba(0,245,255,.4);
+}
+#brain-intro-btn {
+  background: rgba(0,245,255,.12);
+  border: 1.5px solid rgba(0,245,255,.5);
+  border-radius: 40px;
+  color: #00f5ff;
+  font: 700 15px 'DM Sans', sans-serif;
+  letter-spacing: 1px;
+  padding: 14px 36px;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .2s, transform .15s;
+  animation: introBtnPulse 3s ease-in-out infinite;
+}
+#brain-intro-btn:active { transform: scale(.95); background: rgba(0,245,255,.25); }
+@keyframes introBtnPulse {
+  0%,100% { box-shadow: 0 0 16px rgba(0,245,255,.25); }
+  50%      { box-shadow: 0 0 32px rgba(0,245,255,.55), 0 0 60px rgba(0,245,255,.2); }
+}
+/* Flash d'entrée dans le cerveau */
+#brain-dive-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(0,245,255,.55) 0%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 15;
+  transition: opacity .25s;
+}
+#brain-dive-flash.pop { opacity: 1; }
+
 /* Zone overlay buttons */
 #brain-hotspots { position: absolute; inset: 0; pointer-events: none; }
 .brain-zone-btn {
@@ -2673,8 +2731,14 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <div id="zoneIndicator"><div id="ziName"></div></div>
     <button id="btnBack" onclick="if(window.BrainEngine)BrainEngine.zoomOut()">← retour</button>
     <div class="brain-section-logo">✦ focusTDAH</div>
-    <div class="brain-tap-hint">tape une zone · navigue</div>
-    <div class="brain-scroll-hint">↓ &nbsp; outils &nbsp; ↓</div>
+    <div id="brain-dive-flash"></div>
+    <!-- Écran d'intro : visible au premier chargement, disparaît après "Commencer" -->
+    <div id="brain-intro">
+      <div class="brain-intro-tagline">Bienvenue dans<br>ton cerveau</div>
+      <button id="brain-intro-btn">Commencer →</button>
+    </div>
+    <div class="brain-tap-hint" id="brain-tap-hint" style="opacity:0">tape une zone · navigue</div>
+    <div class="brain-scroll-hint" id="brain-scroll-hint" style="opacity:0">↓ &nbsp; outils &nbsp; ↓</div>
   </div>
 
   <!-- ── Contenu (en bas, scroll ↓) ── -->
@@ -14157,6 +14221,51 @@ function _reorderProjectCards() {
       setTimeout(nav, 350);
     });
 
+    // ── Intro animation "Commencer" ──
+    const brainIntro   = document.getElementById('brain-intro');
+    const introBtn     = document.getElementById('brain-intro-btn');
+    const diveFlash    = document.getElementById('brain-dive-flash');
+    const tapHint      = document.getElementById('brain-tap-hint');
+    const scrollHint   = document.getElementById('brain-scroll-hint');
+    let brainReady = false;
+
+    function revealBrain() {
+      if (brainReady) return;
+      brainReady = true;
+      // 1. Flash lumineux au centre
+      if (diveFlash) { diveFlash.classList.add('pop'); setTimeout(() => diveFlash.classList.remove('pop'), 350); }
+      // 2. Mode immersif + accélération
+      BrainEngine.setMode('focus');
+      // 3. Fade out intro
+      if (brainIntro) brainIntro.classList.add('hidden');
+      // 4. Après 900ms : révéler zones + hints
+      setTimeout(() => {
+        BrainEngine.setMode('idle');
+        document.querySelectorAll('.brain-zone-btn').forEach((btn, i) => {
+          btn.style.transition = `opacity .5s ease ${i * 90}ms`;
+          btn.style.opacity = '1';
+        });
+        if (tapHint)    { tapHint.style.transition    = 'opacity .6s ease .4s'; tapHint.style.opacity    = '1'; }
+        if (scrollHint) { scrollHint.style.transition = 'opacity .6s ease .6s'; scrollHint.style.opacity = '1'; }
+      }, 900);
+    }
+
+    // Vérifier si déjà passé par l'intro lors de cette session
+    if (sessionStorage.getItem('brain_intro_done')) {
+      if (brainIntro) { brainIntro.style.display = 'none'; }
+      brainReady = true;
+      document.querySelectorAll('.brain-zone-btn').forEach(btn => btn.style.opacity = '1');
+      if (tapHint)    tapHint.style.opacity    = '1';
+      if (scrollHint) scrollHint.style.opacity = '1';
+    }
+
+    if (introBtn) {
+      introBtn.addEventListener('click', () => {
+        sessionStorage.setItem('brain_intro_done', '1');
+        revealBrain();
+      });
+    }
+
     // Populate zone overlay buttons in #brain-hotspots
     const ZONE_UI = {
       frontal:    { label: 'Focus',   x: '36%', y: '36%', color: '#00f5ff' },
@@ -14171,7 +14280,7 @@ function _reorderProjectCards() {
       Object.entries(ZONE_UI).forEach(([zoneId, ui]) => {
         const btn = document.createElement('button');
         btn.className = 'brain-zone-btn';
-        btn.style.cssText = `left:${ui.x};top:${ui.y};color:${ui.color}`;
+        btn.style.cssText = `left:${ui.x};top:${ui.y};color:${ui.color};opacity:${brainReady ? '1' : '0'}`;
         btn.innerHTML = `<span class="bzb-dot"></span><span class="bzb-label">${ui.label}</span>`;
         btn.addEventListener('click', () => {
           if (window.BrainEngine) BrainEngine.zoomToLobe(zoneId);
