@@ -1595,6 +1595,241 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 @keyframes bonCaret { 50% { opacity: 0; } }
 .bon-text.typing em { color: rgba(0,245,255,.95); font-style: normal; font-weight: 800; }
 
+
+/* Onboarding v9: traitement court-métrage studio — letterbox, lumière, profondeur, mise en scène. */
+#brain-onboarding {
+  --cinema-glow: rgba(0,245,255,.34);
+  --film-warm: rgba(255,210,140,.14);
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255,255,255,.06), transparent 18%),
+    radial-gradient(circle at 78% 16%, rgba(124,92,252,.18), transparent 32%),
+    radial-gradient(circle at 20% 80%, rgba(0,245,255,.10), transparent 30%),
+    linear-gradient(180deg, #020207 0%, #050512 42%, #080817 100%);
+}
+#brain-onboarding::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #000 0 8.5%, transparent 8.5% 91.5%, #000 91.5% 100%),
+    radial-gradient(circle at 50% 48%, transparent 0 44%, rgba(0,0,0,.42) 100%),
+    linear-gradient(90deg, rgba(0,245,255,.035), transparent 14% 86%, rgba(176,92,252,.045));
+  mix-blend-mode: normal;
+}
+.bon-voyage-stage,
+.bon-content { position: relative; z-index: 5; }
+.bon-cinema-layer {
+  position: absolute;
+  inset: -10%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.bon-cinema-layer::before,
+.bon-cinema-layer::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(18px);
+  opacity: .75;
+  animation: bonLensDrift 8s ease-in-out infinite alternate;
+}
+.bon-cinema-layer::before {
+  width: 220px; height: 220px;
+  left: 8%; top: 14%;
+  background: radial-gradient(circle, rgba(0,245,255,.18), transparent 64%);
+}
+.bon-cinema-layer::after {
+  width: 300px; height: 300px;
+  right: 5%; bottom: 8%;
+  background: radial-gradient(circle, rgba(176,92,252,.18), transparent 66%);
+  animation-delay: -2s;
+}
+@keyframes bonLensDrift { to { transform: translate3d(24px,-18px,0) scale(1.08); opacity: .95; } }
+.bon-film-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: .12;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.55) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(0,245,255,.28) 0 1px, transparent 1.5px);
+  background-size: 31px 31px, 47px 47px;
+  animation: bonFilmGrain .7s steps(2) infinite;
+  mix-blend-mode: screen;
+}
+@keyframes bonFilmGrain { 50% { transform: translate(-9px, 7px); } }
+.bon-cinema-titlecard {
+  position: absolute;
+  left: 22px;
+  top: 22px;
+  z-index: 7;
+  color: rgba(255,255,255,.72);
+  font: 900 10px 'DM Sans', sans-serif;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.bon-cinema-titlecard::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 18px var(--accent);
+}
+.bon-visual.bon-3d-view {
+  transform-origin: center;
+  animation: bonPremiumFloat 7s cubic-bezier(.4,0,.2,1) infinite;
+  box-shadow:
+    0 38px 130px rgba(0,0,0,.58),
+    0 0 120px color-mix(in srgb, var(--accent) 20%, transparent),
+    inset 0 0 0 1px rgba(255,255,255,.14),
+    inset 0 40px 120px rgba(255,255,255,.045);
+}
+@keyframes bonPremiumFloat {
+  0%,100% { transform: translateY(0) rotateX(0deg) rotateY(-1deg); }
+  50% { transform: translateY(-12px) rotateX(2.2deg) rotateY(2deg); }
+}
+.bon-visual.bon-3d-view::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 38% 28%, rgba(255,255,255,.28), transparent 11%),
+    linear-gradient(115deg, rgba(255,255,255,.16), transparent 30% 62%, rgba(0,245,255,.10));
+  opacity: .62;
+  mix-blend-mode: screen;
+}
+.bon-visual.bon-3d-view::after {
+  content: '';
+  position: absolute;
+  left: -20%; right: -20%; top: -16%; height: 28%;
+  z-index: 7;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), rgba(0,245,255,.22), transparent);
+  transform: rotate(-12deg) translateX(-40%);
+  filter: blur(2px);
+  animation: bonStudioSweep 5.8s ease-in-out infinite;
+}
+@keyframes bonStudioSweep { 55%,100% { transform: rotate(-12deg) translateX(120%); opacity: 0; } 0% { opacity: 0; } 12%,38% { opacity: 1; } }
+.bon-cartoon-brain svg {
+  filter: contrast(1.08) saturate(1.12);
+}
+.bon-lobe {
+  stroke-width: 3.4;
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--accent) 42%, transparent));
+}
+.bon-lobe.frontal, .bon-lobe.parietal, .bon-lobe.temporal, .bon-lobe.occipital, .bon-lobe.cerebellum, .bon-lobe.brainstem {
+  fill-opacity: .84;
+}
+.bon-shot-label {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  z-index: 8;
+  display: grid;
+  gap: 3px;
+  text-align: right;
+}
+.bon-shot-label strong {
+  color: #fff;
+  font: 900 12px 'Syne', sans-serif;
+  letter-spacing: .5px;
+}
+.bon-shot-label span {
+  color: rgba(255,255,255,.52);
+  font: 800 9px 'DM Sans', sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.bon-content {
+  box-shadow: 0 -18px 80px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.bon-title {
+  text-shadow: 0 0 34px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.bon-voice-line {
+  border-left: 2px solid var(--accent);
+  padding-left: 12px;
+  color: rgba(255,255,255,.76);
+  font: 700 13px/1.45 'DM Sans', sans-serif;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 78%);
+  border-radius: 0 12px 12px 0;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+}
+.bon-director-note {
+  color: rgba(255,255,255,.36);
+  font: 800 9px 'DM Sans', sans-serif;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+.bon-cinematic-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 8px;
+  margin-top: 2px;
+}
+.bon-tool-card {
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 14px;
+  padding: 10px 11px;
+  color: rgba(255,255,255,.76);
+  background: rgba(255,255,255,.055);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  font: 800 11px 'DM Sans', sans-serif;
+}
+.bon-tool-card em { display:block; color: var(--accent); font-style: normal; font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 3px; }
+#brain-onboarding[data-scene="whole"] .bon-cartoon-brain { --travel-scale: .92; filter: drop-shadow(0 42px 70px rgba(0,0,0,.56)); }
+#brain-onboarding[data-scene="zoom"] .bon-visual.bon-3d-view,
+#brain-onboarding[data-scene="synapse"] .bon-visual.bon-3d-view { animation-duration: 5.2s; }
+#brain-onboarding[data-scene="distraction"] .bon-visual { --progress: 76; --travel-scale: 1.28; --travel-x: -44px; --travel-y: -14px; }
+#brain-onboarding[data-scene="distraction"] .bon-signal-path { stroke-dasharray: 5 20; animation-duration: .82s; }
+#brain-onboarding[data-scene="distraction"] .bon-cartoon-brain { animation: bonCartoonShake .55s steps(2) infinite; }
+.bon-distraction-cloud {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+#brain-onboarding[data-scene="distraction"] .bon-distraction-cloud { opacity: 1; }
+.bon-distraction-token {
+  position: absolute;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  color: rgba(255,255,255,.78);
+  background: rgba(0,0,8,.56);
+  font: 900 10px 'DM Sans', sans-serif;
+  letter-spacing: .7px;
+  box-shadow: 0 0 18px rgba(0,245,255,.16);
+  animation: bonTokenOrbit 3.6s ease-in-out infinite;
+  animation-delay: var(--td,0s);
+}
+@keyframes bonTokenOrbit { 50% { transform: translate3d(var(--tox,16px), var(--toy,-12px), 0) scale(1.06); border-color: var(--accent); } }
+@media (min-width: 900px) {
+  #brain-onboarding .bon-voyage-stage { perspective: 1200px; }
+  #brain-onboarding .bon-content {
+    background: linear-gradient(180deg, rgba(10,10,22,.78), rgba(0,0,8,.86));
+  }
+}
+@media (max-width: 520px) {
+  #brain-onboarding::after { background: radial-gradient(circle at 50% 48%, transparent 0 52%, rgba(0,0,0,.44) 100%); }
+  .bon-cinema-titlecard { top: 14px; left: 16px; font-size: 8px; }
+  .bon-shot-label { right: 14px; top: 14px; }
+  .bon-cinematic-tools { grid-template-columns: 1fr; }
+}
+
 @media (min-width: 700px) {
   .bon-content { max-width: 560px; align-self: center; border: 1px solid rgba(255,255,255,.08); border-radius: 26px 26px 0 0; }
 }
@@ -4407,80 +4642,97 @@ function renderUserPill(user) {
 function maybeShowOnboarding() {
   const existingOnboarding = document.getElementById('brain-onboarding');
   if (existingOnboarding) existingOnboarding.remove();
-  const ONBOARDING_VERSION = 'v8';
+  const ONBOARDING_VERSION = 'v9';
   const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
   // L'introduction est volontairement rejouée à chaque chargement/refresh.
   // On garde la clé seulement comme trace de version, jamais pour skipper le voyage.
-  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', 'ft_onboarded_v5', 'ft_onboarded_v6', 'ft_onboarded_v7', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
+  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', 'ft_onboarded_v5', 'ft_onboarded_v6', 'ft_onboarded_v7', 'ft_onboarded_v8', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
 
   const STEPS = [
     {
-      scene: 'whole', accent: '#ffffff', tint: null, energy: 0.45, rhythm: 58, lobes: [],
-      label: 'Étape 1 · Vue globale',
-      title: 'D’abord, on voit le cerveau entier.',
-      text: 'On commence loin, comme dans un petit documentaire animé. Le cerveau 3D reste vivant derrière : on observe l’ensemble avant de rentrer dans le réseau.',
-      chips: ['cerveau 3D', 'vue globale', 'départ du voyage'],
-      cta: 'Avancer et zoomer →'
+      scene: 'whole', accent: '#ffffff', tint: null, energy: 0.48, rhythm: 56, lobes: [],
+      label: 'Scène 01 · Ouverture', shot: 'Plan large', director: 'fondu noir → cerveau blanc vivant',
+      title: 'Bienvenue dans ton cerveau.',
+      voice: 'Ton cerveau n’est pas cassé. Il fonctionne selon une autre logique.',
+      text: 'Un cerveau blanc flotte dans le noir. Il respire, pulse, s’allume doucement. On ne lance pas juste une app : on entre dans un monde intérieur.',
+      chips: ['court-métrage', 'cerveau 3D', 'émotion + science'],
+      cta: 'Entrer dans le cerveau →'
     },
     {
-      scene: 'zoom', accent: '#00f5ff', tint: '#00f5ff', energy: 0.68, rhythm: 76, lobes: ['frontal', 'parietal'], lobe: 'frontal',
-      label: 'Étape 2 · Zoom dans le tissu nerveux',
-      title: 'On avance. On zoome dans les connexions.',
-      text: 'La caméra se rapproche : les grandes zones deviennent des circuits. Les traits lumineux montrent les routes que le signal peut emprunter pour créer une pensée ou une action.',
-      chips: ['zoom', 'connexions', 'signal électrique'],
-      cta: 'Entrer dans une synapse →'
+      scene: 'zoom', accent: '#00f5ff', tint: '#00f5ff', energy: 0.72, rhythm: 78, lobes: ['frontal', 'parietal'], lobe: 'frontal',
+      label: 'Scène 02 · Travelling avant', shot: 'Zoom organique', director: 'la caméra traverse la surface',
+      title: 'On avance dans le réseau.',
+      voice: 'Ici, tout repose sur la communication entre les neurones.',
+      text: 'La surface devient un paysage. Les connexions blanches et translucides apparaissent comme des routes lumineuses. Chaque signal aide à choisir, planifier, démarrer ou revenir au calme.',
+      chips: ['travelling', 'neurones', 'signaux'],
+      cta: 'Suivre le signal →'
     },
     {
-      scene: 'synapse', accent: '#00f5ff', tint: '#00f5ff', energy: 0.9, rhythm: 104, lobes: ['corpus', 'frontal'],
-      label: 'Étape 3 · Synapse',
-      title: 'Ici, le message saute une micro-distance.',
-      text: 'Entre deux neurones, il y a un minuscule espace : la synapse. Le signal électrique déclenche des messagers chimiques qui traversent ce petit pont.',
-      chips: ['synapse', 'messagers chimiques', 'transmission'],
-      cta: 'Suivre la dopamine →'
+      scene: 'synapse', accent: '#00f5ff', tint: '#00f5ff', energy: 0.95, rhythm: 108, lobes: ['corpus', 'frontal'],
+      label: 'Scène 03 · Macro synapse', shot: 'Très gros plan', director: 'électricité → chimie → message',
+      title: 'Le message saute une micro-distance.',
+      voice: 'Entre deux neurones, le signal traverse une synapse.',
+      text: 'On voit le courant arriver, puis des messagers chimiques passer le petit espace. Le cerveau se construit dans ces micro-transmissions invisibles.',
+      chips: ['synapse', 'transmission', 'micro-monde'],
+      cta: 'Entrer dans le corridor dopamine →'
     },
     {
-      scene: 'dopamine', accent: '#ffd700', tint: '#ffd700', energy: 1, rhythm: 118, lobes: ['frontal', 'brainstem'],
-      label: 'Étape 4 · Dopamine',
-      title: 'La dopamine aide le cerveau à démarrer.',
-      text: 'Ces petites bulles dorées représentent le carburant de motivation. Dans le TDAH, il arrive parfois de façon moins régulière, surtout quand la tâche semble lointaine ou peu stimulante.',
+      scene: 'dopamine', accent: '#ffd700', tint: '#ffd700', energy: 1, rhythm: 120, lobes: ['frontal', 'brainstem'],
+      label: 'Scène 04 · Dopamine', shot: 'Tunnel lumineux', director: 'particules dorées + cyan/violet',
+      title: 'La dopamine donne l’élan.',
+      voice: 'Elle aide à passer à l’action, sentir la récompense et maintenir l’attention.',
+      text: 'Dans le TDAH, ce système peut être plus irrégulier. Ce n’est pas de la paresse : c’est un démarrage biologique qui a besoin de signaux plus clairs.',
       chips: ['motivation', 'récompense', 'démarrage'],
-      cta: 'Découvrir une nouvelle zone →'
+      cta: 'Aller au centre de contrôle →'
     },
     {
-      scene: 'prefrontal', accent: '#7c5cfc', tint: '#7c5cfc', energy: 0.64, rhythm: 68, lobe: 'frontal', lobes: ['frontal'],
-      label: 'Étape 5 · Cortex préfrontal',
-      title: 'Nouvelle zone : le chef d’orchestre.',
-      text: 'On avance vers l’avant du cerveau. Cette zone aide à planifier, inhiber, garder le fil et commencer. Elle n’est pas cassée : elle a besoin d’appuis visibles.',
-      chips: ['planification', 'mémoire de travail', 'démarrage'],
+      scene: 'prefrontal', accent: '#7c5cfc', tint: '#7c5cfc', energy: 0.66, rhythm: 70, lobe: 'frontal', lobes: ['frontal'],
+      label: 'Scène 05 · Cortex préfrontal', shot: 'Centre de contrôle', director: 'panneaux flottants : planifier, prioriser, décider',
+      title: 'Le chef d’orchestre organise le chaos.',
+      voice: 'Cette zone aide à planifier, prioriser, décider et garder l’objectif en tête.',
+      text: 'Des panneaux apparaissent dans l’espace : mémoire de travail, temps, priorités. Certains circuits s’allument puis s’éteignent : l’appui externe devient nécessaire.',
+      chips: ['planification', 'priorités', 'mémoire de travail'],
       tools: ['Plan', 'Micro-étapes', 'Mémoire externe'],
-      cta: 'Avancer vers l’hyperfocus →'
+      cta: 'Voir la surcharge →'
     },
     {
-      scene: 'hyperfocus', accent: '#b05cfc', tint: '#b05cfc', energy: 1, rhythm: 132, lobes: ['frontal', 'parietal', 'temporal'], pattern: 'hyperfocus',
-      label: 'Étape 6 · Réseau attentionnel',
-      title: 'On découvre l’hyperfocus.',
-      text: 'Quand la stimulation est forte, le réseau peut s’illuminer très intensément. La capacité est là : le défi, c’est choisir quand l’attention s’allume et quand elle s’arrête.',
-      chips: ['intensité', 'stimulation', 'régulation'],
+      scene: 'overload', accent: '#ff6b7a', tint: '#ff6b7a', energy: 0.28, rhythm: 38, lobes: ['frontal', 'parietal', 'brainstem'], pattern: 'overload',
+      label: 'Scène 06 · Surcharge', shot: 'Montagne mentale', director: 'un bloc massif écrase les connexions',
+      title: 'Une grosse tâche peut bloquer le trajet.',
+      voice: 'Pas parce que tu ne veux pas. Parce que ton cerveau ne sait pas par où entrer.',
+      text: 'La tâche devient une montagne. Les signaux se croisent. Trop d’informations, trop de directions. La solution n’est pas de forcer : c’est de découper.',
+      chips: ['blocage', 'montagne', 'découpage'],
+      tools: ['Juste 2 minutes', 'Brain dump', 'Je suis bloqué'],
+      cta: 'Traverser la tempête →'
+    },
+    {
+      scene: 'distraction', accent: '#ffd84d', tint: '#ffd84d', energy: 0.82, rhythm: 118, lobes: ['parietal', 'temporal'], pattern: 'irregular',
+      label: 'Scène 07 · Distraction', shot: 'Tempête de stimuli', director: 'notifications, idées, sons, souvenirs orbitent',
+      title: 'Ton attention se déplace vite.',
+      voice: 'Le cerveau TDAH capte ce qui est nouveau, urgent, intéressant ou stimulant.',
+      text: 'Ce n’est pas une absence d’attention. C’est une attention mobile, rapide, sensible aux nouveautés. Il faut lui donner une piste claire à suivre.',
+      chips: ['nouveauté', 'stimulation', 'attention mobile'],
+      cta: 'Entrer en hyperfocus →'
+    },
+    {
+      scene: 'hyperfocus', accent: '#b05cfc', tint: '#b05cfc', energy: 1, rhythm: 136, lobes: ['frontal', 'parietal', 'temporal'], pattern: 'hyperfocus',
+      label: 'Scène 08 · Hyperfocus', shot: 'Convergence totale', director: 'tout converge vers une seule zone brillante',
+      title: 'La concentration est là. La régulation est le défi.',
+      voice: 'Quand quelque chose stimule vraiment ton cerveau, le réseau peut s’illuminer très fort.',
+      text: 'Les connexions deviennent fluides. Le monde extérieur s’éteint presque. Le problème n’est donc pas “se concentrer”, mais allumer, arrêter et rediriger l’attention.',
+      chips: ['intensité', 'fluidité', 'régulation'],
       tools: ['Timer', 'Pause visible', 'Mode sobre'],
-      cta: 'Voir quand ça surcharge →'
+      cta: 'Faire apparaître les outils →'
     },
     {
-      scene: 'overload', accent: '#ff8855', tint: '#ff8855', energy: 0.3, rhythm: 40, lobes: ['frontal', 'parietal', 'brainstem'], pattern: 'overload',
-      label: 'Étape 7 · Surcharge',
-      title: 'Trop d’informations bloque le trajet.',
-      text: 'Quand tout arrive d’un bloc, la mémoire de travail déborde. Découper en micro-actions redonne au signal un chemin clair : on avance, une étape après l’autre.',
-      chips: ['surcharge', 'micro-actions', 'réactivation'],
-      tools: ['Juste 2 minutes', 'Brain dump', 'Choix automatique'],
-      cta: 'Revenir à la vue globale →'
-    },
-    {
-      scene: 'transition', accent: '#00f5ff', tint: '#00f5ff', energy: 0.72, rhythm: 72, lobes: ['frontal', 'parietal', 'temporal', 'cerebellum'],
-      label: 'Étape 8 · Avec ton cerveau',
-      title: 'Maintenant, l’app devient une carte.',
-      text: 'FocusTDAH garde ce design cerveau 3D et transforme le voyage en outils concrets : rendre visible, réduire la friction, créer du démarrage et protéger ton énergie.',
-      chips: ['avec ton cerveau', 'pas contre lui', 'outils adaptés'],
-      tools: ['Démarrer', 'Plan', 'Reset', 'Sons'],
-      cta: 'Entrer dans mon cerveau →'
+      scene: 'transition', accent: '#00f5ff', tint: '#00f5ff', energy: 0.76, rhythm: 74, lobes: ['frontal', 'parietal', 'temporal', 'cerebellum'],
+      label: 'Scène 09 · FocusTDAH', shot: 'Révélation produit', director: 'l’interface naît du cerveau',
+      title: 'Maintenant, l’app devient un chemin.',
+      voice: 'FocusTDAH existe pour travailler avec ton cerveau, pas contre lui.',
+      text: 'Les outils apparaissent comme des aides neuronales : les pensées se rangent, la montagne se découpe, le timer trace un circuit court, et le démarrage devient accessible.',
+      chips: ['avec ton cerveau', 'pas contre lui', 'chemin accessible'],
+      tools: ['Micro-étapes', 'Brain dump', 'Timer court', 'Mini-quête'],
+      cta: 'Commencer →'
     },
   ];
   const ov = document.createElement('div');
@@ -4540,8 +4792,12 @@ function maybeShowOnboarding() {
         ['Régulation', 'La difficulté : allumer, arrêter, puis rediriger l’attention.', 'right:5%;top:14%']
       ],
       overload: [
-        ['Surcharge', 'Trop d’informations ralentit le préfrontal et fatigue le système.', 'left:5%;top:13%'],
-        ['Micro-actions', 'Découper baisse la charge et redonne un chemin au signal.', 'right:5%;bottom:14%']
+        ['Surcharge', 'La montagne mentale bloque le point d’entrée.', 'left:5%;top:13%'],
+        ['Micro-actions', 'Découper transforme un mur en petits chemins lumineux.', 'right:5%;bottom:14%']
+      ],
+      distraction: [
+        ['Stimuli', 'Nouveauté, sons, idées : tout demande à être capté.', 'left:5%;top:13%'],
+        ['Attention mobile', 'Le signal saute vite : il faut lui donner une piste.', 'right:5%;bottom:14%']
       ],
       transition: [
         ['Interface = appui', 'Les outils rendent visibles le temps, les étapes et l’énergie.', 'left:5%;top:14%'],
@@ -4620,21 +4876,44 @@ function maybeShowOnboarding() {
     return (zones[s.scene] || []).map(([name, style]) => `<div class="bon-zone-reveal" style="${style}">${name}</div>`).join('');
   }
 
+  function distractionCloud(s) {
+    if (s.scene !== 'distraction') return '';
+    const tokens = [
+      ['notification', 'left:10%;top:20%;--td:.1s;--tox:18px;--toy:-10px'],
+      ['idée', 'right:12%;top:26%;--td:.35s;--tox:-14px;--toy:14px'],
+      ['souvenir', 'left:14%;bottom:22%;--td:.55s;--tox:20px;--toy:10px'],
+      ['urgence', 'right:10%;bottom:24%;--td:.78s;--tox:-22px;--toy:-16px'],
+      ['son', 'left:42%;top:12%;--td:1s;--tox:8px;--toy:18px']
+    ];
+    return `<div class="bon-distraction-cloud">${tokens.map(([t, style]) => `<span class="bon-distraction-token" style="${style}">${t}</span>`).join('')}</div>`;
+  }
+
+  function cinematicToolCards(s) {
+    if (!s.tools || !s.tools.length) return '';
+    return `<div class="bon-cinematic-tools">${s.tools.slice(0,4).map((tool, i) => `<div class="bon-tool-card"><em>outil ${i + 1}</em>${tool}</div>`).join('')}</div>`;
+  }
+
   function renderScene(s) {
     const modeLabel = s.pattern === 'hyperfocus' ? 'réseau intensifié'
       : s.pattern === 'overload' ? 'surcharge cognitive'
       : s.pattern === 'irregular' ? 'signal irrégulier'
+      : s.scene === 'distraction' ? 'tempête de stimuli'
       : s.lobe ? 'zoom cortical'
       : 'activité neuronale';
     return `
       <div class="bon-visual bon-3d-view bon-cartoon-view" data-scene="${s.scene}">
+        <div class="bon-cinema-layer"></div>
+        <div class="bon-film-grain"></div>
         <div class="bon-3d-glass"></div>
         <div class="bon-scanline"></div>
         ${cartoonBrainSvg(s)}
         ${synapseZoom(s)}
         ${zoneReveals(s)}
+        ${distractionCloud(s)}
         <div class="bon-camera-rail"><span>cerveau</span><span>zoom</span><span>synapse</span><span>zones</span></div>
-        <div class="bon-3d-badge">voyage animé éducatif · ${modeLabel}</div>
+        <div class="bon-cinema-titlecard">FocusTDAH · intro film</div>
+        <div class="bon-shot-label"><strong>${s.shot || 'Plan guidé'}</strong><span>${s.director || 'voyage cerveau 3D'}</span></div>
+        <div class="bon-3d-badge">court-métrage éducatif · ${modeLabel}</div>
         <div class="bon-depth-label">le cerveau 3D continue de bouger derrière</div>
         <div class="bon-cartoon-label one">zones du cerveau</div>
         <div class="bon-cartoon-label two">messages électriques</div>
@@ -4685,7 +4964,10 @@ function maybeShowOnboarding() {
         <div class="bon-bar">${STEPS.map((_, i) => `<div class="bon-seg${i < step ? ' done' : i === step ? ' active' : ''}"></div>`).join('')}</div>
         <div class="bon-meta"><div class="bon-label">${s.label}</div><div class="bon-count">${step + 1}/${STEPS.length}</div></div>
         <div class="bon-title">${s.title}</div>
+        <div class="bon-voice-line" id="bon-voice-line">${s.voice || ''}</div>
+        <div class="bon-director-note">${s.director || ''}</div>
         <div class="bon-text typing bon-type-caret" id="bon-type-text"></div>
+        ${cinematicToolCards(s)}
         <div class="bon-chip-row">
           ${(s.chips || []).map(c => `<span class="bon-chip">${c}</span>`).join('')}
           ${(s.tools || []).map(c => `<span class="bon-chip tool">${c}</span>`).join('')}
