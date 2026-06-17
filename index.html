@@ -1113,11 +1113,27 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .bon-seg.done   { background: rgba(0,245,255,.4); }
 .bon-seg.active { background: #00f5ff; }
+.bon-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
 .bon-label {
   font: 700 10px 'Share Tech Mono', monospace;
   letter-spacing: 2px;
   color: rgba(0,245,255,.55);
   text-transform: uppercase;
+}
+.bon-count {
+  flex: 0 0 auto;
+  font: 800 10px 'Share Tech Mono', monospace;
+  letter-spacing: 1.4px;
+  color: rgba(255,255,255,.55);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: rgba(255,255,255,.05);
 }
 .bon-title {
   font-family: 'Syne', sans-serif;
@@ -3916,76 +3932,87 @@ function renderUserPill(user) {
 }
 
 function maybeShowOnboarding() {
-  // Forcer le replay du nouveau voyage éducatif v3
-  if (localStorage.getItem('ft_onboarded_v2') && !localStorage.getItem('ft_onboarded_v3')) {
-    localStorage.removeItem('ft_onboarded_v2');
-  }
-  if (localStorage.getItem('ft_onboarded_v3')) {
+  const ONBOARDING_VERSION = 'v4';
+  const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
+  const replayRequested = new URLSearchParams(window.location.search).has('intro');
+
+  // Forcer le replay du voyage éducatif v4 pour les personnes qui avaient déjà vu v2/v3.
+  // v4 rend le compteur 1/8 visible, donc le 8e écran est impossible à manquer.
+  ['ft_onboarded_v2', 'ft_onboarded_v3'].forEach(k => {
+    if (localStorage.getItem(k) && !localStorage.getItem(ONBOARDING_KEY)) localStorage.removeItem(k);
+  });
+
+  if (localStorage.getItem(ONBOARDING_KEY) && !replayRequested) {
     // Déjà vu : révéler les zones immédiatement
     if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
     return;
   }
 
+  if (replayRequested) {
+    localStorage.removeItem(ONBOARDING_KEY);
+    localStorage.removeItem('ft_onboarded');
+  }
+
   const STEPS = [
-    // 0 — Le cerveau entier (intro)
+    // 1/8 — Le cerveau entier (intro)
     {
-      label: 'Bienvenue',
+      label: 'Écran 1 · Bienvenue',
       title: 'Bienvenue dans ton cerveau.',
       text: 'Ton cerveau ne fonctionne pas mal.\nIl fonctionne <em>différemment</em>.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.4); BrainEngine.zoomOut(); } },
       cta: 'Découvrir →'
     },
-    // 1 — Les neurones
+    // 2/8 — Les neurones
     {
-      label: 'Étape 1 · Les neurones',
+      label: 'Écran 2 · Les neurones',
       title: 'Tes neurones parlent en permanence.',
       text: 'Ils communiquent entre eux via des <em>neurotransmetteurs</em>.\nCes signaux te permettent de te concentrer, planifier, passer à l\'action.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#00f5ff'); BrainEngine.setEnergy(0.75); } },
       cta: 'Continuer →'
     },
-    // 2 — La dopamine
+    // 3/8 — La dopamine
     {
-      label: 'Étape 2 · La dopamine',
+      label: 'Écran 3 · La dopamine',
       title: 'La dopamine : ton carburant.',
       text: 'Elle t\'aide à <em>démarrer</em>, <em>maintenir l\'attention</em>, ressentir la récompense.\nDans le TDAH, ce système fonctionne <em>différemment</em>.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#ffd700'); BrainEngine.setEnergy(0.95); } },
       cta: 'Continuer →'
     },
-    // 3 — Comparaison neurotypique vs TDAH
+    // 4/8 — Comparaison neurotypique vs TDAH
     {
-      label: 'Étape 3 · Ton cerveau est unique',
+      label: 'Écran 4 · Ton cerveau est unique',
       title: 'Ce n\'est pas un manque de volonté.',
       text: 'Cerveau neurotypique : les signaux circulent facilement.\nCerveau TDAH : les signaux sont plus <em>irréguliers</em>, il cherche plus de stimulation.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#6688aa'); BrainEngine.setEnergy(0.25); } },
       cta: 'Continuer →'
     },
-    // 4 — Le cortex préfrontal
+    // 5/8 — Le cortex préfrontal
     {
-      label: 'Étape 4 · Cortex préfrontal',
+      label: 'Écran 5 · Cortex préfrontal',
       title: 'Le chef d\'orchestre.',
       text: 'Planification, mémoire de travail, organisation, démarrage des tâches.\nIl n\'est pas <em>cassé</em> — il reçoit juste moins efficacement certains signaux.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#00f5ff'); BrainEngine.setEnergy(0.55); if(BrainEngine.highlightLobe) BrainEngine.highlightLobe('frontal', 2.0, 1500); } },
       cta: 'Continuer →'
     },
-    // 5 — L'hyperfocus
+    // 6/8 — L'hyperfocus
     {
-      label: 'Étape 5 · L\'hyperfocus',
+      label: 'Écran 6 · L\'hyperfocus',
       title: 'Tu peux te concentrer intensément.',
       text: 'Quand quelque chose est suffisamment stimulant, l\'attention <em>explose</em>.\nLe problème n\'est pas la capacité — c\'est la <em>régulation</em>.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#b05cfc'); BrainEngine.setEnergy(1.0); } },
       cta: 'Continuer →'
     },
-    // 6 — Pourquoi les méthodes classiques échouent
+    // 7/8 — Pourquoi les méthodes classiques échouent
     {
-      label: 'Étape 6 · Découper, pas forcer',
+      label: 'Écran 7 · Découper, pas forcer',
       title: 'Pourquoi les méthodes classiques échouent.',
       text: 'Grosse tâche → ton cerveau se <em>surcharge</em>, les connexions ralentissent.\nMicro-étapes → les réseaux <em>se réactivent</em>. C\'est la base de FocusTDAH.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#ff8855'); BrainEngine.setEnergy(0.35); } },
       cta: 'Continuer →'
     },
-    // 7 — Transition vers l'application
+    // 8/8 — Transition vers l'application
     {
-      label: 'Étape 7 · Travailler avec ton cerveau',
+      label: 'Écran 8 · Travailler avec ton cerveau',
       title: 'On y va.',
       text: 'Maintenant que tu comprends comment ton cerveau fonctionne, apprenons à travailler <em>avec lui</em>, pas contre lui.',
       brainFn: () => { if(window.BrainEngine){ BrainEngine.setColorTint('#7c5cfc'); BrainEngine.setEnergy(0.85); } },
@@ -4006,7 +4033,10 @@ function maybeShowOnboarding() {
         <div class="bon-bar">
           ${STEPS.map((_, i) => `<div class="bon-seg${i < step ? ' done' : i === step ? ' active' : ''}"></div>`).join('')}
         </div>
-        <div class="bon-label">${s.label}</div>
+        <div class="bon-meta">
+          <div class="bon-label">${s.label}</div>
+          <div class="bon-count">${step + 1}/${STEPS.length}</div>
+        </div>
         <div class="bon-title">${s.title}</div>
         <div class="bon-text">${s.text.replace(/\n/g, '<br>')}</div>
         <button class="bon-btn" id="bon-next">${s.cta}</button>
@@ -4018,9 +4048,8 @@ function maybeShowOnboarding() {
   }
 
   function finishOnboarding() {
-    localStorage.setItem('ft_onboarded_v3', '1');
-    localStorage.setItem('ft_onboarded_v2', '1');
-    localStorage.setItem('ft_onboarded', '1');
+    localStorage.setItem(ONBOARDING_KEY, '1');
+    localStorage.setItem('ft_onboarded', ONBOARDING_VERSION);
     ov.style.transition = 'opacity .7s ease';
     ov.style.opacity = '0';
     setTimeout(() => {
