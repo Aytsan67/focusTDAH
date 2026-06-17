@@ -4254,7 +4254,11 @@ function show(id) {
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
   if (window.BrainEngine) {
-    if (id === 'landing') BrainEngine.zoomOut();
+    if (id === 'landing') {
+      BrainEngine.zoomOut();
+      BrainEngine.resume(); // iOS : forcer le rendu même si IntersectionObserver n'a pas tiré
+      if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
+    }
   }
   if (id === 'quicktodo-screen' && typeof renderQT === 'function') renderQT();
 }
@@ -14310,11 +14314,11 @@ function _reorderProjectCards() {
       brainReady = true;
       // 1. Flash lumineux au centre
       if (diveFlash) { diveFlash.classList.add('pop'); setTimeout(() => diveFlash.classList.remove('pop'), 350); }
-      // 2. Mode immersif + accélération
+      // 2. Accélération + tint bref
       BrainEngine.setMode('focus');
       // 3. Fade out intro
       if (brainIntro) brainIntro.classList.add('hidden');
-      // 4. Après 900ms : révéler zones + hints
+      // 4. Après 900ms : révéler zones + hints avec stagger
       setTimeout(() => {
         BrainEngine.setMode('idle');
         document.querySelectorAll('.brain-zone-btn').forEach((btn, i) => {
@@ -14326,20 +14330,20 @@ function _reorderProjectCards() {
       }, 900);
     }
 
-    // Vérifier si déjà passé par l'intro lors de cette session
-    if (sessionStorage.getItem('brain_intro_done')) {
-      if (brainIntro) { brainIntro.style.display = 'none'; }
+    // L'intro rejoue à chaque ouverture de l'app (expérience immersive)
+    // Quand on revient sur landing depuis un autre écran : skip l'intro, montrer zones directement
+    window._brainRevealImmediate = function() {
+      if (brainReady) return;
       brainReady = true;
-      document.querySelectorAll('.brain-zone-btn').forEach(btn => btn.style.opacity = '1');
+      if (brainIntro) { brainIntro.style.opacity = '0'; brainIntro.style.pointerEvents = 'none'; }
+      document.querySelectorAll('.brain-zone-btn').forEach(btn => { btn.style.transition = 'none'; btn.style.opacity = '1'; });
       if (tapHint)    tapHint.style.opacity    = '1';
       if (scrollHint) scrollHint.style.opacity = '1';
-    }
+      BrainEngine.setMode('idle');
+    };
 
     if (introBtn) {
-      introBtn.addEventListener('click', () => {
-        sessionStorage.setItem('brain_intro_done', '1');
-        revealBrain();
-      });
+      introBtn.addEventListener('click', revealBrain);
     }
 
     // Populate zone overlay buttons in #brain-hotspots
