@@ -4094,22 +4094,9 @@ function renderUserPill(user) {
 function maybeShowOnboarding() {
   const ONBOARDING_VERSION = 'v5';
   const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
-  const replayRequested = new URLSearchParams(window.location.search).has('intro');
-
-  // v5 = vrai voyage animé dans le cerveau TDAH. On force le replay si l'ancienne intro avait déjà été vue.
-  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4'].forEach(k => {
-    if (localStorage.getItem(k) && !localStorage.getItem(ONBOARDING_KEY)) localStorage.removeItem(k);
-  });
-
-  if (localStorage.getItem(ONBOARDING_KEY) && !replayRequested) {
-    if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
-    return;
-  }
-
-  if (replayRequested) {
-    localStorage.removeItem(ONBOARDING_KEY);
-    localStorage.removeItem('ft_onboarded');
-  }
+  // L'introduction est volontairement rejouée à chaque chargement/refresh.
+  // On garde la clé seulement comme trace de version, jamais pour skipper le voyage.
+  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
 
   const STEPS = [
     {
