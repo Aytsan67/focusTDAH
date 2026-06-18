@@ -80,6 +80,7 @@ main {
 }
 
 :root {
+  /* ── Thème global ── */
   --bg: #0d0d14;
   --card: rgba(22, 22, 31, 0.62);
   --soft: rgba(28, 28, 39, 0.62);
@@ -88,7 +89,25 @@ main {
   --muted: #7a7690;
   --accent: #7c5cfc;
   --accent2: #b05cfc;
+  --accent-rgb: 124, 92, 252;
+  --accent2-rgb: 176, 92, 252;
   --green: #5cfca0;
+
+  /* ── Bestiaire — raretés ── */
+  --rarity-commun:    #9e9e9e;
+  --rarity-rare:      #2979ff;
+  --rarity-epique:    #ab47bc;
+  --rarity-legendaire:#ffa726;
+}
+/* ── MODE SOBRE (réduction stimuli, flag ft_flag_mode_sobre) ── */
+body.mode-sobre {
+  --accent: #8a8a92;
+  --accent2: #9a9aa2;
+  --green: #9a9aa0;
+}
+body.mode-sobre, body.mode-sobre * {
+  animation: none !important;
+  transition: none !important;
 }
 html { background: var(--bg); }
 body {
@@ -727,6 +746,21 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .bestiary-fab:active { transform: scale(.9); border-color: var(--accent); }
 
+.mode-sobre-fab {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 14px rgba(0,0,0,.4);
+  transition: border-color .2s, background .2s, transform .15s;
+  padding: 0; flex-shrink: 0;
+}
+.mode-sobre-fab:active { transform: scale(.9); }
+.mode-sobre-fab.active { border-color: var(--accent); background: rgba(124,92,252,.15); }
+
 /* Stats panel */
 .stats-panel {
   position: fixed;
@@ -1012,14 +1046,60 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 }
 .user-popover-logout:hover { border-color: #fc5c7d; color: #fc5c7d; }
 
-/* ══ LANDING — deux sections empilées (contenu → cerveau) ══ */
+/* ══ LANDING — cerveau en haut (hero), outils en bas (scroll) ══ */
 #landing {
   display: none;
   background: var(--bg);
 }
 #landing.active { display: block; }
 
-/* Section contenu (haut) */
+/* Cerveau = hero plein écran (première vue) */
+#brain-section {
+  height: 100svh;
+  width: 100%;
+  position: relative;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(0,245,255,.18), transparent 30%),
+    radial-gradient(circle at 50% 52%, rgba(124,92,252,.14), transparent 38%),
+    #000008;
+  overflow: hidden;
+  cursor: grab;
+}
+#brain-section::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 47%;
+  width: min(72vw, 760px);
+  height: min(52vw, 520px);
+  min-width: 300px;
+  min-height: 220px;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid rgba(255,255,255,.32);
+  border-radius: 48% 52% 46% 54% / 38% 42% 58% 62%;
+  background:
+    radial-gradient(circle at 34% 34%, rgba(255,255,255,.28), transparent 8%),
+    radial-gradient(circle at 54% 28%, rgba(255,255,255,.18), transparent 11%),
+    radial-gradient(circle at 64% 55%, rgba(0,245,255,.16), transparent 13%),
+    radial-gradient(circle at 40% 62%, rgba(124,92,252,.20), transparent 15%),
+    rgba(255,255,255,.035);
+  box-shadow: 0 0 70px rgba(0,245,255,.22), inset 0 0 34px rgba(255,255,255,.08);
+  pointer-events: none;
+  z-index: 0;
+  animation: staticBrainFloat 5s ease-in-out infinite;
+}
+#brain-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,.12) 0 1px, transparent 1.5px);
+  background-size: 58px 58px;
+  opacity: .16;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes staticBrainFloat { 50% { transform: translate(-50%, calc(-50% - 10px)) scale(1.015); } }
+
+/* Section contenu (en bas, après scroll) */
 .landing-left {
   min-height: 100svh;
   padding: 18px 14px calc(env(safe-area-inset-bottom) + 24px);
@@ -1027,29 +1107,1040 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   position: relative;
 }
 
-/* Hint de scroll vers le cerveau */
+/* Hint de scroll (inside brain-section, positionné en bas) */
 .brain-scroll-hint {
-  text-align: center;
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
   color: rgba(0, 245, 255, .45);
   font-size: 13px;
   letter-spacing: 2px;
-  padding: 20px 0 6px;
   pointer-events: none;
+  white-space: nowrap;
   animation: hintBounce 2s ease-in-out infinite;
 }
 @keyframes hintBounce {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(5px); }
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(5px); }
 }
 
-/* Cerveau = plein écran (section en bas) */
-#brain-section {
-  height: 100svh;
-  width: 100%;
+/* ── Onboarding cerveau éducatif : voyage immersif TDAH ── */
+#brain-onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(0,245,255,.12), transparent 34%),
+    radial-gradient(circle at 70% 18%, rgba(124,92,252,.14), transparent 30%),
+    linear-gradient(180deg, rgba(0,0,8,.70), rgba(6,6,18,.82));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: auto;
+  overflow: hidden;
+}
+#brain-onboarding::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.16) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(0,245,255,.14) 0 1px, transparent 1.6px);
+  background-size: 44px 44px, 77px 77px;
+  opacity: .24;
+  animation: bonStarDrift 18s linear infinite;
+}
+@keyframes bonStarDrift { to { transform: translate3d(-44px, 32px, 0); } }
+.bon-voyage-stage {
   position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(env(safe-area-inset-top) + 24px) 18px 10px;
+  perspective: 900px;
+  isolation: isolate;
+}
+.bon-visual {
+  position: relative;
+  width: min(92vw, 430px);
+  height: min(54vh, 430px);
+  min-height: 300px;
+  transform-style: preserve-3d;
+  animation: bonFloat 5s ease-in-out infinite;
+}
+@keyframes bonFloat { 0%,100%{ transform: translateY(0) rotateX(0deg); } 50%{ transform: translateY(-8px) rotateX(2deg); } }
+.bon-brain-silhouette {
+  position: absolute;
+  inset: 7% 5% 9%;
+  border: 1.4px solid rgba(255,255,255,.45);
+  border-radius: 48% 52% 46% 54% / 38% 42% 58% 62%;
+  filter: drop-shadow(0 0 34px rgba(0,245,255,.25));
+  background:
+    radial-gradient(circle at 33% 35%, rgba(255,255,255,.24), transparent 9%),
+    radial-gradient(circle at 54% 29%, rgba(255,255,255,.16), transparent 11%),
+    radial-gradient(circle at 63% 55%, rgba(255,255,255,.11), transparent 12%),
+    radial-gradient(circle at 39% 61%, rgba(124,92,252,.18), transparent 14%),
+    rgba(255,255,255,.035);
+  box-shadow: inset 0 0 26px rgba(255,255,255,.12), inset 0 -20px 50px rgba(0,245,255,.08);
+}
+.bon-brain-silhouette::before,
+.bon-brain-silhouette::after {
+  content: '';
+  position: absolute;
+  inset: 13% 12%;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,.18);
+  clip-path: polygon(0 22%, 100% 5%, 96% 35%, 12% 46%, 6% 74%, 86% 68%, 80% 94%, 0 88%);
+}
+.bon-brain-silhouette::after {
+  inset: 19% 19%;
+  opacity: .55;
+  transform: rotate(-8deg);
+}
+.bon-zoom-ring {
+  position: absolute;
+  width: 72%; height: 72%; left: 14%; top: 14%;
+  border: 1px solid rgba(0,245,255,.35);
+  border-radius: 50%;
+  animation: bonZoomRing 2.6s ease-in-out infinite;
+}
+@keyframes bonZoomRing { 0%{transform:scale(.55);opacity:0} 35%{opacity:1} 100%{transform:scale(1.22);opacity:0} }
+.bon-neuron {
+  position: absolute;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 18px rgba(0,245,255,.9), 0 0 42px rgba(124,92,252,.35);
+  animation: bonNeuronPulse 1.8s ease-in-out infinite;
+}
+.bon-neuron::before, .bon-neuron::after {
+  content: '';
+  position: absolute;
+  left: 8px; top: 7px;
+  width: var(--wire, 108px); height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,.9), rgba(0,245,255,.2));
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: left center;
+  box-shadow: 0 0 12px rgba(0,245,255,.6);
+}
+.bon-neuron::after { transform: rotate(calc(var(--rot, 0deg) + 42deg)); opacity: .55; width: calc(var(--wire, 108px) * .62); }
+@keyframes bonNeuronPulse { 50% { transform: scale(1.35); background: #00f5ff; } }
+.bon-signal {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #00f5ff;
+  box-shadow: 0 0 18px #00f5ff;
+  animation: bonSignal 2.2s cubic-bezier(.22,.8,.2,1) infinite;
+}
+@keyframes bonSignal {
+  0%   { transform: translate(0,0) scale(.7); opacity: 0; }
+  18%  { opacity: 1; }
+  78%  { opacity: 1; }
+  100% { transform: translate(var(--tx,120px), var(--ty,0px)) scale(1.15); opacity: 0; }
+}
+.bon-particle {
+  position: absolute;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--pcol, #ffd700);
+  box-shadow: 0 0 18px var(--pcol, #ffd700);
+  animation: bonParticle 2.4s ease-in-out infinite;
+}
+@keyframes bonParticle { 0%,100%{transform:translate(0,0) scale(.8);opacity:.35} 50%{transform:translate(var(--dx,20px),var(--dy,-18px)) scale(1.25);opacity:1} }
+.bon-synapse-gap {
+  position: absolute;
+  left: 32%; right: 32%; top: 44%; height: 46px;
+  border-left: 2px solid rgba(255,255,255,.45);
+  border-right: 2px solid rgba(255,255,255,.45);
+  border-radius: 22px;
+  background: linear-gradient(90deg, rgba(255,215,0,.03), rgba(255,215,0,.13), rgba(255,215,0,.03));
+}
+.bon-split {
+  position: absolute;
+  inset: 11% 4% 12%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.bon-half {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 30px;
+  background: rgba(255,255,255,.035);
+  overflow: hidden;
+}
+.bon-half.good { box-shadow: inset 0 0 30px rgba(92,252,160,.13); }
+.bon-half.adhd { box-shadow: inset 0 0 30px rgba(252,186,92,.12); }
+.bon-pathline {
+  position: absolute;
+  height: 3px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, var(--line, #5cfca0), transparent);
+  box-shadow: 0 0 16px var(--line, #5cfca0);
+  animation: bonPath 1.25s linear infinite;
+}
+.bon-half.adhd .bon-pathline { animation: bonPath 1.8s steps(3) infinite; opacity: .72; }
+@keyframes bonPath { 0%{transform:translateX(-110%)} 100%{transform:translateX(150%)} }
+.bon-region {
+  position: absolute;
+  border: 1.5px solid var(--rcol, #00f5ff);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rcol, #00f5ff) 15%, transparent);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--rcol, #00f5ff) 65%, transparent);
+  animation: bonRegion 2s ease-in-out infinite;
+}
+@keyframes bonRegion { 50%{ transform: scale(1.08); filter: brightness(1.4); } }
+.bon-task-block {
+  position: absolute;
+  left: 12%; top: 20%; right: 12%;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(252,92,125,.12);
+  border: 1px solid rgba(252,92,125,.45);
+  color: #fff;
+  font: 800 18px 'Syne', sans-serif;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(252,92,125,.2);
+  animation: bonOverload 1.6s ease-in-out infinite;
+}
+@keyframes bonOverload { 50% { transform: scale(1.06) rotate(-1deg); } }
+.bon-micro-row {
+  position: absolute;
+  left: 8%; right: 8%; bottom: 16%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.bon-micro {
+  border-radius: 12px;
+  padding: 11px 7px;
+  background: rgba(92,252,160,.1);
+  border: 1px solid rgba(92,252,160,.35);
+  color: #5cfca0;
+  font: 800 11px 'DM Sans', sans-serif;
+  text-align: center;
+  animation: bonMicro 2.5s ease-in-out infinite;
+  animation-delay: var(--d,0s);
+}
+@keyframes bonMicro { 50% { transform: translateY(-7px); background: rgba(92,252,160,.18); } }
+.bon-callout {
+  position: absolute;
+  max-width: 160px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.52);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.78);
+  font: 700 11px 'DM Sans', sans-serif;
+  line-height: 1.25;
+  backdrop-filter: blur(10px);
+}
+.bon-chip-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+.bon-chip {
+  border: 1px solid rgba(0,245,255,.24);
+  border-radius: 999px;
+  background: rgba(0,245,255,.07);
+  color: rgba(0,245,255,.82);
+  font: 700 11px 'DM Sans', sans-serif;
+  padding: 6px 9px;
+}
+.bon-chip.tool { border-color: rgba(124,92,252,.35); background: rgba(124,92,252,.12); color: #b9a8ff; }
+.bon-content {
+  position: relative;
+  width: 100%;
+  padding: 18px 20px calc(env(safe-area-inset-bottom) + 22px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(180deg, transparent, rgba(0,0,8,.82) 18%, rgba(0,0,8,.96));
+  backdrop-filter: blur(12px);
+}
+.bon-bar { display: flex; gap: 5px; margin-bottom: 4px; }
+.bon-seg { height: 3px; flex: 1; border-radius: 2px; background: rgba(255,255,255,.15); transition: background .3s, box-shadow .3s; }
+.bon-seg.done   { background: rgba(0,245,255,.4); }
+.bon-seg.active { background: #00f5ff; box-shadow: 0 0 12px rgba(0,245,255,.7); }
+.bon-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bon-label { font: 700 10px 'Share Tech Mono', monospace; letter-spacing: 2px; color: rgba(0,245,255,.62); text-transform: uppercase; }
+.bon-count { flex: 0 0 auto; font: 800 10px 'Share Tech Mono', monospace; letter-spacing: 1.4px; color: rgba(255,255,255,.68); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 4px 9px; background: rgba(255,255,255,.05); }
+.bon-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(24px, 7vw, 34px); color: #fff; line-height: 1.08; letter-spacing: -.03em; }
+.bon-text { font-size: 15px; color: rgba(255,255,255,.68); line-height: 1.55; }
+.bon-text em { color: rgba(0,245,255,.95); font-style: normal; font-weight: 800; }
+.bon-btn-row { display:grid; grid-template-columns: 1fr; gap:8px; margin-top: 4px; }
+.bon-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, rgba(0,245,255,.16), rgba(124,92,252,.18)); border: 1.5px solid rgba(0,245,255,.42); border-radius: 16px; color: #00f5ff; font: 800 15px 'DM Sans', sans-serif; letter-spacing: .5px; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background .15s, transform .1s; }
+.bon-btn:active { background: rgba(0,245,255,.24); transform: scale(.98); }
+.bon-skip { background: none; border: none; color: rgba(255,255,255,.34); font: 600 12px 'DM Sans', sans-serif; cursor: pointer; padding: 6px 0; text-align: center; width: 100%; -webkit-tap-highlight-color: transparent; }
+.bon-node { cursor: pointer; }
+.bon-node.popped { animation: bonPop .45s ease; }
+@keyframes bonPop { 50% { transform: scale(1.35); filter: brightness(1.7); } }
+
+/* Onboarding v7: dessin animé éducatif + cerveau 3D synchronisé.
+   La fenêtre gauche montre toujours un cerveau animé visible, même si le canvas 3D est derrière. */
+.bon-3d-view {
+  width: min(92vw, 720px);
+  height: min(60vh, 620px);
+  min-height: 340px;
+  border-radius: 34px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 46%, rgba(0,245,255,.08), rgba(0,0,8,.08) 42%, rgba(0,0,8,.34));
+  border: 1px solid rgba(255,255,255,.13);
+  box-shadow: inset 0 0 0 1px rgba(0,245,255,.08), 0 28px 90px rgba(0,0,0,.35);
+  backdrop-filter: blur(1px) saturate(1.08);
+  -webkit-backdrop-filter: blur(1px) saturate(1.08);
+}
+.bon-3d-glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(0,245,255,.08) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(0,245,255,.055) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: .32;
+  pointer-events: none;
+}
+.bon-scanline {
+  position: absolute;
+  left: 0; right: 0; top: -18%; height: 24%;
+  background: linear-gradient(180deg, transparent, rgba(0,245,255,.18), transparent);
+  filter: blur(3px);
+  animation: bonScan3d 4.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes bonScan3d { 0%{transform:translateY(0);opacity:0} 18%{opacity:1} 100%{transform:translateY(520%);opacity:0} }
+.bon-3d-badge,
+.bon-depth-label {
+  position: absolute;
+  left: 18px;
+  z-index: 2;
+  border: 1px solid rgba(0,245,255,.22);
+  background: rgba(0,0,8,.48);
+  color: rgba(0,245,255,.78);
+  border-radius: 999px;
+  padding: 7px 11px;
+  font: 800 10px 'DM Sans', sans-serif;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+.bon-3d-badge { top: 16px; }
+.bon-depth-label { bottom: 16px; color: rgba(255,255,255,.58); border-color: rgba(255,255,255,.14); }
+.bon-real-callout {
+  max-width: 210px;
+  animation: bonCalloutIn .7s ease both;
+  animation-delay: var(--d,0s);
+}
+.bon-real-callout strong { display:block; color:#fff; font:800 12px 'Syne', sans-serif; margin-bottom:4px; letter-spacing:.2px; }
+.bon-real-callout span { display:block; color:rgba(255,255,255,.66); font-weight:600; }
+@keyframes bonCalloutIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+#brain-onboarding[data-scene="dopamine"] .bon-3d-view { box-shadow: inset 0 0 0 1px rgba(255,215,0,.18), 0 28px 90px rgba(255,215,0,.10); }
+#brain-onboarding[data-scene="hyperfocus"] .bon-3d-view { background: radial-gradient(circle at 50% 46%, rgba(176,92,252,.18), rgba(0,0,8,.10) 46%, rgba(0,0,8,.34)); }
+#brain-onboarding[data-scene="overload"] .bon-3d-view { animation: bonOverloadFrame 1.2s steps(2) infinite; }
+@keyframes bonOverloadFrame { 50% { filter: saturate(1.4) contrast(1.08); box-shadow: inset 0 0 0 1px rgba(255,136,85,.28), 0 28px 90px rgba(255,92,92,.14); } }
+
+.bon-cartoon-brain {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: min(82%, 560px);
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 28px 42px rgba(0,0,0,.35));
+  z-index: 1;
+}
+.bon-cartoon-brain svg { width: 100%; height: auto; display: block; overflow: visible; }
+.bon-lobe {
+  stroke: rgba(255,255,255,.78);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 12px rgba(0,245,255,.24));
+  animation: bonLobeBreathe 3.6s ease-in-out infinite;
+  transform-origin: center;
+}
+.bon-lobe.frontal { fill: rgba(0,245,255,.23); }
+.bon-lobe.parietal { fill: rgba(124,92,252,.25); animation-delay:.2s; }
+.bon-lobe.temporal { fill: rgba(0,204,187,.22); animation-delay:.4s; }
+.bon-lobe.occipital { fill: rgba(136,204,255,.20); animation-delay:.55s; }
+.bon-lobe.cerebellum { fill: rgba(34,102,255,.25); animation-delay:.7s; }
+.bon-lobe.brainstem { fill: rgba(255,68,85,.25); animation-delay:.9s; }
+@keyframes bonLobeBreathe { 50% { transform: scale(1.025); filter: drop-shadow(0 0 22px var(--accent)); } }
+.bon-fold { fill: none; stroke: rgba(255,255,255,.38); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 9 9; animation: bonFoldFlow 5s linear infinite; }
+@keyframes bonFoldFlow { to { stroke-dashoffset: -90; } }
+.bon-signal-path { fill:none; stroke: var(--accent); stroke-width:4; stroke-linecap:round; stroke-dasharray: 12 18; filter: drop-shadow(0 0 10px var(--accent)); animation: bonSignalFlow 1.45s linear infinite; }
+.bon-signal-path.delay { animation-delay:.45s; opacity:.75; }
+@keyframes bonSignalFlow { to { stroke-dashoffset: -120; } }
+.bon-signal-dot { fill:#fff; filter: drop-shadow(0 0 12px var(--accent)); animation: bonDotTravel 2.6s ease-in-out infinite; }
+.bon-signal-dot.d2 { animation-delay:.55s; }
+.bon-signal-dot.d3 { animation-delay:1.05s; }
+@keyframes bonDotTravel { 0%,100% { opacity:.35; transform:translate(0,0) scale(.85); } 45% { opacity:1; transform:translate(18px,-10px) scale(1.25); } }
+.bon-neurotransmitter { fill:#ffd700; filter: drop-shadow(0 0 10px #ffd700); animation: bonNeuroFloat 2.2s ease-in-out infinite; }
+.bon-neurotransmitter:nth-of-type(2n) { animation-delay:.35s; }
+@keyframes bonNeuroFloat { 50% { transform: translateY(-14px) scale(1.25); opacity:.78; } }
+.bon-cartoon-label {
+  position:absolute;
+  z-index:3;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 11px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,8,.58);
+  color:rgba(255,255,255,.82);
+  font:800 12px 'DM Sans',sans-serif;
+  backdrop-filter:blur(12px);
+  animation: bonCalloutIn .7s ease both;
+}
+.bon-cartoon-label::before { content:''; width:9px; height:9px; border-radius:50%; background:var(--accent); box-shadow:0 0 12px var(--accent); }
+.bon-cartoon-label.one { left:8%; top:14%; }
+.bon-cartoon-label.two { right:7%; top:26%; animation-delay:.16s; }
+.bon-cartoon-label.three { left:10%; bottom:16%; animation-delay:.32s; }
+#brain-onboarding[data-scene="dopamine"] .bon-neurotransmitter { animation-duration:1.25s; }
+#brain-onboarding[data-scene="compare"] .bon-signal-path { animation-duration:2.4s; stroke-dasharray:6 24; }
+#brain-onboarding[data-scene="hyperfocus"] .bon-lobe { animation-duration:1.25s; }
+#brain-onboarding[data-scene="overload"] .bon-cartoon-brain { animation: bonCartoonShake .7s steps(2) infinite; }
+@keyframes bonCartoonShake { 50% { transform: translate(calc(-50% + 5px), calc(-50% - 3px)) rotate(-.8deg); } }
+
+/* Onboarding v8: voyage caméra inspiré documentaire éducatif — cerveau entier → zoom → synapse → zones. */
+.bon-visual {
+  --travel-x: 0px;
+  --travel-y: 0px;
+  --travel-scale: 1;
+}
+.bon-camera-rail {
+  position: absolute;
+  left: 9%; right: 9%; bottom: 58px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(0,245,255,.04), rgba(0,245,255,.55), rgba(176,92,252,.38), rgba(0,245,255,.04));
+  box-shadow: 0 0 18px rgba(0,245,255,.26);
+  z-index: 3;
+  opacity: .82;
+}
+.bon-camera-rail::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: calc(var(--progress, 12) * 1%);
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 16px #00f5ff, 0 0 38px rgba(124,92,252,.55);
+  transform: translate(-50%, -50%);
+  transition: left .75s cubic-bezier(.22,.8,.18,1);
+}
+.bon-camera-rail span {
+  position: absolute;
+  top: 12px;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,.46);
+  font: 800 9px 'DM Sans', sans-serif;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+}
+.bon-camera-rail span:nth-child(1) { left: 12%; }
+.bon-camera-rail span:nth-child(2) { left: 42%; }
+.bon-camera-rail span:nth-child(3) { left: 70%; }
+.bon-camera-rail span:nth-child(4) { left: 90%; }
+.bon-cartoon-brain {
+  transition: transform .95s cubic-bezier(.2,.9,.18,1), filter .95s ease, opacity .55s ease;
+}
+.bon-cartoon-view .bon-cartoon-brain {
+  transform: translate(calc(-50% + var(--travel-x)), calc(-50% + var(--travel-y))) scale(var(--travel-scale));
+}
+#brain-onboarding[data-scene="whole"] .bon-visual { --progress: 12; --travel-scale: .98; }
+#brain-onboarding[data-scene="zoom"] .bon-visual { --progress: 30; --travel-scale: 1.42; --travel-x: -58px; --travel-y: 12px; }
+#brain-onboarding[data-scene="synapse"] .bon-visual { --progress: 48; --travel-scale: 2.05; --travel-x: -120px; --travel-y: -18px; }
+#brain-onboarding[data-scene="dopamine"] .bon-visual { --progress: 58; --travel-scale: 1.72; --travel-x: -32px; --travel-y: 24px; }
+#brain-onboarding[data-scene="prefrontal"] .bon-visual { --progress: 70; --travel-scale: 1.55; --travel-x: 92px; --travel-y: 20px; }
+#brain-onboarding[data-scene="hyperfocus"] .bon-visual { --progress: 82; --travel-scale: 1.35; --travel-x: 22px; --travel-y: -10px; }
+#brain-onboarding[data-scene="overload"] .bon-visual { --progress: 91; --travel-scale: 1.2; --travel-x: -20px; --travel-y: 0; }
+#brain-onboarding[data-scene="transition"] .bon-visual { --progress: 98; --travel-scale: 1; }
+.bon-synapse-zoom {
+  position: absolute;
+  inset: 12% 9% 14%;
+  z-index: 4;
+  opacity: 0;
+  transform: scale(.82) translateY(18px);
+  transition: opacity .7s ease, transform .9s cubic-bezier(.22,.8,.18,1);
+  pointer-events: none;
+}
+.bon-synapse-zoom svg { width: 100%; height: 100%; overflow: visible; }
+.bon-synapse-zoom .axon { fill: none; stroke: rgba(255,255,255,.62); stroke-width: 18; stroke-linecap: round; filter: drop-shadow(0 0 16px rgba(0,245,255,.42)); }
+.bon-synapse-zoom .signal { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 18 22; filter: drop-shadow(0 0 12px var(--accent)); animation: bonSignalFlow 1.05s linear infinite; }
+.bon-synapse-zoom .gap { fill: rgba(0,0,8,.58); stroke: rgba(255,255,255,.25); stroke-width: 2; }
+.bon-synapse-zoom .bubble { fill: #ffd700; filter: drop-shadow(0 0 12px #ffd700); animation: bonNeuroFloat 1.6s ease-in-out infinite; }
+.bon-synapse-zoom .bubble:nth-of-type(2n) { animation-delay: .22s; }
+#brain-onboarding[data-scene="synapse"] .bon-synapse-zoom,
+#brain-onboarding[data-scene="dopamine"] .bon-synapse-zoom {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+#brain-onboarding[data-scene="synapse"] .bon-cartoon-brain,
+#brain-onboarding[data-scene="dopamine"] .bon-cartoon-brain { opacity: .38; filter: blur(.4px) drop-shadow(0 28px 42px rgba(0,0,0,.35)); }
+.bon-zone-reveal {
+  position: absolute;
+  z-index: 5;
+  border: 1px solid var(--zcol, #00f5ff);
+  background: color-mix(in srgb, var(--zcol, #00f5ff) 17%, rgba(0,0,8,.35));
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 11px;
+  font: 900 10px 'DM Sans', sans-serif;
+  letter-spacing: .9px;
+  text-transform: uppercase;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--zcol, #00f5ff) 45%, transparent);
+  animation: bonZoneDiscover .9s ease both, bonRegion 2.2s ease-in-out infinite .9s;
+  animation-delay: var(--delay, 0s), calc(var(--delay, 0s) + .9s);
+}
+@keyframes bonZoneDiscover { from { opacity: 0; transform: scale(.58) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.bon-type-caret::after {
+  content: '▌';
+  color: var(--accent);
+  margin-left: 2px;
+  animation: bonCaret .8s steps(2) infinite;
+}
+@keyframes bonCaret { 50% { opacity: 0; } }
+.bon-text.typing em { color: rgba(0,245,255,.95); font-style: normal; font-weight: 800; }
+
+
+/* Onboarding v9: traitement court-métrage studio — letterbox, lumière, profondeur, mise en scène. */
+#brain-onboarding {
+  --cinema-glow: rgba(0,245,255,.34);
+  --film-warm: rgba(255,210,140,.14);
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255,255,255,.06), transparent 18%),
+    radial-gradient(circle at 78% 16%, rgba(124,92,252,.18), transparent 32%),
+    radial-gradient(circle at 20% 80%, rgba(0,245,255,.10), transparent 30%),
+    linear-gradient(180deg, #020207 0%, #050512 42%, #080817 100%);
+}
+#brain-onboarding::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #000 0 8.5%, transparent 8.5% 91.5%, #000 91.5% 100%),
+    radial-gradient(circle at 50% 48%, transparent 0 44%, rgba(0,0,0,.42) 100%),
+    linear-gradient(90deg, rgba(0,245,255,.035), transparent 14% 86%, rgba(176,92,252,.045));
+  mix-blend-mode: normal;
+}
+.bon-voyage-stage,
+.bon-content { position: relative; z-index: 5; }
+.bon-cinema-layer {
+  position: absolute;
+  inset: -10%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.bon-cinema-layer::before,
+.bon-cinema-layer::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(18px);
+  opacity: .75;
+  animation: bonLensDrift 8s ease-in-out infinite alternate;
+}
+.bon-cinema-layer::before {
+  width: 220px; height: 220px;
+  left: 8%; top: 14%;
+  background: radial-gradient(circle, rgba(0,245,255,.18), transparent 64%);
+}
+.bon-cinema-layer::after {
+  width: 300px; height: 300px;
+  right: 5%; bottom: 8%;
+  background: radial-gradient(circle, rgba(176,92,252,.18), transparent 66%);
+  animation-delay: -2s;
+}
+@keyframes bonLensDrift { to { transform: translate3d(24px,-18px,0) scale(1.08); opacity: .95; } }
+.bon-film-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: .12;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.55) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(0,245,255,.28) 0 1px, transparent 1.5px);
+  background-size: 31px 31px, 47px 47px;
+  animation: bonFilmGrain .7s steps(2) infinite;
+  mix-blend-mode: screen;
+}
+@keyframes bonFilmGrain { 50% { transform: translate(-9px, 7px); } }
+.bon-cinema-titlecard {
+  position: absolute;
+  left: 22px;
+  top: 22px;
+  z-index: 7;
+  color: rgba(255,255,255,.72);
+  font: 900 10px 'DM Sans', sans-serif;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.bon-cinema-titlecard::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 18px var(--accent);
+}
+.bon-visual.bon-3d-view {
+  transform-origin: center;
+  animation: bonPremiumFloat 7s cubic-bezier(.4,0,.2,1) infinite;
+  box-shadow:
+    0 38px 130px rgba(0,0,0,.58),
+    0 0 120px color-mix(in srgb, var(--accent) 20%, transparent),
+    inset 0 0 0 1px rgba(255,255,255,.14),
+    inset 0 40px 120px rgba(255,255,255,.045);
+}
+@keyframes bonPremiumFloat {
+  0%,100% { transform: translateY(0) rotateX(0deg) rotateY(-1deg); }
+  50% { transform: translateY(-12px) rotateX(2.2deg) rotateY(2deg); }
+}
+.bon-visual.bon-3d-view::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 38% 28%, rgba(255,255,255,.28), transparent 11%),
+    linear-gradient(115deg, rgba(255,255,255,.16), transparent 30% 62%, rgba(0,245,255,.10));
+  opacity: .62;
+  mix-blend-mode: screen;
+}
+.bon-visual.bon-3d-view::after {
+  content: '';
+  position: absolute;
+  left: -20%; right: -20%; top: -16%; height: 28%;
+  z-index: 7;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), rgba(0,245,255,.22), transparent);
+  transform: rotate(-12deg) translateX(-40%);
+  filter: blur(2px);
+  animation: bonStudioSweep 5.8s ease-in-out infinite;
+}
+@keyframes bonStudioSweep { 55%,100% { transform: rotate(-12deg) translateX(120%); opacity: 0; } 0% { opacity: 0; } 12%,38% { opacity: 1; } }
+.bon-cartoon-brain svg {
+  filter: contrast(1.08) saturate(1.12);
+}
+.bon-lobe {
+  stroke-width: 3.4;
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--accent) 42%, transparent));
+}
+.bon-lobe.frontal, .bon-lobe.parietal, .bon-lobe.temporal, .bon-lobe.occipital, .bon-lobe.cerebellum, .bon-lobe.brainstem {
+  fill-opacity: .84;
+}
+.bon-shot-label {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  z-index: 8;
+  display: grid;
+  gap: 3px;
+  text-align: right;
+}
+.bon-shot-label strong {
+  color: #fff;
+  font: 900 12px 'Syne', sans-serif;
+  letter-spacing: .5px;
+}
+.bon-shot-label span {
+  color: rgba(255,255,255,.52);
+  font: 800 9px 'DM Sans', sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.bon-content {
+  box-shadow: 0 -18px 80px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.bon-title {
+  text-shadow: 0 0 34px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.bon-voice-line {
+  border-left: 2px solid var(--accent);
+  padding-left: 12px;
+  color: rgba(255,255,255,.76);
+  font: 700 13px/1.45 'DM Sans', sans-serif;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 78%);
+  border-radius: 0 12px 12px 0;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+}
+.bon-director-note {
+  color: rgba(255,255,255,.36);
+  font: 800 9px 'DM Sans', sans-serif;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+.bon-cinematic-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 8px;
+  margin-top: 2px;
+}
+.bon-tool-card {
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 14px;
+  padding: 10px 11px;
+  color: rgba(255,255,255,.76);
+  background: rgba(255,255,255,.055);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  font: 800 11px 'DM Sans', sans-serif;
+}
+.bon-tool-card em { display:block; color: var(--accent); font-style: normal; font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 3px; }
+#brain-onboarding[data-scene="whole"] .bon-cartoon-brain { --travel-scale: .92; filter: drop-shadow(0 42px 70px rgba(0,0,0,.56)); }
+#brain-onboarding[data-scene="zoom"] .bon-visual.bon-3d-view,
+#brain-onboarding[data-scene="synapse"] .bon-visual.bon-3d-view { animation-duration: 5.2s; }
+#brain-onboarding[data-scene="distraction"] .bon-visual { --progress: 76; --travel-scale: 1.28; --travel-x: -44px; --travel-y: -14px; }
+#brain-onboarding[data-scene="distraction"] .bon-signal-path { stroke-dasharray: 5 20; animation-duration: .82s; }
+#brain-onboarding[data-scene="distraction"] .bon-cartoon-brain { animation: bonCartoonShake .55s steps(2) infinite; }
+.bon-distraction-cloud {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+#brain-onboarding[data-scene="distraction"] .bon-distraction-cloud { opacity: 1; }
+.bon-distraction-token {
+  position: absolute;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  color: rgba(255,255,255,.78);
+  background: rgba(0,0,8,.56);
+  font: 900 10px 'DM Sans', sans-serif;
+  letter-spacing: .7px;
+  box-shadow: 0 0 18px rgba(0,245,255,.16);
+  animation: bonTokenOrbit 3.6s ease-in-out infinite;
+  animation-delay: var(--td,0s);
+}
+@keyframes bonTokenOrbit { 50% { transform: translate3d(var(--tox,16px), var(--toy,-12px), 0) scale(1.06); border-color: var(--accent); } }
+@media (min-width: 900px) {
+  #brain-onboarding .bon-voyage-stage { perspective: 1200px; }
+  #brain-onboarding .bon-content {
+    background: linear-gradient(180deg, rgba(10,10,22,.78), rgba(0,0,8,.86));
+  }
+}
+@media (max-width: 520px) {
+  #brain-onboarding::after { background: radial-gradient(circle at 50% 48%, transparent 0 52%, rgba(0,0,0,.44) 100%); }
+  .bon-cinema-titlecard { top: 14px; left: 16px; font-size: 8px; }
+  .bon-shot-label { right: 14px; top: 14px; }
+  .bon-cinematic-tools { grid-template-columns: 1fr; }
+}
+
+
+/* Onboarding v10: le vrai cerveau 3D existant redevient le sujet principal. */
+body.brain-onboarding-uses-3d {
   background: #000008;
   overflow: hidden;
-  cursor: grab;
+}
+body.brain-onboarding-uses-3d main {
+  z-index: 1990;
+}
+body.brain-onboarding-uses-3d #brain-section {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  z-index: 1995 !important;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(0,245,255,.20), transparent 32%),
+    radial-gradient(circle at 50% 52%, rgba(124,92,252,.16), transparent 42%),
+    #000008 !important;
+  pointer-events: none !important;
+  opacity: 1 !important;
+  filter: contrast(1.08) saturate(1.18) brightness(1.05);
+}
+body.brain-onboarding-uses-3d #brain-section::before {
+  opacity: .08;
+}
+body.brain-onboarding-uses-3d #brain-canvas {
+  width: 100vw !important;
+  height: 100dvh !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 60px color-mix(in srgb, var(--accent, #00f5ff) 24%, transparent));
+}
+body.brain-onboarding-uses-3d #brain-intro,
+body.brain-onboarding-uses-3d #brain-hotspots,
+body.brain-onboarding-uses-3d #zoneIndicator,
+body.brain-onboarding-uses-3d #btnBack,
+body.brain-onboarding-uses-3d .brain-section-logo,
+body.brain-onboarding-uses-3d #brain-state-badge,
+body.brain-onboarding-uses-3d .brain-tap-hint,
+body.brain-onboarding-uses-3d .brain-scroll-hint,
+body.brain-onboarding-uses-3d .landing-left {
+  display: none !important;
+}
+body.brain-onboarding-uses-3d #brain-onboarding {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,255,255,.025), transparent 18%),
+    radial-gradient(circle at 78% 16%, rgba(124,92,252,.09), transparent 32%),
+    radial-gradient(circle at 20% 80%, rgba(0,245,255,.06), transparent 30%),
+    linear-gradient(180deg, rgba(0,0,4,.28), rgba(0,0,10,.38));
+}
+body.brain-onboarding-uses-3d #brain-onboarding::before {
+  opacity: .14;
+}
+body.brain-onboarding-uses-3d .bon-3d-view {
+  background: radial-gradient(circle at 50% 46%, rgba(0,245,255,.015), rgba(0,0,8,.03) 42%, rgba(0,0,8,.10));
+  border-color: rgba(255,255,255,.10);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,245,255,.10),
+    inset 0 0 120px rgba(0,0,0,.18),
+    0 38px 130px rgba(0,0,0,.28),
+    0 0 120px color-mix(in srgb, var(--accent) 17%, transparent);
+}
+body.brain-onboarding-uses-3d .bon-cartoon-brain,
+body.brain-onboarding-uses-3d .bon-cartoon-label {
+  display: none !important;
+}
+.bon-real-3d-anchor {
+  position: absolute;
+  inset: 11% 7% 15%;
+  z-index: 2;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.08);
+  background:
+    radial-gradient(circle at 50% 46%, transparent 0 36%, rgba(0,245,255,.08) 44%, transparent 62%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.035), transparent 58%);
+  box-shadow: inset 0 0 55px rgba(0,245,255,.08), 0 0 80px rgba(0,245,255,.05);
+  pointer-events: none;
+  animation: bonReal3dBreath 4.8s ease-in-out infinite;
+}
+@keyframes bonReal3dBreath { 50% { transform: scale(1.035); opacity: .72; } }
+body.brain-onboarding-uses-3d .bon-depth-label::before {
+  content: 'vrai ';
+}
+body.brain-onboarding-uses-3d .bon-synapse-zoom {
+  background: radial-gradient(circle at 50% 50%, rgba(0,0,8,.28), transparent 68%);
+  border-radius: 32px;
+}
+body.brain-onboarding-uses-3d #brain-onboarding[data-scene="synapse"] .bon-synapse-zoom,
+body.brain-onboarding-uses-3d #brain-onboarding[data-scene="dopamine"] .bon-synapse-zoom {
+  opacity: .92;
+}
+
+@media (min-width: 700px) {
+  .bon-content { max-width: 560px; align-self: center; border: 1px solid rgba(255,255,255,.08); border-radius: 26px 26px 0 0; }
+}
+
+/* Desktop safety: the brain voyage must be visible on computer screens too,
+   not hidden in a phone-sized bottom sheet. */
+#brain-onboarding {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  left: 0;
+  top: 0;
+  color: #fff;
+}
+#brain-onboarding::before { pointer-events: none; z-index: 0; }
+#brain-onboarding .bon-voyage-stage,
+#brain-onboarding .bon-content { z-index: 1; }
+@media (min-width: 900px) {
+  #brain-onboarding {
+    display: grid;
+    grid-template-columns: minmax(420px, 1.15fr) minmax(380px, 560px);
+    align-items: center;
+    gap: clamp(24px, 4vw, 64px);
+    padding: clamp(28px, 4vw, 56px);
+    overflow-y: auto;
+  }
+  #brain-onboarding .bon-voyage-stage {
+    min-height: min(760px, calc(100dvh - 112px));
+    padding: 0;
+  }
+  #brain-onboarding .bon-visual {
+    width: min(54vw, 680px);
+    height: min(72vh, 640px);
+    min-height: 420px;
+  }
+  #brain-onboarding .bon-content {
+    width: 100%;
+    max-width: 560px;
+    align-self: center;
+    border-radius: 30px;
+    padding: 28px;
+    background: rgba(0,0,8,.76);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 28px 90px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  #brain-onboarding .bon-title { font-size: clamp(34px, 4vw, 54px); }
+  #brain-onboarding .bon-text { font-size: 17px; }
+  #brain-onboarding .bon-btn { font-size: 16px; padding: 18px; }
+}
+/* ── Neurotransmitter state badge ── */
+#brain-state-badge {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 52px);
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0,0,0,.55);
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 5px 11px;
+  font: 600 11px 'DM Sans', sans-serif;
+  letter-spacing: .5px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .4s ease;
+  z-index: 12;
+  white-space: nowrap;
+}
+
+/* ── Intro screen overlay ── */
+#brain-intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  z-index: 20;
+  pointer-events: auto;
+  transition: opacity .8s ease;
+}
+#brain-intro.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.brain-intro-tagline {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  line-height: 1.25;
+  letter-spacing: .5px;
+  text-shadow: 0 0 40px rgba(0,245,255,.4);
+}
+#brain-intro-btn {
+  background: rgba(0,245,255,.12);
+  border: 1.5px solid rgba(0,245,255,.5);
+  border-radius: 40px;
+  color: #00f5ff;
+  font: 700 15px 'DM Sans', sans-serif;
+  letter-spacing: 1px;
+  padding: 14px 36px;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .2s, transform .15s;
+  animation: introBtnPulse 3s ease-in-out infinite;
+}
+#brain-intro-btn:active { transform: scale(.95); background: rgba(0,245,255,.25); }
+@keyframes introBtnPulse {
+  0%,100% { box-shadow: 0 0 16px rgba(0,245,255,.25); }
+  50%      { box-shadow: 0 0 32px rgba(0,245,255,.55), 0 0 60px rgba(0,245,255,.2); }
+}
+/* Flash d'entrée dans le cerveau */
+#brain-dive-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(0,245,255,.55) 0%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 15;
+  transition: opacity .25s;
+}
+#brain-dive-flash.pop { opacity: 1; }
+
+/* Zone overlay buttons */
+#brain-hotspots { position: absolute; inset: 0; pointer-events: none; }
+.brain-zone-btn {
+  position: absolute;
+  background: none;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transform: translate(-50%, -50%);
+  padding: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+.brain-zone-btn .bzb-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor, 0 0 22px currentColor;
+  animation: dotPulse 2.2s ease-in-out infinite;
+  transition: transform .15s;
+}
+.brain-zone-btn:active .bzb-dot { transform: scale(2); }
+.brain-zone-btn .bzb-label {
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: rgba(255,255,255,.55);
+  font-family: 'Share Tech Mono', monospace;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+/* Zone indicator (shown when zoomed in) */
+#zoneIndicator {
+  position: absolute;
+  top: 60px; left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s;
+}
+#zoneIndicator.visible { opacity: 1; }
+#ziName {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: 3px;
+  text-transform: uppercase;
+}
+/* Back button (shown when zoomed in) */
+#btnBack {
+  position: absolute;
+  bottom: 32px; left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  background: rgba(0,0,0,.6);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 20px;
+  color: rgba(255,255,255,.75);
+  font: 12px 'Share Tech Mono', monospace;
+  letter-spacing: 2px;
+  padding: 8px 22px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 10;
+  -webkit-tap-highlight-color: transparent;
+}
+#btnBack.visible { display: block; }
+
+/* Hint "tape une zone" (inside brain-section) */
+.brain-tap-hint {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, .2);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: 'Share Tech Mono', monospace;
 }
 #brain-section:active { cursor: grabbing; }
 #brain-canvas {
@@ -1697,6 +2788,100 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   transition: border-color .13s;
 }
 .focus-btn-no:active { border-color: var(--accent); color: var(--text); }
+/* ── PAUSE PERMISSION ── */
+.pause-perm-card {
+  background: rgba(92,252,160,.1); border: 1.5px solid rgba(92,252,160,.3);
+  border-radius: 22px; padding: 28px 22px; text-align: center; margin: 24px 0;
+}
+.pause-perm-emoji { font-size: 48px; margin-bottom: 14px; }
+.pause-perm-msg strong { display: block; font: 700 18px 'Syne', sans-serif; color: var(--green); margin-bottom: 10px; }
+.pause-perm-msg p { font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 8px; }
+.pause-opts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+.pause-btn {
+  padding: 18px 10px; border: 1.5px solid var(--border); border-radius: 16px;
+  background: var(--card); color: var(--text); text-align: center; cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.pause-btn:active { border-color: var(--green); background: rgba(92,252,160,.08); }
+.pause-min { display: block; font: 700 24px 'Syne', sans-serif; color: var(--green); }
+.pause-label { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.pause-timer { margin-top: 20px; }
+.pause-timer-num { font: 700 64px 'Syne', sans-serif; text-align: center; color: var(--green); margin-bottom: 16px; }
+.pause-timer-track { height: 10px; border-radius: 10px; background: var(--soft); overflow: hidden; margin-bottom: 20px; }
+.pause-timer-bar { height: 100%; background: linear-gradient(90deg, var(--green), #3de88a); transition: width 1s linear; border-radius: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .pause-timer-bar { transition: none; }
+}
+.pause-idea-wrap { margin-top: 20px; }
+.pause-idea-result { margin-top: 12px; padding: 14px 16px; background: var(--soft); border: 1px solid var(--border); border-radius: 12px; font-size: 14px; color: var(--text); line-height: 1.5; }
+.pause-idea-result:empty { display: none; padding: 0; border: none; margin-top: 0; }
+
+/* ── VICTOIRES CARNET ── */
+.victoires-today {
+  background: linear-gradient(135deg, rgba(124,92,252,.12), rgba(176,92,252,.08));
+  border: 1.5px solid rgba(124,92,252,.3); border-radius: 22px; padding: 20px; margin: 20px 0; text-align: center;
+}
+.victoires-count { font: 700 20px 'Syne', sans-serif; color: var(--accent); }
+.victoires-add { margin-bottom: 24px; }
+.victoires-input {
+  width: 100%; min-height: 100px; padding: 14px; border: 1.5px solid var(--border);
+  border-radius: 16px; background: var(--card); color: var(--text); font: 14px 'DM Sans', sans-serif;
+  resize: none; outline: none; transition: border-color .2s;
+}
+.victoires-input:focus { border-color: var(--accent); }
+.victoires-confirm { font-size: 12px; color: var(--green); margin-top: 8px; min-height: 16px; opacity: 0; transition: opacity .25s; }
+.victoires-confirm.visible { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .victoires-confirm { transition: none; }
+}
+.victoires-list { display: flex; flex-direction: column; gap: 8px; }
+.victoire-recall {
+  background: var(--soft); border: 1.5px solid var(--border); border-radius: 14px;
+  padding: 12px 14px; margin: 10px 0 4px; font-size: 13.5px; line-height: 1.6; color: var(--text);
+}
+.victoire-recall strong { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.victoire-item {
+  padding: 14px 16px; background: var(--soft); border: 1px solid var(--border); border-radius: 12px;
+  font-size: 14px; color: var(--text); line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start;
+}
+.victoire-text { flex: 1; }
+.victoire-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0; line-height: 1; opacity: .5; transition: opacity .2s, color .2s; }
+.victoire-del:active { opacity: 1; color: #fc5c7d; }
+
+/* ── ACHAT IMPULSIF ── */
+.achat-card {
+  background: rgba(252,92,125,.08); border: 1.5px solid rgba(252,92,125,.25);
+  border-radius: 22px; padding: 28px 22px; text-align: center; margin: 24px 0;
+}
+.achat-emoji { font-size: 48px; margin-bottom: 14px; }
+.achat-msg strong { display: block; font: 700 18px 'Syne', sans-serif; color: #fc5c7d; margin-bottom: 10px; }
+.achat-msg p { font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 8px; }
+.achat-timer { margin-top: 20px; }
+.achat-timer-num { font: 700 64px 'Syne', sans-serif; text-align: center; color: #fc5c7d; margin-bottom: 16px; }
+.achat-timer-track { height: 10px; border-radius: 10px; background: var(--soft); overflow: hidden; margin-bottom: 24px; }
+.achat-timer-bar { height: 100%; background: linear-gradient(90deg, #fc5c7d, #fc875c); transition: width 1s linear; border-radius: 10px; }
+.achat-question { margin-bottom: 20px; }
+.achat-question p { margin-bottom: 4px; }
+.achat-sub { font-size: 13px; color: var(--muted); }
+.achat-opts { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── ROUTINES MINIMALES ── */
+.routines-list { display: flex; flex-direction: column; gap: 8px; margin: 18px 0; }
+.routine-row {
+  display: flex; align-items: center; gap: 12px; padding: 14px 14px;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+  transition: border-color .2s, background .2s;
+}
+.routine-check {
+  width: 20px; height: 20px; min-width: 20px; border: 1.5px solid var(--border);
+  border-radius: 6px; background: none; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+  transition: all .15s;
+}
+.routine-check.checked { background: var(--green); border-color: var(--green); color: #0b1f0b; }
+.routine-text { flex: 1; font-size: 14px; color: var(--text); user-select: none; }
+.routine-text.checked { text-decoration: line-through; color: var(--muted); }
+
 .focus-btn-setup {
   width: 100%; border: none; background: none; color: var(--accent);
   font: 600 13px 'DM Sans', sans-serif; cursor: pointer; padding: 6px 0;
@@ -2204,13 +3389,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 .pick-task-card { background: linear-gradient(135deg, rgba(124,92,252,.12), rgba(176,92,252,.08)); border: 1.5px solid rgba(124,92,252,.25); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; cursor: pointer; transition: all .15s; display: none; }
 .pick-task-card:active { transform: scale(.98); }
 
-/* ── BESTIAIRE — RARETÉS ── */
-:root {
-  --rarity-commun:    #9e9e9e;
-  --rarity-rare:      #2979ff;
-  --rarity-epique:    #ab47bc;
-  --rarity-legendaire:#ffa726;
-}
+/* ── BESTIAIRE — RARETÉS (variables fusionnées dans :root principal) ── */
 .bestiary-backdrop {
   position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 600;
   display: flex; align-items: flex-end; justify-content: center;
@@ -2334,6 +3513,92 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   .screen:not(#plan-preview) { display: none !important; }
   .back, #btn-start-project, #btn-export-plan, #btn-delete-project, .file-add-btn { display: none !important; }
 }
+/* ══════════ MODE CERVEAU — bascule + hub ══════════ */
+.brain-toggle-fab {
+  position: fixed; top: calc(env(safe-area-inset-top) + 12px); right: 14px; z-index: 700;
+  display: flex; align-items: center; gap: 6px;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 999px;
+  padding: 7px 14px 7px 10px; font: 700 12px 'DM Sans', sans-serif; color: var(--text);
+  box-shadow: 0 2px 14px rgba(0,0,0,.35); cursor: pointer; transition: transform .12s, border-color .15s;
+}
+.brain-toggle-fab:active { transform: scale(.95); }
+.brain-toggle-fab.mode-brain { border-color: var(--accent); color: var(--accent); }
+
+.brain-return-fab {
+  position: fixed; bottom: calc(env(safe-area-inset-bottom) + 90px); right: 14px; z-index: 650;
+  width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: #fff;
+  border: none; font-size: 22px; display: none; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 4px 18px rgba(124,92,252,.45); transition: transform .12s;
+}
+.brain-return-fab.visible { display: flex; }
+.brain-return-fab:active { transform: scale(.92); }
+
+/* ── Écran hub ── */
+#brain-hub { padding-top: calc(env(safe-area-inset-top) + 64px); }
+.bh-disclaimer {
+  background: rgba(124,92,252,.08); border: 1px solid rgba(124,92,252,.25); border-radius: 14px;
+  padding: 12px 14px; margin-bottom: 16px; font-size: 12.5px; line-height: 1.5; color: var(--muted);
+}
+.bh-disclaimer strong { color: var(--text); }
+.bh-svg-wrap { background: var(--card); border: 1.5px solid var(--border); border-radius: 20px; padding: 6px; margin-bottom: 14px; }
+svg.bh-schema { display: block; width: 100%; height: auto; }
+.bh-link { stroke: var(--border); stroke-width: 2; fill: none; opacity: .6; }
+.bh-node { cursor: pointer; }
+.bh-node .bh-blob { transition: opacity .2s ease; }
+.bh-node .bh-core { stroke: var(--border); stroke-width: 2; transition: stroke .15s ease, stroke-width .15s ease; }
+.bh-node:hover .bh-core, .bh-node:focus-visible .bh-core, .bh-node[aria-pressed="true"] .bh-core { stroke: var(--text); stroke-width: 3; }
+.bh-node:focus { outline: none; }
+.bh-node .bh-emoji { font-size: 26px; text-anchor: middle; dominant-baseline: central; }
+.bh-node .bh-label { fill: var(--text); font-size: 13px; font-weight: 700; text-anchor: middle; font-family: 'DM Sans', sans-serif; }
+.bh-node .bh-sub   { fill: var(--muted); font-size: 9.5px; text-anchor: middle; font-family: 'DM Sans', sans-serif; }
+@media (prefers-reduced-motion: no-preference) {
+  body[data-bh-anim="on"] .bh-link.hot { stroke: var(--accent); opacity: 1; stroke-dasharray: 6 8; animation: bhFlow 1.6s linear infinite; }
+  @keyframes bhFlow { to { stroke-dashoffset: -28; } }
+}
+.bh-mirror-note { font-size: 11.5px; color: var(--muted); text-align: center; margin: -4px 0 16px; }
+.bh-textlink { display: block; text-align: center; color: var(--accent); font: 600 13px 'DM Sans', sans-serif; text-decoration: none; margin-bottom: 8px; }
+
+/* ── Bottom sheet zone ── */
+.bh-sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 9000; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn .2s ease; }
+.bh-sheet { background: var(--card); border-radius: 24px 24px 0 0; padding: 22px 20px calc(env(safe-area-inset-bottom) + 24px); width: 100%; max-width: 480px; max-height: 82vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.bh-sheet-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.bh-sheet-emoji { font-size: 28px; }
+.bh-sheet-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 19px; }
+.bh-sheet-sub { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
+.bh-sheet-mech { font-size: 13.5px; line-height: 1.6; color: var(--text); background: var(--soft); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; }
+.bh-sheet-mech .src { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }
+.bh-sit-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.bh-sit-item { background: var(--soft); border: 1.5px solid var(--border); border-radius: 14px; padding: 10px 12px; font-size: 13px; cursor: pointer; transition: border-color .15s; }
+.bh-sit-item:active { transform: scale(.99); }
+.bh-sit-item:hover, .bh-sit-item:focus-visible { border-color: var(--accent); }
+.bh-sheet-actions { display: flex; flex-direction: column; gap: 8px; }
+.bh-sheet-close { display: block; width: 100%; text-align: center; background: none; border: none; color: var(--muted); font: 600 13px 'DM Sans', sans-serif; padding: 10px 0 0; }
+
+/* ── Bibliothèque des réactions ── */
+#situations-lib .sl-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 16px; }
+.sl-chip { background: var(--soft); border: 1.5px solid var(--border); border-radius: 999px; padding: 6px 12px; font: 600 12px 'DM Sans', sans-serif; color: var(--muted); cursor: pointer; }
+.sl-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(124,92,252,.1); }
+.sl-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+.sl-zone-intro { background: var(--soft); border-radius: 14px; padding: 12px 14px; margin: 18px 0 10px; }
+.sl-zone-intro:first-child { margin-top: 0; }
+.sl-zone-intro-head { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+.sl-zone-intro-sub { font-weight: 600; font-size: 12px; color: var(--muted); text-transform: none; letter-spacing: normal; }
+.sl-zone-intro-mech { font-size: 13px; line-height: 1.6; color: var(--text); }
+.sl-zone-intro-mech .src { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }
+.sl-card-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; margin-bottom: 6px; }
+.sl-card-mech { font-size: 13px; line-height: 1.55; color: var(--text); margin-bottom: 6px; }
+.sl-card-norm { font-size: 12.5px; color: var(--accent2); font-style: italic; margin-bottom: 10px; }
+.sl-card-strategy { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+.sl-card-strategy strong { color: var(--text); }
+.sl-card-action { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: none; border-radius: 999px; padding: 8px 16px; font: 700 12.5px 'DM Sans', sans-serif; cursor: pointer; }
+.sl-card-action:active { transform: scale(.96); }
+/* ── SEUIL POUR CETTE FOIS (flag ft_flag_seuil_tache) ── */
+#seuil-tache-block { margin: 6px 0 12px; }
+#seuil-tache-block details summary { font-size: 13px; color: var(--muted); cursor: pointer; user-select: none; padding: 2px 0; }
+#seuil-texte { width: 100%; min-height: 60px; resize: vertical; background: var(--soft); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font: 13px 'DM Sans',sans-serif; padding: 8px 12px; outline: none; margin-top: 8px; box-sizing: border-box; }
+#seuil-texte:focus { border-color: var(--accent); }
+#seuil-atteint-msg { font-size: 13px; color: var(--muted); margin: 4px 0 8px; }
+.seuil-marker { font-size: 12px; color: var(--muted); font-weight: normal; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -2341,6 +3606,12 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <pwa-install id="pwa-install" name="focusTDAH" icon="./icons/icon-192.png" manifest-url="./manifest.json"></pwa-install>
 
 <main>
+
+<!-- MODE CERVEAU — bascule persistante + retour au hub -->
+<button class="brain-toggle-fab" id="brain-toggle-fab" type="button" aria-pressed="false">
+  <span id="brain-toggle-icon">🧠</span><span id="brain-toggle-label">Cerveau</span>
+</button>
+<button class="brain-return-fab" id="brain-return-fab" type="button" aria-label="Retour au hub cerveau" title="Retour au hub cerveau">🧠</button>
 
 <!-- SPLASH -->
 <section class="screen active" id="splash">
@@ -2375,7 +3646,24 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- ACCUEIL -->
 <section class="screen" id="landing">
 
-  <!-- ── Contenu (en haut, première vue) ── -->
+  <!-- ── Cerveau plein écran (en haut, première vue) ── -->
+  <div id="brain-section">
+    <canvas id="brain-canvas"></canvas>
+    <div id="brain-hotspots"></div>
+    <div id="zoneIndicator"><div id="ziName"></div></div>
+    <button id="btnBack" onclick="if(window.BrainEngine)BrainEngine.zoomOut()">← retour</button>
+    <div class="brain-section-logo">✦ focusTDAH</div>
+    <div id="brain-intro">
+      <div class="brain-intro-tagline">Bienvenue dans ton cerveau TDAH</div>
+      <button id="brain-intro-btn" type="button">Commencer l’introduction →</button>
+    </div>
+    <div id="brain-dive-flash"></div>
+    <div id="brain-state-badge"></div>
+    <div class="brain-tap-hint" id="brain-tap-hint" style="opacity:0">tape une zone · navigue</div>
+    <div class="brain-scroll-hint" id="brain-scroll-hint" style="opacity:0">↓ &nbsp; outils &nbsp; ↓</div>
+  </div>
+
+  <!-- ── Contenu (en bas, scroll ↓) ── -->
   <div class="landing-left">
 
     <!-- Logo row + halt btn -->
@@ -2457,17 +3745,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 
     <button id="btn-end-of-day" style="width:100%;background:none;border:none;color:var(--muted);font:500 13px 'DM Sans',sans-serif;padding:12px 0 2px;cursor:pointer;text-align:left">🌙 Fin de journée</button>
 
-    <!-- Scroll hint vers le cerveau -->
-    <div class="brain-scroll-hint">↓ &nbsp; cerveau &nbsp; ↓</div>
-
   </div><!-- /.landing-left -->
-
-  <!-- ── Cerveau plein écran (en bas, scroll ↓) ── -->
-  <div id="brain-section">
-    <canvas id="brain-canvas"></canvas>
-    <div id="brain-hotspots"></div>
-    <div class="brain-section-logo">✦ focusTDAH</div>
-  </div>
 
   <!-- Panneau droit masqué (backward compat) -->
   <div class="landing-right" style="display:none!important"></div>
@@ -2477,7 +3755,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- LISTE RAPIDE -->
 <section class="screen" id="quicktodo-screen">
   <button class="back" onclick="show('landing')">← Accueil</button>
-  <h1>📋 Ma liste <em>rapide</em></h1>
+  <h1>Ma liste <em>rapide</em></h1>
   <p class="sub">Capture rapide — coché = disparu en 60 s.</p>
   <div class="quicktodo" style="margin-top:8px">
     <div class="qt-header">
@@ -2668,6 +3946,15 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
     <div class="step-dots" id="s-dots"></div>
   </div>
   <div class="task-name" id="s-task-name"></div>
+  <!-- Seuil pour cette fois — ft_flag_seuil_tache -->
+  <div id="seuil-tache-block" role="group" aria-label="Seuil pour cette tâche" style="display:none">
+    <details id="seuil-details">
+      <summary>Fixer un seuil pour cette tâche</summary>
+      <textarea id="seuil-texte" aria-label="Écrire ce qui compte comme assez, pour cette fois" rows="3"></textarea>
+    </details>
+    <div id="seuil-atteint-msg" aria-live="polite" style="display:none">Seuil atteint. Tu peux passer à la suite.</div>
+    <button class="btn-ghost" id="btn-seuil-suffisant">✓ C'est suffisant pour cette fois</button>
+  </div>
   <!-- Temps cumulé + % déclaré sur cette tâche -->
   <div id="s-task-progress" style="display:none;margin:-6px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
   <div class="micro-box" id="micro-box">
@@ -2797,6 +4084,35 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <div id="methodes-list"></div>
 </section>
 
+<!-- MODE CERVEAU — hub de navigation -->
+<section class="screen" id="brain-hub">
+  <div class="bh-disclaimer" role="note">
+    <strong>Modèle pédagogique, ni diagnostic ni mesure.</strong> Ce schéma montre 6 réseaux qui
+    se coordonnent dans un cerveau TDAH — pas une carte anatomique, pas un examen de ton cerveau.
+    Touche une zone pour explorer ce qui s'y passe.
+  </div>
+  <div class="bh-svg-wrap">
+    <svg class="bh-schema" id="bh-schema" viewBox="0 0 320 380" role="group"
+         aria-label="Schéma des 6 réseaux du cerveau TDAH, vue conceptuelle et non anatomique">
+      <g id="bh-edges" aria-hidden="true"></g>
+      <g id="bh-nodes"></g>
+    </svg>
+  </div>
+  <p class="bh-mirror-note">🪞 La couleur des zones reflète ton activité dans l'app en ce moment —
+    pas une mesure de ton cerveau.</p>
+  <a href="#" class="bh-textlink" id="bh-link-situations">📖 Voir tout en texte → Bibliothèque des réactions</a>
+</section>
+
+<!-- BIBLIOTHÈQUE DES RÉACTIONS — repli 2D total, accessible depuis les deux modes -->
+<section class="screen" id="situations-lib">
+  <button class="back" id="back-situations-lib">← Retour</button>
+  <h1>Ça t'est déjà <em>arrivé</em> ?</h1>
+  <p class="sub">28 situations TDAH du quotidien — pourquoi ça arrive, et quoi faire maintenant.
+    Tu n'es pas cassé·e : c'est ton cerveau qui fonctionne différemment.</p>
+  <div class="sl-filters" id="sl-filters"></div>
+  <div id="sl-list"></div>
+</section>
+
 <section class="screen" id="aide-menu">
   <button class="back" id="back-aide-menu">← Accueil</button>
   <div style="margin-bottom:24px">
@@ -2823,6 +4139,26 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="block-btn block-reset" id="aide-btn-reset">
     <span class="b-title">🧘 Reset cognitif</span>
     <span class="b-sub">Respiration · Étirement · Eau · Mini victoire</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-situations">
+    <span class="b-title">📖 Ça t'est déjà arrivé ?</span>
+    <span class="b-sub">28 situations TDAH du quotidien, leur mécanisme, et quoi faire maintenant</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-pause" style="display:none">
+    <span class="b-title">✋ Permission de pause</span>
+    <span class="b-sub">Tu as le droit de t'arrêter — même sans finir</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-victoires" style="display:none">
+    <span class="b-title">🌟 Petites victoires</span>
+    <span class="b-sub">Note tes victoires du jour — contre la rumination</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-achat" style="display:none">
+    <span class="b-title">🛍️ Pause avant d'acheter</span>
+    <span class="b-sub">5 minutes pour réfléchir vraiment</span>
+  </button>
+  <button class="block-btn block-secondary" id="aide-btn-routines" style="display:none">
+    <span class="b-title">📋 Routines minimales</span>
+    <span class="b-sub">Checklist rapide : clés, téléphone, etc.</span>
   </button>
 </section>
 
@@ -2972,6 +4308,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="back" id="back-reset-cognitif">← Retour</button>
   <h1>Reset <em>cognitif</em></h1>
   <p class="sub">3 minutes pour toi. Ton cerveau en a besoin avant de continuer.</p>
+  <div id="reset-victoire-recall"></div>
   <div id="reset-steps-wrap">
     <div class="reset-step" id="rs-breath">
       <div class="reset-step-num">1</div>
@@ -3036,6 +4373,101 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   </div>
 </section>
 
+<!-- PERMISSION DE PAUSE -->
+<section class="screen" id="pause-perm">
+  <button class="back" id="back-pause-perm">← Retour</button>
+  <h1>Permission de <em>pause</em></h1>
+  <div class="pause-perm-card">
+    <div class="pause-perm-emoji">✋</div>
+    <div class="pause-perm-msg">
+      <strong>Tu as le droit de t'arrêter.</strong>
+      <p>Même si tu n'as pas fini. Même si tu étais censée bosser plus. C'est OK.</p>
+      <p>Ton cerveau TDAH a ses limites : respecte-les, et tu en auras plus demain.</p>
+    </div>
+  </div>
+  <p class="sub" style="margin-top:24px">Combien de temps pour vraiment t'arrêter ?</p>
+  <div class="pause-opts">
+    <button class="pause-btn" data-min="5"><span class="pause-min">5</span><span class="pause-label">min</span></button>
+    <button class="pause-btn" data-min="10"><span class="pause-min">10</span><span class="pause-label">min</span></button>
+    <button class="pause-btn" data-min="15"><span class="pause-min">15</span><span class="pause-label">min</span></button>
+    <button class="pause-btn" data-min="20"><span class="pause-min">20</span><span class="pause-label">min</span></button>
+  </div>
+  <div class="pause-timer" id="pause-timer" style="display:none">
+    <div class="pause-timer-num" id="pause-timer-num">5:00</div>
+    <div class="pause-timer-track"><div class="pause-timer-bar" id="pause-timer-bar"></div></div>
+    <p class="sub" style="margin-top:8px">Tu peux quitter cet écran quand tu veux — la pause continue à ton rythme, pas au sien.</p>
+  </div>
+  <div class="pause-idea-wrap">
+    <button class="btn-outline" id="btn-pause-idea">🎲 Une idée pour ce temps-là</button>
+    <div class="pause-idea-result" id="pause-idea-result" role="status" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- CARNET DE PETITES VICTOIRES -->
+<section class="screen" id="victoires-carnet">
+  <button class="back" id="back-victoires-carnet">← Retour</button>
+  <h1>Petites <em>victoires</em></h1>
+  <p class="sub">Chaque pas compte. Noter les victoires t'aide à voir que tu avances — même si ça paraît minuscule.</p>
+
+  <div class="victoires-today" id="victoires-today">
+    <div class="victoires-count">0 victoires</div>
+  </div>
+
+  <div class="victoires-add">
+    <label for="victoires-input" class="section-label">Nouvelle victoire</label>
+    <textarea class="victoires-input" id="victoires-input" placeholder="Ex: j'ai bu un verre d'eau&#10;J'ai envoyé ce message qu'j'repoussais&#10;J'ai pas abandonné malgré l'envie"></textarea>
+    <button class="btn" id="btn-victoires-add">➕ Noter cette victoire</button>
+    <div class="victoires-confirm" id="victoires-confirm" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="section-label" style="margin-top:24px">Aujourd'hui</div>
+  <div class="victoires-list" id="victoires-list"></div>
+</section>
+
+<!-- PAUSE ANTI-ACHAT IMPULSIF -->
+<section class="screen" id="pause-achat">
+  <button class="back" id="back-pause-achat">← Retour</button>
+  <h1>Pause <em>avant d'acheter</em></h1>
+  <p class="sub">L'impulsif a besoin de réfléchir 5 minutes. C'est pas de la frustration, c'est de l'autonomie.</p>
+
+  <div class="achat-card">
+    <div class="achat-emoji">🛍️</div>
+    <div class="achat-msg">
+      <strong>Je te donne 5 minutes avant d'acheter.</strong>
+      <p>Pas pour te convaincre — juste pour voir ce que tu décides en vrai.</p>
+    </div>
+  </div>
+
+  <div class="achat-timer" id="achat-timer" style="display:none">
+    <div class="achat-timer-num" id="achat-timer-num">5:00</div>
+    <div class="achat-timer-track"><div class="achat-timer-bar" id="achat-timer-bar"></div></div>
+    <div class="achat-question">
+      <p><strong>Tu en as vraiment besoin ?</strong></p>
+      <p class="achat-sub">Pas de jugement — juste honnête.</p>
+    </div>
+    <div class="achat-opts">
+      <button class="btn" id="btn-achat-oui">Oui, j'achète</button>
+      <button class="btn-outline" id="btn-achat-non">Non, j'oublie</button>
+    </div>
+  </div>
+
+  <div class="achat-start" id="achat-start">
+    <button class="btn" id="btn-achat-start">⏱ Lancer le minuteur</button>
+  </div>
+</section>
+
+<!-- ROUTINES MINIMALES -->
+<section class="screen" id="routines-mini">
+  <button class="back" id="back-routines-mini">← Retour</button>
+  <h1>Routines <em>minimales</em></h1>
+  <p class="sub">Les trucs basiques qu'on oublie et qu'on regrette après. Checklist rapide avant de sortir — ou n'importe quand.</p>
+
+  <div class="section-label">Avant de partir</div>
+  <div class="routines-list" id="routines-list"></div>
+
+  <button class="btn-outline" id="btn-routines-reset" style="margin-top:16px">🔄 Réinitialiser pour demain</button>
+</section>
+
 <!-- TIMER SETUP -->
 <section class="screen" id="timer-setup">
   <button class="back" id="back-timer-setup">← Accueil</button>
@@ -3098,7 +4530,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- AGENDA -->
 <section class="screen" id="agenda">
   <button class="back" id="back-agenda">← Accueil</button>
-  <h1>📅 <em>Agenda</em></h1>
+  <h1><em>Agenda</em></h1>
   <p class="sub">Tes projets avec deadlines, triés par urgence.</p>
   <button id="btn-show-planning" style="width:100%;padding:13px;border-radius:14px;border:1.5px solid var(--accent);background:rgba(124,92,252,.1);color:var(--accent);font:700 14px 'Syne',sans-serif;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px">📆 Voir le planning →</button>
   <div id="agenda-list"></div>
@@ -3112,7 +4544,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- PLANNING PAR JOUR -->
 <section class="screen" id="planning-view">
   <button class="back" id="back-planning">← Agenda</button>
-  <h1>📆 <em>Planning</em></h1>
+  <h1><em>Planning</em></h1>
   <div class="plan-settings-row">
     <div class="planning-tab-row" style="flex:1;margin-bottom:0">
       <button class="planning-tab active" id="ptab-matiere">Par matière</button>
@@ -3128,7 +4560,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <!-- SONS D'AMBIANCE -->
 <section class="screen" id="sons">
   <button class="back" id="back-sons">← Accueil</button>
-  <h1>🎵 Sons <em>d'ambiance</em></h1>
+  <h1>Sons <em>d'ambiance</em></h1>
   <p class="sub">Filtre les distractions et entre dans ta zone de flow.</p>
   <div class="section-label" style="margin-bottom:8px">Bruit de fond</div>
   <div class="sound-grid">
@@ -3183,6 +4615,7 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
   <button class="focus-fab" id="focus-fab" title="Mode Focus">📵</button>
   <button class="stats-fab" id="stats-fab" title="Stats du jour">📊</button>
   <button class="bestiary-fab" id="bestiary-fab" title="Bestiaire">🐉</button>
+  <button class="mode-sobre-fab" id="mode-sobre-fab" title="Mode Sobre">🔇</button>
 </div>
 <div class="stats-panel" id="stats-panel" style="display:none"></div>
 </main>
@@ -3315,34 +4748,374 @@ function renderUserPill(user) {
 }
 
 function maybeShowOnboarding() {
-  if (localStorage.getItem('ft_onboarded')) return;
-  const slides = [
-    { emoji: '⏱', title: 'Timer libre', desc: 'Lance un timer adapté à ton niveau de focus. Même 5 minutes comptent.' },
-    { emoji: '✦', title: 'Projets structurés', desc: 'Décris ton projet, l\'app génère un plan en micro-étapes. Tu n\'as plus qu\'à démarrer.' },
-    { emoji: '🧠', title: 'J\'ai besoin d\'aide', desc: 'Bloqué, en panique, submergé ? L\'app t\'accompagne selon ton état, pas selon un planning.' },
-  ];
-  let idx = 0;
-  const bd = document.createElement('div');
-  bd.className = 'cat-modal-backdrop';
-  bd.id = 'onboarding-bd';
-  document.body.appendChild(bd);
+  const existingOnboarding = document.getElementById('brain-onboarding');
+  if (existingOnboarding) existingOnboarding.remove();
+  document.body.classList.remove('brain-onboarding-uses-3d');
+  const ONBOARDING_VERSION = 'v10';
+  const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
+  // L'introduction est volontairement rejouée à chaque chargement/refresh.
+  // On garde la clé seulement comme trace de version, jamais pour skipper le voyage.
+  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', 'ft_onboarded_v5', 'ft_onboarded_v6', 'ft_onboarded_v7', 'ft_onboarded_v8', 'ft_onboarded_v9', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
 
-  function render() {
-    const s = slides[idx];
-    bd.innerHTML = `
-      <div class="cat-modal-sheet" style="text-align:center">
-        <div style="font-size:56px;margin-bottom:12px">${s.emoji}</div>
-        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">${idx+1} / ${slides.length}</div>
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:12px">${s.title}</div>
-        <div style="font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:24px">${s.desc}</div>
-        <button class="btn" id="ob-next">${idx < slides.length-1 ? 'Suivant →' : 'C\'est parti ✓'}</button>
-      </div>`;
-    bd.querySelector('#ob-next').onclick = () => {
-      if (idx < slides.length - 1) { idx++; render(); }
-      else { localStorage.setItem('ft_onboarded', '1'); bd.remove(); }
-    };
+  const STEPS = [
+    {
+      scene: 'whole', accent: '#ffffff', tint: null, energy: 0.48, rhythm: 56, lobes: [],
+      label: 'Scène 01 · Ouverture', shot: 'Plan large', director: 'fondu noir → cerveau blanc vivant',
+      title: 'Bienvenue dans ton cerveau.',
+      voice: 'Ton cerveau n’est pas cassé. Il fonctionne selon une autre logique.',
+      text: 'Un cerveau blanc flotte dans le noir. Il respire, pulse, s’allume doucement. On ne lance pas juste une app : on entre dans un monde intérieur.',
+      chips: ['court-métrage', 'cerveau 3D', 'émotion + science'],
+      cta: 'Entrer dans le cerveau →'
+    },
+    {
+      scene: 'zoom', accent: '#00f5ff', tint: '#00f5ff', energy: 0.72, rhythm: 78, lobes: ['frontal', 'parietal'], lobe: 'frontal',
+      label: 'Scène 02 · Travelling avant', shot: 'Zoom organique', director: 'la caméra traverse la surface',
+      title: 'On avance dans le réseau.',
+      voice: 'Ici, tout repose sur la communication entre les neurones.',
+      text: 'La surface devient un paysage. Les connexions blanches et translucides apparaissent comme des routes lumineuses. Chaque signal aide à choisir, planifier, démarrer ou revenir au calme.',
+      chips: ['travelling', 'neurones', 'signaux'],
+      cta: 'Suivre le signal →'
+    },
+    {
+      scene: 'synapse', accent: '#00f5ff', tint: '#00f5ff', energy: 0.95, rhythm: 108, lobes: ['corpus', 'frontal'],
+      label: 'Scène 03 · Macro synapse', shot: 'Très gros plan', director: 'électricité → chimie → message',
+      title: 'Le message saute une micro-distance.',
+      voice: 'Entre deux neurones, le signal traverse une synapse.',
+      text: 'On voit le courant arriver, puis des messagers chimiques passer le petit espace. Le cerveau se construit dans ces micro-transmissions invisibles.',
+      chips: ['synapse', 'transmission', 'micro-monde'],
+      cta: 'Entrer dans le corridor dopamine →'
+    },
+    {
+      scene: 'dopamine', accent: '#ffd700', tint: '#ffd700', energy: 1, rhythm: 120, lobes: ['frontal', 'brainstem'],
+      label: 'Scène 04 · Dopamine', shot: 'Tunnel lumineux', director: 'particules dorées + cyan/violet',
+      title: 'La dopamine donne l’élan.',
+      voice: 'Elle aide à passer à l’action, sentir la récompense et maintenir l’attention.',
+      text: 'Dans le TDAH, ce système peut être plus irrégulier. Ce n’est pas de la paresse : c’est un démarrage biologique qui a besoin de signaux plus clairs.',
+      chips: ['motivation', 'récompense', 'démarrage'],
+      cta: 'Aller au centre de contrôle →'
+    },
+    {
+      scene: 'prefrontal', accent: '#7c5cfc', tint: '#7c5cfc', energy: 0.66, rhythm: 70, lobe: 'frontal', lobes: ['frontal'],
+      label: 'Scène 05 · Cortex préfrontal', shot: 'Centre de contrôle', director: 'panneaux flottants : planifier, prioriser, décider',
+      title: 'Le chef d’orchestre organise le chaos.',
+      voice: 'Cette zone aide à planifier, prioriser, décider et garder l’objectif en tête.',
+      text: 'Des panneaux apparaissent dans l’espace : mémoire de travail, temps, priorités. Certains circuits s’allument puis s’éteignent : l’appui externe devient nécessaire.',
+      chips: ['planification', 'priorités', 'mémoire de travail'],
+      tools: ['Plan', 'Micro-étapes', 'Mémoire externe'],
+      cta: 'Voir la surcharge →'
+    },
+    {
+      scene: 'overload', accent: '#ff6b7a', tint: '#ff6b7a', energy: 0.28, rhythm: 38, lobes: ['frontal', 'parietal', 'brainstem'], pattern: 'overload',
+      label: 'Scène 06 · Surcharge', shot: 'Montagne mentale', director: 'un bloc massif écrase les connexions',
+      title: 'Une grosse tâche peut bloquer le trajet.',
+      voice: 'Pas parce que tu ne veux pas. Parce que ton cerveau ne sait pas par où entrer.',
+      text: 'La tâche devient une montagne. Les signaux se croisent. Trop d’informations, trop de directions. La solution n’est pas de forcer : c’est de découper.',
+      chips: ['blocage', 'montagne', 'découpage'],
+      tools: ['Juste 2 minutes', 'Brain dump', 'Je suis bloqué'],
+      cta: 'Traverser la tempête →'
+    },
+    {
+      scene: 'distraction', accent: '#ffd84d', tint: '#ffd84d', energy: 0.82, rhythm: 118, lobes: ['parietal', 'temporal'], pattern: 'irregular',
+      label: 'Scène 07 · Distraction', shot: 'Tempête de stimuli', director: 'notifications, idées, sons, souvenirs orbitent',
+      title: 'Ton attention se déplace vite.',
+      voice: 'Le cerveau TDAH capte ce qui est nouveau, urgent, intéressant ou stimulant.',
+      text: 'Ce n’est pas une absence d’attention. C’est une attention mobile, rapide, sensible aux nouveautés. Il faut lui donner une piste claire à suivre.',
+      chips: ['nouveauté', 'stimulation', 'attention mobile'],
+      cta: 'Entrer en hyperfocus →'
+    },
+    {
+      scene: 'hyperfocus', accent: '#b05cfc', tint: '#b05cfc', energy: 1, rhythm: 136, lobes: ['frontal', 'parietal', 'temporal'], pattern: 'hyperfocus',
+      label: 'Scène 08 · Hyperfocus', shot: 'Convergence totale', director: 'tout converge vers une seule zone brillante',
+      title: 'La concentration est là. La régulation est le défi.',
+      voice: 'Quand quelque chose stimule vraiment ton cerveau, le réseau peut s’illuminer très fort.',
+      text: 'Les connexions deviennent fluides. Le monde extérieur s’éteint presque. Le problème n’est donc pas “se concentrer”, mais allumer, arrêter et rediriger l’attention.',
+      chips: ['intensité', 'fluidité', 'régulation'],
+      tools: ['Timer', 'Pause visible', 'Mode sobre'],
+      cta: 'Faire apparaître les outils →'
+    },
+    {
+      scene: 'transition', accent: '#00f5ff', tint: '#00f5ff', energy: 0.76, rhythm: 74, lobes: ['frontal', 'parietal', 'temporal', 'cerebellum'],
+      label: 'Scène 09 · FocusTDAH', shot: 'Révélation produit', director: 'l’interface naît du cerveau',
+      title: 'Maintenant, l’app devient un chemin.',
+      voice: 'FocusTDAH existe pour travailler avec ton cerveau, pas contre lui.',
+      text: 'Les outils apparaissent comme des aides neuronales : les pensées se rangent, la montagne se découpe, le timer trace un circuit court, et le démarrage devient accessible.',
+      chips: ['avec ton cerveau', 'pas contre lui', 'chemin accessible'],
+      tools: ['Micro-étapes', 'Brain dump', 'Timer court', 'Mini-quête'],
+      cta: 'Commencer →'
+    },
+  ];
+  document.body.classList.add('brain-onboarding-uses-3d');
+  const ov = document.createElement('div');
+  ov.id = 'brain-onboarding';
+  document.body.appendChild(ov);
+  let step = 0;
+
+  function safeBrain(fn) { try { if (window.BrainEngine) fn(); } catch(e) {} }
+
+  let brainSceneTimer = null;
+  function setBrainForStep(s) {
+    clearTimeout(brainSceneTimer);
+    safeBrain(() => {
+      if (BrainEngine.resume) BrainEngine.resume();
+      if (BrainEngine.setColorTint) BrainEngine.setColorTint(s.tint || null);
+      if (BrainEngine.setEnergy) BrainEngine.setEnergy(s.energy);
+      if (BrainEngine.setNeuronRhythm) BrainEngine.setNeuronRhythm(s.rhythm || 60);
+      if (BrainEngine.zoomOut) BrainEngine.zoomOut();
+      const lobes = s.lobes || (s.lobe ? [s.lobe] : []);
+      lobes.forEach((lobe, i) => {
+        setTimeout(() => safeBrain(() => BrainEngine.highlightLobe && BrainEngine.highlightLobe(lobe, 1.25, 1300)), 220 + i * 170);
+      });
+      if (s.lobe && BrainEngine.zoomToLobe) {
+        brainSceneTimer = setTimeout(() => safeBrain(() => BrainEngine.zoomToLobe(s.lobe)), 420);
+      }
+    });
   }
-  render();
+
+  function sceneCallouts(s) {
+    const byScene = {
+      whole: [
+        ['Modèle 3D du cerveau', 'La forme complète reste visible : on part du réseau global.', 'left:6%;top:10%'],
+        ['Activité de base', 'Les points lumineux représentent des groupes neuronaux actifs.', 'right:4%;bottom:16%']
+      ],
+      zoom: [
+        ['Zoom caméra', 'On quitte la vue globale pour entrer dans les connexions.', 'left:5%;top:14%'],
+        ['Routes neuronales', 'Les lignes brillantes deviennent le chemin du signal.', 'right:4%;bottom:12%']
+      ],
+      synapse: [
+        ['Synapse', 'Le message traverse un tout petit espace entre deux neurones.', 'left:5%;top:13%'],
+        ['Transmission', 'Électricité puis chimie : c’est comme ça que le signal avance.', 'right:4%;bottom:12%']
+      ],
+      dopamine: [
+        ['Circuit récompense', 'La dopamine aide le cerveau à démarrer et à maintenir l’effort.', 'left:6%;bottom:16%'],
+        ['TDAH', 'Le carburant arrive moins régulièrement pour les tâches peu stimulantes.', 'right:5%;top:12%']
+      ],
+      compare: [
+        ['Flux régulier', 'Quand le signal est stable, l’action se lance plus facilement.', 'left:5%;top:12%'],
+        ['Flux TDAH', 'Le réseau cherche plus d’intensité pour relancer la transmission.', 'right:4%;bottom:14%']
+      ],
+      prefrontal: [
+        ['Cortex préfrontal', 'Planifier, inhiber, garder le fil : ici l’appui externe aide beaucoup.', 'left:5%;top:16%'],
+        ['Zoom réel', 'La caméra entre sur la zone frontale du cerveau 3D.', 'right:5%;bottom:14%']
+      ],
+      hyperfocus: [
+        ['Hyperfocus', 'Le réseau peut s’illuminer très fort quand la stimulation est suffisante.', 'left:5%;bottom:14%'],
+        ['Régulation', 'La difficulté : allumer, arrêter, puis rediriger l’attention.', 'right:5%;top:14%']
+      ],
+      overload: [
+        ['Surcharge', 'La montagne mentale bloque le point d’entrée.', 'left:5%;top:13%'],
+        ['Micro-actions', 'Découper transforme un mur en petits chemins lumineux.', 'right:5%;bottom:14%']
+      ],
+      distraction: [
+        ['Stimuli', 'Nouveauté, sons, idées : tout demande à être capté.', 'left:5%;top:13%'],
+        ['Attention mobile', 'Le signal saute vite : il faut lui donner une piste.', 'right:5%;bottom:14%']
+      ],
+      transition: [
+        ['Interface = appui', 'Les outils rendent visibles le temps, les étapes et l’énergie.', 'left:5%;top:14%'],
+        ['Avec le cerveau', 'On ne force pas le réseau : on lui donne des rails.', 'right:5%;bottom:14%']
+      ]
+    };
+    return (byScene[s.scene] || byScene.whole).map(([title, desc, pos], i) => `
+      <div class="bon-callout bon-real-callout" style="${pos};--d:${i * .18}s">
+        <strong>${title}</strong><span>${desc}</span>
+      </div>`).join('');
+  }
+
+  function cartoonBrainSvg(s) {
+    const dopamineDots = s.scene === 'dopamine' || s.scene === 'hyperfocus'
+      ? `<circle class="bon-neurotransmitter" cx="220" cy="200" r="7"/><circle class="bon-neurotransmitter" cx="252" cy="184" r="5"/><circle class="bon-neurotransmitter" cx="286" cy="210" r="6"/><circle class="bon-neurotransmitter" cx="318" cy="188" r="5"/>`
+      : '';
+    const overload = s.scene === 'overload'
+      ? `<path class="bon-signal-path delay" d="M125 170 C190 130, 250 260, 330 165 S455 120, 500 210" style="stroke:#ff8855"/>`
+      : '';
+    return `
+      <div class="bon-cartoon-brain" aria-hidden="true">
+        <svg viewBox="0 0 640 430" role="img">
+          <path class="bon-lobe frontal" d="M92 218 C55 145, 92 74, 178 62 C236 20, 318 42, 340 105 C315 146, 300 196, 318 246 C248 278, 154 286, 92 218Z"/>
+          <path class="bon-lobe parietal" d="M286 74 C365 28, 481 50, 528 126 C584 182, 560 268, 492 300 C424 284, 347 270, 318 246 C300 196, 315 146, 340 105 C328 88, 309 79, 286 74Z"/>
+          <path class="bon-lobe temporal" d="M145 236 C218 265, 308 258, 368 292 C340 348, 234 368, 162 336 C111 314, 90 274, 145 236Z"/>
+          <path class="bon-lobe occipital" d="M484 124 C564 142, 601 218, 560 279 C536 316, 493 329, 452 303 C508 263, 514 190, 484 124Z"/>
+          <path class="bon-lobe cerebellum" d="M390 303 C448 286, 523 312, 533 356 C492 397, 396 396, 350 357 C352 332, 364 315, 390 303Z"/>
+          <path class="bon-lobe brainstem" d="M331 318 C355 326, 371 352, 366 382 C360 409, 334 413, 321 392 C309 370, 312 336, 331 318Z"/>
+          <path class="bon-fold" d="M132 136 C174 109, 222 117, 249 154 M118 190 C174 166, 238 178, 277 219 M357 126 C405 105, 468 126, 498 174 M353 210 C418 198, 482 222, 511 263 M176 311 C230 333, 296 326, 337 296"/>
+          <path class="bon-signal-path" d="M142 196 C205 145, 284 170, 340 218 S440 275, 510 226"/>
+          <path class="bon-signal-path delay" d="M190 96 C240 142, 278 142, 332 110 S444 98, 504 160"/>
+          ${overload}
+          <circle class="bon-signal-dot" cx="142" cy="196" r="8"/>
+          <circle class="bon-signal-dot d2" cx="332" cy="110" r="7"/>
+          <circle class="bon-signal-dot d3" cx="510" cy="226" r="8"/>
+          ${dopamineDots}
+        </svg>
+      </div>`;
+  }
+
+  function synapseZoom(s) {
+    if (!['synapse', 'dopamine'].includes(s.scene)) return '';
+    return `
+      <div class="bon-synapse-zoom" aria-hidden="true">
+        <svg viewBox="0 0 640 360">
+          <path class="axon" d="M42 180 C135 82, 216 102, 284 160"/>
+          <path class="axon" d="M356 200 C430 260, 520 258, 600 158"/>
+          <path class="signal" d="M64 178 C148 94, 224 108, 288 160"/>
+          <ellipse class="gap" cx="320" cy="180" rx="46" ry="62"/>
+          <circle class="bubble" cx="286" cy="166" r="8"/><circle class="bubble" cx="306" cy="188" r="6"/><circle class="bubble" cx="328" cy="164" r="7"/><circle class="bubble" cx="350" cy="194" r="6"/><circle class="bubble" cx="372" cy="176" r="8"/>
+          <path class="signal" d="M352 198 C430 254, 518 248, 592 160" style="animation-delay:.32s"/>
+        </svg>
+      </div>`;
+  }
+
+  function zoneReveals(s) {
+    const zones = {
+      prefrontal: [
+        ['Préfrontal', 'left:58%;top:28%;--zcol:#7c5cfc;--delay:.05s'],
+        ['Mémoire de travail', 'left:48%;top:48%;--zcol:#00f5ff;--delay:.22s']
+      ],
+      hyperfocus: [
+        ['Attention', 'left:58%;top:24%;--zcol:#b05cfc;--delay:.05s'],
+        ['Mémoire', 'left:28%;top:55%;--zcol:#00ccbb;--delay:.2s'],
+        ['Coordination', 'left:65%;top:70%;--zcol:#2266ff;--delay:.35s']
+      ],
+      overload: [
+        ['Surcharge', 'left:42%;top:25%;--zcol:#ff8855;--delay:.05s'],
+        ['Pause', 'left:62%;top:63%;--zcol:#5cfca0;--delay:.26s']
+      ],
+      transition: [
+        ['Carte complète', 'left:50%;top:18%;--zcol:#00f5ff;--delay:.05s'],
+        ['Outils', 'left:34%;top:68%;--zcol:#7c5cfc;--delay:.22s']
+      ]
+    };
+    return (zones[s.scene] || []).map(([name, style]) => `<div class="bon-zone-reveal" style="${style}">${name}</div>`).join('');
+  }
+
+  function distractionCloud(s) {
+    if (s.scene !== 'distraction') return '';
+    const tokens = [
+      ['notification', 'left:10%;top:20%;--td:.1s;--tox:18px;--toy:-10px'],
+      ['idée', 'right:12%;top:26%;--td:.35s;--tox:-14px;--toy:14px'],
+      ['souvenir', 'left:14%;bottom:22%;--td:.55s;--tox:20px;--toy:10px'],
+      ['urgence', 'right:10%;bottom:24%;--td:.78s;--tox:-22px;--toy:-16px'],
+      ['son', 'left:42%;top:12%;--td:1s;--tox:8px;--toy:18px']
+    ];
+    return `<div class="bon-distraction-cloud">${tokens.map(([t, style]) => `<span class="bon-distraction-token" style="${style}">${t}</span>`).join('')}</div>`;
+  }
+
+  function cinematicToolCards(s) {
+    if (!s.tools || !s.tools.length) return '';
+    return `<div class="bon-cinematic-tools">${s.tools.slice(0,4).map((tool, i) => `<div class="bon-tool-card"><em>outil ${i + 1}</em>${tool}</div>`).join('')}</div>`;
+  }
+
+  function renderScene(s) {
+    const modeLabel = s.pattern === 'hyperfocus' ? 'réseau intensifié'
+      : s.pattern === 'overload' ? 'surcharge cognitive'
+      : s.pattern === 'irregular' ? 'signal irrégulier'
+      : s.scene === 'distraction' ? 'tempête de stimuli'
+      : s.lobe ? 'zoom cortical'
+      : 'activité neuronale';
+    return `
+      <div class="bon-visual bon-3d-view bon-cartoon-view" data-scene="${s.scene}">
+        <div class="bon-cinema-layer"></div>
+        <div class="bon-film-grain"></div>
+        <div class="bon-3d-glass"></div>
+        <div class="bon-scanline"></div>
+        <div class="bon-real-3d-anchor" aria-hidden="true"></div>
+        ${synapseZoom(s)}
+        ${zoneReveals(s)}
+        ${distractionCloud(s)}
+        <div class="bon-camera-rail"><span>cerveau</span><span>zoom</span><span>synapse</span><span>zones</span></div>
+        <div class="bon-cinema-titlecard">FocusTDAH · intro film</div>
+        <div class="bon-shot-label"><strong>${s.shot || 'Plan guidé'}</strong><span>${s.director || 'voyage cerveau 3D'}</span></div>
+        <div class="bon-3d-badge">cerveau 3D original · ${modeLabel}</div>
+        <div class="bon-depth-label">cerveau 3D existant · piloté en direct</div>
+        <div class="bon-cartoon-label one">zones du cerveau</div>
+        <div class="bon-cartoon-label two">messages électriques</div>
+        <div class="bon-cartoon-label three">synapses + dopamine</div>
+        ${sceneCallouts(s)}
+      </div>`;
+  }
+
+  let bonTypeTimer = null;
+  function typeBonText(raw) {
+    clearTimeout(bonTypeTimer);
+    const el = ov.querySelector('#bon-type-text');
+    if (!el) return;
+    const html = raw.replace(/\n/g, '<br>');
+    el.innerHTML = '';
+    el.classList.add('typing', 'bon-type-caret');
+    let i = 0;
+    function tick() {
+      if (!document.body.contains(ov)) return;
+      if (html[i] === '<') {
+        const end = html.indexOf('>', i);
+        if (end !== -1) {
+          el.innerHTML += html.slice(i, end + 1);
+          i = end + 1;
+        } else {
+          el.innerHTML += html[i++];
+        }
+      } else {
+        el.innerHTML += html[i++] || '';
+      }
+      if (i <= html.length) bonTypeTimer = setTimeout(tick, html[i - 1] === ' ' ? 16 : 24);
+      else el.classList.remove('bon-type-caret');
+    }
+    tick();
+  }
+
+  function renderStep() {
+    const s = STEPS[step];
+    setBrainForStep(s);
+    ov.style.setProperty('--accent', s.accent);
+    ov.dataset.scene = s.scene;
+    window._bonCurrentScene = s;
+    window._bonApplyBrainScene = () => setBrainForStep(window._bonCurrentScene || s);
+    setTimeout(() => { if (window._bonApplyBrainScene) window._bonApplyBrainScene(); }, 250);
+    ov.innerHTML = `
+      <div class="bon-voyage-stage">${renderScene(s)}</div>
+      <div class="bon-content">
+        <div class="bon-bar">${STEPS.map((_, i) => `<div class="bon-seg${i < step ? ' done' : i === step ? ' active' : ''}"></div>`).join('')}</div>
+        <div class="bon-meta"><div class="bon-label">${s.label}</div><div class="bon-count">${step + 1}/${STEPS.length}</div></div>
+        <div class="bon-title">${s.title}</div>
+        <div class="bon-voice-line" id="bon-voice-line">${s.voice || ''}</div>
+        <div class="bon-director-note">${s.director || ''}</div>
+        <div class="bon-text typing bon-type-caret" id="bon-type-text"></div>
+        ${cinematicToolCards(s)}
+        <div class="bon-chip-row">
+          ${(s.chips || []).map(c => `<span class="bon-chip">${c}</span>`).join('')}
+          ${(s.tools || []).map(c => `<span class="bon-chip tool">${c}</span>`).join('')}
+        </div>
+        <div class="bon-btn-row">
+          <button class="bon-btn" id="bon-next">${s.cta}</button>
+          ${step > 0 ? `<button class="bon-skip" id="bon-skip">Passer le voyage</button>` : ''}
+        </div>
+      </div>`;
+    typeBonText(s.text);
+    ov.querySelector('#bon-next').onclick = () => { step < STEPS.length - 1 ? (step++, renderStep()) : finishOnboarding(); };
+    const sk = ov.querySelector('#bon-skip');
+    if (sk) sk.onclick = finishOnboarding;
+    ov.querySelectorAll('.bon-node').forEach(n => n.addEventListener('click', () => {
+      n.classList.remove('popped'); void n.offsetWidth; n.classList.add('popped');
+      safeBrain(() => BrainEngine.celebratePulse && BrainEngine.celebratePulse());
+    }));
+  }
+
+  function finishOnboarding() {
+    localStorage.setItem(ONBOARDING_KEY, '1');
+    localStorage.setItem('ft_onboarded', ONBOARDING_VERSION);
+    ov.style.transition = 'opacity .7s ease, transform .7s ease';
+    ov.style.opacity = '0';
+    ov.style.transform = 'scale(1.02)';
+    setTimeout(() => {
+      ov.remove();
+      document.body.classList.remove('brain-onboarding-uses-3d');
+      clearTimeout(brainSceneTimer);
+      clearTimeout(bonTypeTimer);
+      window._bonCurrentScene = null;
+      window._bonApplyBrainScene = null;
+      safeBrain(() => { BrainEngine.zoomOut && BrainEngine.zoomOut(); BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.6); BrainEngine.setNeuronRhythm && BrainEngine.setNeuronRhythm(60); });
+      if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
+    }, 700);
+  }
+
+  renderStep();
 }
 
 function goToApp(user) {
@@ -3429,9 +5202,17 @@ function showRitalinModal() {
 function initAuth() {
   if (!FB_READY) {
     // Firebase pas configuré — mode local uniquement
-    show('landing'); initLanding(); renderHome();
+    goToApp(null);
     return;
   }
+
+  // Sécurité desktop : si Firebase ne répond pas (extension, popup, réseau),
+  // on ne laisse jamais l'utilisateur devant un splash noir/vide.
+  const authFallbackTimer = setTimeout(() => {
+    const splash = document.getElementById('splash');
+    const hasVisibleScreen = document.querySelector('.screen.active:not(#splash)');
+    if (splash && splash.classList.contains('active') && !hasVisibleScreen) show('auth');
+  }, 3500);
 
   const loadingEl  = document.getElementById('auth-loading');
   const googleBtn  = document.getElementById('btn-google-login');
@@ -3448,10 +5229,11 @@ function initAuth() {
   // (fallback quand popup est bloqué sur certains navigateurs)
   _auth.getRedirectResult().then(result => {
     localStorage.removeItem('ft_redirect_pending');
-    // Si pas de user via redirect ET onAuthStateChanged n'a pas encore rendu
-    // le user → montrer l'écran auth maintenant (ITP a bloqué le résultat)
+    // Si aucun compte n'arrive via redirect, on reste en expérience locale :
+    // l'introduction doit apparaître même sans connexion Google.
     if ((!result || !result.user) && !_auth.currentUser) {
-      show('auth');
+      clearTimeout(authFallbackTimer);
+      goToApp(null);
     }
   }).catch(e => {
     localStorage.removeItem('ft_redirect_pending');
@@ -3504,6 +5286,7 @@ function initAuth() {
     _fbUser = user;
     if (user) {
       localStorage.removeItem('ft_redirect_pending');
+      clearTimeout(authFallbackTimer);
       if (firstCall) {
         goToApp(user);
         loadFromFirestore(user.uid).then(() => { renderHome(); renderQT(); });
@@ -3512,9 +5295,11 @@ function initAuth() {
         goToApp(user);
       }
     } else {
-      // Ne pas interrompre un redirect en cours
+      // Pas connecté : entrer quand même dans l'expérience locale au lieu d'un écran noir/auth.
+      // Le bouton Google reste disponible via les options de compte si besoin, mais l'intro doit être visible.
       if (!localStorage.getItem('ft_redirect_pending')) {
-        show('auth');
+        clearTimeout(authFallbackTimer);
+        goToApp(null);
       }
     }
     firstCall = false;
@@ -3676,6 +5461,7 @@ function checkReboundAlert() {
   }
 }
 function _showReboundBanner(slot, isRebound, minLeft) {
+  if (document.body.classList.contains('mode-sobre')) return;
   if (slot.dataset.dismissed === '1') return;
   if (slot.querySelector('.rebound-banner')) return;
   const div = document.createElement('div');
@@ -3724,7 +5510,11 @@ function show(id) {
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
   if (window.BrainEngine) {
-    if (id === 'landing') BrainEngine.zoomOut();
+    if (id === 'landing') {
+      BrainEngine.zoomOut();
+      BrainEngine.resume(); // iOS : forcer le rendu même si IntersectionObserver n'a pas tiré
+      if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
+    }
   }
   if (id === 'quicktodo-screen' && typeof renderQT === 'function') renderQT();
 }
@@ -5606,6 +7396,11 @@ function renderStepsList(steps, container, saveFn, seanceMode, _openNames) {
     const nameSpan = document.createElement('span');
     nameSpan.className = 'plan-step-name';
     nameSpan.textContent = step.name;
+    if (localStorage.getItem('ft_flag_seuil_tache') === '1' && step.seuilAtteint) {
+      var _sm = document.createElement('span');
+      _sm.className = 'seuil-marker'; _sm.textContent = '(✓ seuil)';
+      nameSpan.appendChild(_sm);
+    }
     const eb = document.createElement('button');
     eb.className = 'edit-btn'; eb.textContent = '✎'; eb.title = 'Renommer';
     (function(st, ns, btn) {
@@ -7382,6 +9177,23 @@ function renderSession() {
   const activeSteps = getActiveSteps(p);
   document.getElementById('s-step-label').textContent = 'Étape ' + (idx + 1) + ' / ' + activeSteps.length;
   document.getElementById('s-task-name').textContent = step.name;
+  // Seuil pour cette fois (ft_flag_seuil_tache)
+  (function() {
+    var seuilBlock = document.getElementById('seuil-tache-block');
+    if (localStorage.getItem('ft_flag_seuil_tache') === '1') {
+      seuilBlock.style.display = '';
+      document.getElementById('seuil-texte').value = step.seuilTexte || '';
+      document.getElementById('seuil-atteint-msg').style.display = step.seuilAtteint ? '' : 'none';
+      if (step.seuilAtteint) {
+        var marker = document.createElement('span');
+        marker.className = 'seuil-marker';
+        marker.textContent = '(✓ seuil)';
+        document.getElementById('s-task-name').appendChild(marker);
+      }
+    } else {
+      seuilBlock.style.display = 'none';
+    }
+  })();
   const microBox = document.getElementById('micro-box');
   if (step.micros.length) {
     microBox.style.display = '';
@@ -9741,6 +11553,7 @@ function showFrictionStrategies(ft) {
 }
 
 function showDopamineToast(msg, duration) {
+  if (document.body.classList.contains('mode-sobre')) return;
   const existing = document.querySelector('.dopamine-toast');
   if (existing) existing.remove();
   const toast = document.createElement('div');
@@ -10023,6 +11836,26 @@ function showResetCognitif() {
   if (btn) btn.style.display = 'block';
   document.getElementById('reset-steps-wrap').style.display = 'block';
   document.getElementById('reset-active-content').style.display = 'none';
+
+  const recall = document.getElementById('reset-victoire-recall');
+  if (recall) {
+    recall.innerHTML = '';
+    if (localStorage.getItem('ft_flag_carnet_victoires') === '1' && typeof window.getRandomVictoire === 'function') {
+      const victoire = window.getRandomVictoire();
+      if (victoire) {
+        const box = document.createElement('div');
+        box.className = 'victoire-recall';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Une victoire récente :';
+        const text = document.createElement('div');
+        text.textContent = victoire;
+        box.appendChild(strong);
+        box.appendChild(text);
+        recall.appendChild(box);
+      }
+    }
+  }
+
   show('reset-cognitif');
 }
 
@@ -10932,12 +12765,20 @@ function showRSDMode() {
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
 
   function step1() {
+    let victoireHtml = '';
+    if (localStorage.getItem('ft_flag_carnet_victoires') === '1' && typeof window.getRandomVictoire === 'function') {
+      const victoire = window.getRandomVictoire();
+      if (victoire) {
+        victoireHtml = `<div class="victoire-recall"><strong>Une victoire récente :</strong>${victoire.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</div>`;
+      }
+    }
     bd.innerHTML = `
       <div class="cat-modal-sheet">
         <div class="cat-modal-handle"></div>
         <div style="font-size:28px;text-align:center;margin-bottom:8px">💙</div>
         <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;text-align:center;margin-bottom:10px">Ce que tu ressens est réel.</div>
         <div class="rsd-card">Le RSD (Dysrégulation Émotionnelle Sensible au Rejet) est neurologique — pas une faiblesse. Ton cerveau TDAH amplifie la douleur du rejet jusqu'à 10×. Ce n'est pas exagéré. C'est biologique.</div>
+        ${victoireHtml}
         <button class="btn" id="rsd-next1">Je comprends → ancrage</button>
         <button style="background:none;border:none;color:var(--muted);font:600 13px 'DM Sans',sans-serif;width:100%;padding:8px;cursor:pointer;margin-top:4px" onclick="document.getElementById('rsd-bd').remove()">Fermer</button>
       </div>`;
@@ -12028,6 +13869,50 @@ document.getElementById('back-sons').onclick = () => show('landing');
       document.body.removeEventListener('click', restoreSnd);
     }, { once: true });
   }
+})();
+
+// ─── MODE SOBRE (réduction des stimuli — état persistant ft_mode_sobre) ───
+// Bouton rapide toujours visible. État (on/off) mémorisé dans localStorage
+// comme le reste de l'app : repart dans le même état à la prochaine ouverture.
+let _modeSobreSavedSound = null;
+
+function isModeSobreOn() {
+  return localStorage.getItem('ft_mode_sobre') === '1';
+}
+
+function setModeSobre(active, opts) {
+  opts = opts || {};
+  document.body.classList.toggle('mode-sobre', active);
+  const fab = document.getElementById('mode-sobre-fab');
+  if (fab) fab.classList.toggle('active', active);
+  localStorage.setItem('ft_mode_sobre', active ? '1' : '0');
+  if (active) {
+    // Suspend (pas désactive) le son d'ambiance en cours, pour le relancer à la sortie
+    if (!opts.silent) {
+      _modeSobreSavedSound = _soundCtx.current;
+      if (_modeSobreSavedSound) _stopSound();
+    }
+    const slot = document.getElementById('rebound-banner-slot');
+    if (slot) slot.innerHTML = '';
+  } else if (!opts.silent) {
+    if (_modeSobreSavedSound && _modeSobreSavedSound !== 'off') {
+      playAmbientSound(_modeSobreSavedSound);
+    }
+    _modeSobreSavedSound = null;
+    if (typeof checkReboundAlert === 'function') checkReboundAlert();
+  }
+}
+
+function toggleModeSobre() {
+  setModeSobre(!document.body.classList.contains('mode-sobre'));
+}
+
+(function setupModeSobre() {
+  const fab = document.getElementById('mode-sobre-fab');
+  if (!fab) return;
+  fab.style.display = '';
+  fab.onclick = toggleModeSobre;
+  if (isModeSobreOn()) setModeSobre(true, { silent: true });
 })();
 
 // ── 5. RITUEL DE TRANSITION ───────────────────
@@ -13590,18 +15475,92 @@ function _reorderProjectCards() {
 <script>
 // ══ BRAIN ENGINE INIT ══
 (function initBrain() {
-  if (!window.THREE || !window.BrainEngine) return;
+  function enableBrainFallback() {
+    const introBtn = document.getElementById('brain-intro-btn');
+    const brainIntro = document.getElementById('brain-intro');
+    const tapHint = document.getElementById('brain-tap-hint');
+    const scrollHint = document.getElementById('brain-scroll-hint');
+    const reveal = () => {
+      if (brainIntro) brainIntro.classList.add('hidden');
+      if (tapHint) { tapHint.textContent = 'cerveau visible · moteur 3D indisponible'; tapHint.style.opacity = '1'; }
+      if (scrollHint) scrollHint.style.opacity = '1';
+    };
+    if (introBtn) introBtn.addEventListener('click', reveal);
+  }
+
+  if (!window.THREE || !window.BrainEngine) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enableBrainFallback);
+    else enableBrainFallback();
+    return;
+  }
 
   function doInit() {
     const canvas = document.getElementById('brain-canvas');
     if (!canvas) return;
 
     BrainEngine.init(canvas);
-    BrainEngine.setMode('idle');
 
-    // Energy mirror (every 60s)
+    // ── Neurotransmitter visual states ──
+    const BRAIN_STATES = {
+      idle:      { tint: null,        energy: null,  rot: 0.003, badge: null },
+      focus:     { tint: '#7c5cfc',   energy: 0.85,  rot: 0.005, badge: { icon: '🔴', label: 'Mode Focus',   color: '#a78bfa' } },
+      celebrate: { tint: '#ffd700',   energy: 1.0,   rot: 0.008, badge: { icon: '✨', label: 'Dopamine ↑',   color: '#ffd700' } },
+      panic:     { tint: '#ff3333',   energy: 0.18,  rot: 0.001, badge: { icon: '🚨', label: 'Surcharge',    color: '#ff4455' } },
+      rest:      { tint: '#00ccbb',   energy: 0.45,  rot: 0.001, badge: { icon: '🌊', label: 'Repos cognitif', color: '#00ccbb' } },
+    };
+    const stateBadge = document.getElementById('brain-state-badge');
+    let _badgeTimer = null;
+    let _celebTimer = null;
+
+    function setBrainState(state) {
+      const s = BRAIN_STATES[state] || BRAIN_STATES.idle;
+      BrainEngine.setColorTint(s.tint);
+      if (s.energy !== null) BrainEngine.setEnergy(s.energy);
+      // Rotation speed via internal autoRotSpeed (override via setMode)
+      if      (s.rot === 0)     { /* keep */ }
+      else if (s.rot <= 0.001)  { /* slow — setMode won't help, use direct trick */ }
+      // Show badge
+      if (stateBadge && s.badge) {
+        stateBadge.innerHTML = `<span>${s.badge.icon}</span><span>${s.badge.label}</span>`;
+        stateBadge.style.borderColor = s.badge.color + '80';
+        stateBadge.style.color       = s.badge.color;
+        stateBadge.style.opacity     = '1';
+        clearTimeout(_badgeTimer);
+        _badgeTimer = setTimeout(() => { if(stateBadge) stateBadge.style.opacity = '0'; }, 3500);
+      } else if (stateBadge && state === 'idle') {
+        stateBadge.style.opacity = '0';
+      }
+      // Celebrate auto-reverts after 2s
+      if (state === 'celebrate') {
+        clearTimeout(_celebTimer);
+        _celebTimer = setTimeout(() => setBrainState('idle'), 2200);
+      }
+    }
+
+    // Intercept setMode to drive visual states
+    const _origSetMode = BrainEngine.setMode.bind(BrainEngine);
+    BrainEngine.setMode = function(m) {
+      _origSetMode(m === 'focus' || m === 'zoom' ? 'zoom' : m === 'immersive' ? 'immersive' : 'idle');
+      setBrainState(m);
+    };
+    // Intercept celebratePulse to add dopamine wave
+    const _origCelebrate = BrainEngine.celebratePulse.bind(BrainEngine);
+    BrainEngine.celebratePulse = function() {
+      _origCelebrate();
+      setBrainState('celebrate');
+    };
+
+    BrainEngine.setMode('idle');
+    if (typeof window._bonApplyBrainScene === 'function') {
+      setTimeout(() => window._bonApplyBrainScene(), 120);
+    }
+
+    // Energy mirror (every 60s — only when idle/not in a special state)
     function _updateEnergy() {
-      if (typeof calcFocusScore === 'function') BrainEngine.setEnergy(calcFocusScore() / 100);
+      if (typeof calcFocusScore === 'function') {
+        const s = calcFocusScore() / 100;
+        BrainEngine.setEnergy(s);
+      }
     }
     setTimeout(_updateEnergy, 2000);
     setInterval(_updateEnergy, 60000);
@@ -13621,6 +15580,74 @@ function _reorderProjectCards() {
       BrainEngine.highlightLobe(zoneId, 1.5, 500);
       setTimeout(nav, 350);
     });
+
+    // ── Intro animation "Commencer" ──
+    const brainIntro   = document.getElementById('brain-intro');
+    const introBtn     = document.getElementById('brain-intro-btn');
+    const diveFlash    = document.getElementById('brain-dive-flash');
+    const tapHint      = document.getElementById('brain-tap-hint');
+    const scrollHint   = document.getElementById('brain-scroll-hint');
+    let brainReady = false;
+
+    function revealBrain() {
+      if (brainReady) return;
+      brainReady = true;
+      // 1. Flash lumineux au centre
+      if (diveFlash) { diveFlash.classList.add('pop'); setTimeout(() => diveFlash.classList.remove('pop'), 350); }
+      // 2. Accélération + tint bref
+      BrainEngine.setMode('focus');
+      // 3. Fade out intro
+      if (brainIntro) brainIntro.classList.add('hidden');
+      // 4. Après 900ms : révéler zones + hints avec stagger
+      setTimeout(() => {
+        BrainEngine.setMode('idle');
+        document.querySelectorAll('.brain-zone-btn').forEach((btn, i) => {
+          btn.style.transition = `opacity .5s ease ${i * 90}ms`;
+          btn.style.opacity = '1';
+        });
+        if (tapHint)    { tapHint.style.transition    = 'opacity .6s ease .4s'; tapHint.style.opacity    = '1'; }
+        if (scrollHint) { scrollHint.style.transition = 'opacity .6s ease .6s'; scrollHint.style.opacity = '1'; }
+      }, 900);
+    }
+
+    // L'intro rejoue à chaque ouverture de l'app (expérience immersive)
+    // Quand on revient sur landing depuis un autre écran : skip l'intro, montrer zones directement
+    window._brainRevealImmediate = function() {
+      if (brainReady) return;
+      brainReady = true;
+      if (brainIntro) { brainIntro.style.opacity = '0'; brainIntro.style.pointerEvents = 'none'; }
+      document.querySelectorAll('.brain-zone-btn').forEach(btn => { btn.style.transition = 'none'; btn.style.opacity = '1'; });
+      if (tapHint)    tapHint.style.opacity    = '1';
+      if (scrollHint) scrollHint.style.opacity = '1';
+      BrainEngine.setMode('idle');
+    };
+
+    if (introBtn) {
+      introBtn.addEventListener('click', revealBrain);
+    }
+
+    // Populate zone overlay buttons in #brain-hotspots
+    const ZONE_UI = {
+      frontal:    { label: 'Focus',   x: '36%', y: '36%', color: '#00f5ff' },
+      parietal:   { label: 'Plan',    x: '52%', y: '20%', color: '#4488ff' },
+      temporal:   { label: 'Sons',    x: '19%', y: '50%', color: '#00ccbb' },
+      occipital:  { label: 'Projet',  x: '66%', y: '42%', color: '#88ccff' },
+      cerebellum: { label: 'Reset',   x: '54%', y: '68%', color: '#2266ff' },
+      brainstem:  { label: 'Urgence', x: '50%', y: '80%', color: '#ff4455' },
+    };
+    const hotspots = document.getElementById('brain-hotspots');
+    if (hotspots) {
+      Object.entries(ZONE_UI).forEach(([zoneId, ui]) => {
+        const btn = document.createElement('button');
+        btn.className = 'brain-zone-btn';
+        btn.style.cssText = `left:${ui.x};top:${ui.y};color:${ui.color};opacity:${brainReady ? '1' : '0'}`;
+        btn.innerHTML = `<span class="bzb-dot"></span><span class="bzb-label">${ui.label}</span>`;
+        btn.addEventListener('click', () => {
+          if (window.BrainEngine) BrainEngine.zoomToLobe(zoneId);
+        });
+        hotspots.appendChild(btn);
+      });
+    }
 
     // Button grid → highlight corresponding brain zone
     document.querySelectorAll('.landing-action-btn[data-zone]').forEach(btn => {
@@ -13646,6 +15673,721 @@ function _reorderProjectCards() {
   } else {
     requestAnimationFrame(doInit);
   }
+})();
+
+
+// K — Mode Cerveau : hub de navigation, miroir cognitif, bibliothèque des réactions
+(function() {
+  const SVGNS = 'http://www.w3.org/2000/svg';
+
+  // ── Les 6 zones (1:1 avec calcSubScores) ──
+  const ZONES = [
+    { id: 'phare', emoji: '🔭', label: 'Le Phare', sub: 'Alerte & temps', x: 160, y: 50,
+      scoreKey: 'focusBrut', invert: false,
+      mechanism: "En TDAH, la perception du temps est moins fiable : le cerveau a du mal à « sentir » que le temps passe, à estimer une durée, ou à anticiper une échéance qui n'est pas encore là. On parle de cécité temporelle (time blindness) — un vrai phénomène neurologique qui dure toute la vie, pas un manque de volonté.",
+      source: 'Source : tdahfocus.com — gestion du temps et cécité temporelle' },
+    { id: 'starter', emoji: '🚀', label: 'Le Starter', sub: 'Motivation & démarrage', x: 264, y: 120,
+      scoreKey: ['dopamine','momentum'], invert: false,
+      mechanism: "Le circuit de la dopamine (striatum) est moins actif chez les TDAH. Démarrer une tâche qui n'est pas immédiatement intéressante ou urgente demande un effort neurologique réel, pas juste « un coup de volonté ». C'est pour ça que l'urgence débloque soudain l'action : elle fournit le carburant dopaminergique qui manquait.",
+      source: 'Source : Recherche-neurobiologie (vault TDAH)' },
+    { id: 'frein', emoji: '🛑', label: 'Le Frein', sub: 'Impulsivité', x: 264, y: 260,
+      scoreKey: 'friction', invert: true,
+      mechanism: "L'inhibition TDAH a un délai plus court : l'écart entre « avoir une impulsion » et « agir » est réduit. Ce n'est pas un manque de self-control — c'est un frein neurologique qui répond avec un léger retard, encore moins réactif sous fatigue ou stress.",
+      source: 'Source : Recherche-neurobiologie (vault TDAH)' },
+    { id: 'tiroir', emoji: '🗂️', label: 'Le Tiroir', sub: 'Mémoire de travail', x: 56, y: 120,
+      scoreKey: 'surcharge', invert: true,
+      mechanism: "La mémoire de travail TDAH tient en moyenne 3 à 5 éléments à la fois, contre 7 pour la moyenne. Quand elle est pleine, tout ce qui sort du champ de vision ou de pensée immédiat disparaît littéralement — c'est la « permanence de l'objet » qui flanche. L'hypersensibilité aux stimuli (bruit, lumière, texture) sature encore plus vite cet espace déjà limité.",
+      source: "Sources : laminicoachtdah.fr — permanence de l'objet & surcharge sensorielle" },
+    { id: 'alarme', emoji: '🚨', label: "L'Alarme", sub: 'Émotions & RSD', x: 56, y: 260,
+      scoreKey: null, invert: false,
+      mechanism: "Le lien entre l'amygdale (émotions) et le cortex préfrontal (régulation) est plus lâche en TDAH : les émotions arrivent à pleine puissance, sans le filtre qui les module avant la conscience. La Dysrégulation Émotionnelle Sensible au Rejet (RSD) amplifie la douleur du rejet ou de la critique jusqu'à 10× — biologique, pas une question de sensibilité excessive. La honte chronique fait souvent partie du tableau, comme symptôme à part entière.",
+      source: 'Sources : Recherche-neurobiologie + laminicoachtdah.fr — honte TDAH' },
+    { id: 'carburant', emoji: '🔋', label: 'Le Carburant', sub: 'Énergie & sommeil', x: 160, y: 330,
+      scoreKey: 'energie', invert: false,
+      mechanism: "Le TDAH dérègle souvent l'horloge interne (retard de phase de sommeil) : dormir tard, se réveiller difficilement. L'hyperfocus — cette capacité à se plonger des heures dans une tâche captivante sans « sentir » la fatigue ni les besoins du corps — se paie en énergie, parfois brutalement, une fois la tâche terminée.",
+      source: 'Source : Recherche-neurobiologie (vault TDAH)' },
+  ];
+
+  const EDGES = [
+    ['phare','starter'], ['starter','frein'], ['frein','carburant'],
+    ['carburant','alarme'], ['alarme','tiroir'], ['tiroir','phare'],
+  ];
+
+  // ── Bibliothèque des réactions : 28 situations, 4-6 par zone ──
+  const BH_ACTIONS = {
+    timer:  { label: '⏱ Lancer un minuteur', run: () => { show('landing'); setTimeout(() => openWorkModeSheet(), 250); } },
+    agenda: { label: '📅 Ouvrir l’agenda', run: () => show('agenda') },
+    pickTask: { label: '🎲 Choisis pour moi', run: () => { show('landing'); setTimeout(() => pickTaskForMe(), 250); } },
+    panic:  { label: '🔥 Mode panique', run: () => showModePanique() },
+    reset:  { label: '🧘 Reset cognitif', run: () => show('reset-cognitif') },
+    dump:   { label: '🧠 Vider mon cerveau', run: () => show('brain-dump') },
+    sons:   { label: '🎵 Sons d’ambiance', run: () => show('sons') },
+    rsd:    { label: '💔 Je suis submergé(e)', run: () => showRSDMode() },
+  };
+
+  const SITUATIONS = [
+    // 🔭 Le Phare
+    { id: 'phare-1', zone: 'phare', title: "2h ont disparu sans que je m'en rende compte",
+      mech: "Quand une tâche capte ton attention, ton cerveau TDAH peut perdre toute notion du temps qui passe — l'horloge interne ne « sonne » pas. C'est l'hyperfocus, pas de la négligence.",
+      norm: "Tu n'es pas cassé·e : ton cerveau efface le temps quand il est absorbé, c'est neurologique.",
+      strategy: "<strong>Stratégie :</strong> pose une alarme sonore (pas silencieuse) avant de commencer, réglée sur l'heure où tu DOIS t'arrêter.",
+      action: 'timer' },
+    { id: 'phare-2', zone: 'phare', title: "Je suis « juste 5 minutes » en retard… depuis 40 minutes",
+      mech: "Estimer combien de temps il reste est une fonction qui flanche en TDAH — 5 minutes ressenties peuvent être 30 minutes réelles. C'est la cécité temporelle.",
+      norm: "Tu n'es pas cassé·e : ton horloge interne tourne différemment, pas plus lentement par paresse.",
+      strategy: "<strong>Stratégie :</strong> remplace « dans X minutes » par une heure fixe (« départ à 14h32 ») et programme une alarme à ce moment précis.",
+      action: 'agenda' },
+    { id: 'phare-3', zone: 'phare', title: "Je n'arrive pas à évaluer combien de temps une tâche va prendre",
+      mech: "La cécité temporelle touche aussi la planification : le cerveau TDAH a du mal à se projeter dans une durée future. Les estimations sont souvent à côté, dans un sens ou l'autre.",
+      norm: "Tu n'es pas cassé·e : ce n'est pas un manque d'expérience, c'est la perception du temps qui est en cause.",
+      strategy: "<strong>Stratégie :</strong> lance un minuteur dès le début (même sans limite) pour avoir une mesure réelle, et réutilise cette donnée la prochaine fois.",
+      action: 'timer' },
+    { id: 'phare-4', zone: 'phare', title: "Le matin, je ne « sens » pas qu'il faut partir",
+      mech: "Sans signal interne fiable pour « il est temps de », le cerveau TDAH a besoin de signaux externes — sinon rien ne déclenche le passage à l'action.",
+      norm: "Tu n'es pas cassé·e : ton corps n'envoie juste pas l'alerte « départ imminent » comme chez d'autres.",
+      strategy: "<strong>Stratégie :</strong> programme 2-3 alarmes en cascade (réveil, « 15 min restantes », « départ maintenant ») reliées à des actions concrètes.",
+      action: 'agenda' },
+    // 🚀 Le Starter
+    { id: 'starter-1', zone: 'starter', title: "Je remets une tâche simple depuis des jours",
+      mech: "Sans intérêt immédiat ni urgence, le circuit de la dopamine ne s'active pas assez pour déclencher l'action — même si la tâche est facile et courte.",
+      norm: "Tu n'es pas cassé·e ni paresseux·se : ton cerveau attend un signal de récompense qui ne vient pas tout seul pour les tâches « neutres ».",
+      strategy: "<strong>Stratégie :</strong> rends la tâche ridiculement petite (2 minutes) pour court-circuiter le besoin de motivation initiale — l'action crée souvent l'élan, pas l'inverse.",
+      action: 'pickTask' },
+    { id: 'starter-2', zone: 'starter', title: "Je ne fais que les trucs urgents, au dernier moment",
+      mech: "L'urgence génère une poussée d'adrénaline et de dopamine qui pallie temporairement le déficit — c'est pour ça que « la pression » débloque soudain ce que rien d'autre ne débloquait.",
+      norm: "Tu n'es pas cassé·e : ton cerveau a juste trouvé le seul levier qui fonctionne de façon fiable. Le problème, c'est le coût (stress, qualité).",
+      strategy: "<strong>Stratégie :</strong> recrée artificiellement un peu d'urgence plus tôt — un faux deadline, un minuteur visible, un mode panique « pour de faux ».",
+      action: 'panic' },
+    { id: 'starter-3', zone: 'starter', title: "Rien ne m'attire sauf quand c'est la panique",
+      mech: "Le circuit de récompense TDAH répond peu aux récompenses lointaines ou abstraites — seules les récompenses immédiates, intenses ou risquées le font réagir fort.",
+      norm: "Tu n'es pas cassé·e : c'est une histoire de câblage de la récompense, pas de manque d'intérêt pour ta vie.",
+      strategy: "<strong>Stratégie :</strong> associe une micro-récompense immédiate à chaque petite étape pour donner au cerveau quelque chose à « attraper » tout de suite.",
+      action: 'timer' },
+    { id: 'starter-4', zone: 'starter', title: "J'ai créé un plan parfait… et je n'ai rien commencé",
+      mech: "Planifier est créatif et gratifiant en soi pour le cerveau. Exécuter le plan, beaucoup moins. Le cerveau a eu sa récompense avant même de commencer.",
+      norm: "Tu n'es pas cassé·e ni procrastinateur·rice : tu as juste eu ta dose de dopamine au mauvais endroit du processus.",
+      strategy: "<strong>Stratégie :</strong> limite la planification à 2 minutes, puis choisis UNE première action concrète et minuscule — laisse l'app choisir si besoin.",
+      action: 'pickTask' },
+    { id: 'starter-5', zone: 'starter', title: "Un imprévu a changé mes plans et je suis complètement déboussolé·e",
+      mech: "Le cerveau TDAH s'appuie beaucoup sur la structure externe (un plan, un horaire) pour démarrer — c'est elle qui fournit le signal de départ que la motivation interne ne donne pas toujours. Quand le plan change, ce point d'ancrage disparaît et tout le travail de démarrage doit repartir de zéro.",
+      norm: "Tu n'es pas cassé·e ni rigide : un changement de plan retire l'appui qui te faisait démarrer, ta journée doit littéralement redémarrer son moteur.",
+      strategy: "<strong>Stratégie :</strong> traite l'imprévu comme une toute nouvelle tâche de démarrage — laisse l'app choisir une première petite action plutôt que de reconstruire un plan entier.",
+      action: 'pickTask' },
+    // 🛑 Le Frein
+    { id: 'frein-1', zone: 'frein', title: "J'ai dit un truc que je regrette avant même d'y penser",
+      mech: "Le frein inhibiteur TDAH a un délai plus court entre « penser » et « dire » — la parole peut sortir avant que le filtre habituel n'ait eu le temps d'agir.",
+      norm: "Tu n'es pas cassé·e ni impoli·e par nature : ton cerveau a un frein un peu plus lent à mordre, pas absent.",
+      strategy: "<strong>Stratégie :</strong> dans les moments à enjeu, instaure un micro-rituel (respirer, compter jusqu'à 3, poser les mains) qui ajoute artificiellement le délai manquant.",
+      action: 'reset' },
+    { id: 'frein-2', zone: 'frein', title: "J'ai acheté un truc sur un coup de tête",
+      mech: "L'impulsivité TDAH touche aussi les décisions financières : l'envie immédiate court-circuite l'évaluation « est-ce que j'en ai vraiment besoin ».",
+      norm: "Tu n'es pas cassé·e ni irresponsable : c'est le même frein un peu lent que pour les mots, appliqué aux décisions d'achat.",
+      strategy: "<strong>Stratégie :</strong> règle « la liste d'attente de 24h » — note l'envie dans le brain dump au lieu d'acheter, et relis-la le lendemain.",
+      action: 'dump' },
+    { id: 'frein-3', zone: 'frein', title: "J'ai coupé la parole sans m'en rendre compte",
+      mech: "Attendre son tour demande de retenir une pensée en mémoire de travail ET d'inhiber l'envie de la dire tout de suite — deux fonctions qui flanchent en TDAH, en même temps.",
+      norm: "Tu n'es pas cassé·e ni malpoli·e : deux systèmes qui doivent coopérer ont juste du mal à le faire en même temps.",
+      strategy: "<strong>Stratégie :</strong> garde un petit carnet pour « parquer » tes idées pendant que l'autre parle — ça soulage la mémoire de travail ET le frein.",
+      action: 'reset' },
+    { id: 'frein-4', zone: 'frein', title: "J'ai cliqué/scrollé/ouvert 10 onglets sans décider de le faire",
+      mech: "Les micro-impulsions (clic, scroll, swipe) sont les plus difficiles à freiner car elles ne « passent » presque jamais par une décision consciente — quasi automatiques.",
+      norm: "Tu n'es pas cassé·e ni accro : c'est l'inhibition la plus fine et la plus rapide, et c'est elle qui est la plus touchée.",
+      strategy: "<strong>Stratégie :</strong> retire les déclencheurs (notifications, app à portée), pas la volonté — change l'environnement plutôt que de compter sur le frein.",
+      action: 'reset' },
+    // 🗂️ Le Tiroir
+    { id: 'tiroir-1', zone: 'tiroir', title: "Entré·e dans une pièce, oublié pourquoi",
+      mech: "La mémoire de travail TDAH tient peu d'éléments et les perd vite dès qu'un nouveau contexte arrive — l'intention initiale est « écrasée » par les nouvelles infos.",
+      norm: "Tu n'es pas cassé·e ni distrait·e par choix : ta mémoire de travail a une capacité plus petite, point.",
+      strategy: "<strong>Stratégie :</strong> dis l'intention à voix haute juste avant de bouger (« je vais chercher mes clés ») — l'externalisation auditive aide à la garder active.",
+      action: 'dump' },
+    { id: 'tiroir-2', zone: 'tiroir', title: "Hors de vue = hors de l'esprit, même les choses importantes",
+      mech: "C'est la « permanence de l'objet » qui flanche : si une chose n'est pas visible ou rappelée, elle cesse littéralement d'exister pour le cerveau, même si elle est importante.",
+      norm: "Tu n'es pas cassé·e ni négligent·e : ton cerveau ne garde en mémoire « active » que ce qui est sous tes yeux ou rappelé activement.",
+      strategy: "<strong>Stratégie :</strong> rends visible ce qui compte (post-it, objet posé en travers du chemin, rappel programmé) — la mémoire externe remplace la mémoire de travail.",
+      action: 'agenda' },
+    { id: 'tiroir-3', zone: 'tiroir', title: "Trop de pensées en même temps, je n'arrive à rien trier",
+      mech: "Quand la mémoire de travail est saturée (3-5 éléments max), de nouvelles pensées continuent d'arriver — elles s'entassent sans qu'aucune ne puisse être traitée correctement.",
+      norm: "Tu n'es pas cassé·e ni désorganisé·e par nature : c'est un espace limité qui déborde, comme un bureau trop petit pour tous les dossiers.",
+      strategy: "<strong>Stratégie :</strong> vide tout sur « papier » (brain dump) sans trier — sortir les pensées de la tête libère de l'espace, le tri vient après.",
+      action: 'dump' },
+    { id: 'tiroir-4', zone: 'tiroir', title: "Le bruit/la lumière/l'étiquette me rend dingue alors que personne ne le remarque",
+      mech: "L'hypersensibilité sensorielle TDAH fait que des stimuli « normaux » pour d'autres prennent une place disproportionnée dans une mémoire de travail déjà limitée — et finissent par saturer le système.",
+      norm: "Tu n'es pas cassé·e ni hypersensible « pour rien » : ton système nerveux traite réellement ces stimuli plus fort que la moyenne.",
+      strategy: "<strong>Stratégie :</strong> réduis activement les stimuli que tu PEUX contrôler (casque, lumière tamisée, vêtements sans étiquette) — ce n'est pas un luxe, c'est de la régulation.",
+      action: 'sons' },
+    { id: 'tiroir-5', zone: 'tiroir', title: "Je rentre chez moi mais ma tête est encore au travail (ou l'inverse)",
+      mech: "La mémoire de travail TDAH ne se « vide » pas automatiquement en changeant de lieu ou de rôle : le contexte précédent reste actif en arrière-plan, comme une application restée ouverte, et prend de la place pour le nouveau contexte.",
+      norm: "Tu n'es pas cassé·e ni absent·e de ta vie perso : ton cerveau met juste plus de temps à fermer un contexte avant d'en ouvrir un autre.",
+      strategy: "<strong>Stratégie :</strong> avant de changer de lieu ou de rôle, vide rapidement ce qui tourne du contexte précédent (brain dump 2 minutes) — ça libère la place pour basculer.",
+      action: 'dump' },
+    // 🚨 L'Alarme
+    { id: 'alarme-1', zone: 'alarme', title: "Une remarque anodine m'a gâché ma journée",
+      mech: "La RSD (Dysrégulation Émotionnelle Sensible au Rejet) amplifie la douleur d'une critique ou d'un rejet perçu — parfois jusqu'à 10× plus intensément que pour un cerveau neurotypique.",
+      norm: "Tu n'es pas cassé·e ni susceptible : ton cerveau traite littéralement cette douleur à un volume plus fort.",
+      strategy: "<strong>Stratégie :</strong> nomme ce qui se passe (« c'est de la RSD, pas la réalité de la situation ») — nommer le mécanisme aide à reprendre du recul.",
+      action: 'rsd' },
+    { id: 'alarme-2', zone: 'alarme', title: "J'ai explosé/pleuré pour « pas grand chose » et je m'en veux",
+      mech: "Le lien entre l'amygdale (émotions) et le cortex préfrontal (régulation) est plus lâche en TDAH : l'émotion arrive à pleine puissance avant que la régulation n'ait eu le temps d'intervenir.",
+      norm: "Tu n'es pas cassé·e ni « trop émotif·ve » : c'est un délai de régulation, pas un manque de maturité émotionnelle.",
+      strategy: "<strong>Stratégie :</strong> remplace « je suis nul·le de réagir comme ça » par « mon cerveau a réagi avant que je puisse intervenir, c'est neurologique ».",
+      action: 'reset' },
+    { id: 'alarme-3', zone: 'alarme', title: "La peur du jugement m'empêche d'envoyer ce message",
+      mech: "L'anticipation d'un rejet ou d'une critique active la même alarme que le rejet réel, en RSD — le cerveau réagit à une menace imaginée comme si elle était déjà arrivée.",
+      norm: "Tu n'es pas cassé·e ni lâche : ton système d'alarme se déclenche sur une menace anticipée, pas confirmée — c'est épuisant, pas un défaut de courage.",
+      strategy: "<strong>Stratégie :</strong> sépare « écrire le message » et « l'envoyer » en deux étapes distinctes, à des moments différents — ça réduit la charge de la décision finale.",
+      action: 'dump' },
+    { id: 'alarme-4', zone: 'alarme', title: "Je rumine une erreur d'il y a 3 ans à 2h du matin",
+      mech: "La honte chronique liée au TDAH n'est pas qu'une réaction à un événement précis — c'est un fond émotionnel qui ressurgit facilement la nuit, quand les distractions diurnes ne le couvrent plus.",
+      norm: "Tu n'es pas cassé·e ni « obsédé·e » : la honte chronique est documentée comme un symptôme TDAH à part entière, pas une faiblesse de caractère.",
+      strategy: "<strong>Stratégie :</strong> écris la pensée pour la sortir de la boucle mentale (même 2 mots), puis utilise un son d'ambiance pour occuper l'espace qu'elle prenait.",
+      action: 'dump' },
+    { id: 'alarme-5', zone: 'alarme', title: "Je scrolle les réseaux et je me sens en retard sur ma vie",
+      mech: "La dysrégulation émotionnelle TDAH amplifie aussi la comparaison sociale : voir les réussites (réelles ou mises en scène) des autres déclenche une alarme proche de celle du rejet, en plus fort et plus vite que pour un cerveau neurotypique.",
+      norm: "Tu n'es pas cassé·e ni jaloux·se : ton cerveau réagit à la comparaison avec la même intensité qu'à une critique directe — ce n'est pas proportionné à la situation, mais c'est réel.",
+      strategy: "<strong>Stratégie :</strong> note l'intensité de l'émotion sur le moment (1 mot suffit), puis ferme l'appli — la comparaison sociale n'a pas besoin d'une réponse, juste d'être reconnue pour redescendre.",
+      action: 'dump' },
+    { id: 'alarme-6', zone: 'alarme', title: "J'ai peur d'être « trop » — trop intense, trop bizarre, trop pour les autres",
+      mech: "La honte chronique liée au TDAH se fixe souvent sur l'identité entière plutôt que sur un comportement précis : ce n'est plus « j'ai fait un truc maladroit » mais « je SUIS quelqu'un de trop ». C'est le fond de honte qui généralise, pas une évaluation juste de toi.",
+      norm: "Tu n'es pas cassé·e ni « trop » : ce sentiment vient d'un fond de honte qui colore tout, pas d'un vrai retour sur qui tu es.",
+      strategy: "<strong>Stratégie :</strong> sépare le fait du sentiment — écris la situation précise qui a déclenché ça, sans le mot « trop ». Le fait est souvent beaucoup plus petit que le sentiment qu'il déclenche.",
+      action: 'dump' },
+    // 🔋 Le Carburant
+    { id: 'carburant-1', zone: 'carburant', title: "J'ai bossé 4h sans pause, maintenant je suis HS",
+      mech: "L'hyperfocus TDAH désactive les signaux internes de faim, fatigue ou besoin de bouger — le cerveau reste « branché » sur la tâche jusqu'à ce qu'elle s'arrête, puis la facture arrive d'un coup.",
+      norm: "Tu n'es pas cassé·e ni en train de « mal gérer ton temps » : c'est le même mécanisme qui te rend hyper-productif·ve qui te coupe aussi des signaux du corps.",
+      strategy: "<strong>Stratégie :</strong> programme des pauses-minuteur PENDANT la session (pas seulement à la fin) — l'hyperfocus ne te laissera pas les sentir venir seul.",
+      action: 'reset' },
+    { id: 'carburant-2', zone: 'carburant', title: "Je n'arrive pas à dormir même épuisé·e",
+      mech: "Le TDAH est associé à un retard de phase du sommeil — l'horloge interne est décalée, donc le cerveau n'est « prêt à dormir » que plus tard, même si le corps est fatigué.",
+      norm: "Tu n'es pas cassé·e ni en train de mal faire « l'hygiène de sommeil » : ton horloge biologique est juste réglée différemment.",
+      strategy: "<strong>Stratégie :</strong> utilise un rituel sensoriel descendant (son d'ambiance, lumière tamisée) plutôt que de « forcer » le sommeil.",
+      action: 'sons' },
+    { id: 'carburant-3', zone: 'carburant', title: "Je suis à plat sans raison apparente",
+      mech: "L'énergie TDAH varie fortement avec le sommeil, le rythme circadien et l'activité récente — une « baisse sans raison » a souvent une cause réelle, juste pas évidente dans l'instant.",
+      norm: "Tu n'es pas cassé·e ni « feignant·e » : l'énergie TDAH fluctue plus fort et moins prévisiblement que la moyenne.",
+      strategy: "<strong>Stratégie :</strong> avant de te juger, vérifie 3 choses — sommeil de la nuit, dernière pause, dernier repas/eau. Souvent l'une des trois explique tout.",
+      action: 'reset' },
+    { id: 'carburant-4', zone: 'carburant', title: "Après une journée « normale » je suis épuisé·e comme après un marathon",
+      mech: "Une journée « normale » pour un cerveau TDAH implique souvent un effort constant de compensation (filtrer les distractions, forcer le démarrage, gérer les émotions) — un travail invisible mais réel.",
+      norm: "Tu n'es pas cassé·e ni « pas endurant·e » : tu fournis un travail cognitif supplémentaire que les autres ne fournissent pas, toute la journée.",
+      strategy: "<strong>Stratégie :</strong> compte ce travail invisible comme du « vrai » travail dans ton repos — ta fatigue est légitime, pas disproportionnée.",
+      action: 'reset' },
+  ];
+
+  // ── Utilitaires SVG ──
+  function svgEl(tag, attrs, text) {
+    const e = document.createElementNS(SVGNS, tag);
+    Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v));
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  // ── Miroir cognitif : score 0-100 par zone (null = pas de donnée) ──
+  function bhAlarmeScore() {
+    const { events = [] } = getBehaviorData();
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const relevant = events.filter(e => e.ts >= cutoff && (e.type === 'fedup' || e.type === 'selfassess'));
+    if (!relevant.length) return null;
+    const alerts = relevant.filter(e => e.type === 'fedup' || (e.type === 'selfassess' && e.value <= 1));
+    return Math.max(0, 100 - alerts.length * 25);
+  }
+  // « Le Starter » = (dopamine + momentum) / 2 — momentum démarre à 0 par
+  // construction, donc sans aucun événement aujourd'hui le score tombe à ~20
+  // (rouge) au tout premier lancement. C'est un artefact de l'échelle, pas un
+  // vrai signal : on le traite comme "pas encore de donnée" (null), pareil
+  // que L'Alarme.
+  function bhStarterHasSignal() {
+    const { events = [] } = getBehaviorData();
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return events.some(e => e.ts >= cutoff &&
+      ['complete', '10min', 'transition_good', 'phenix_sol', 'fedup'].includes(e.type));
+  }
+  function zoneScore(z) {
+    if (z.id === 'alarme') return bhAlarmeScore();
+    if (z.id === 'starter' && !bhStarterHasSignal()) return null;
+    const s = calcSubScores();
+    let val;
+    if (Array.isArray(z.scoreKey)) val = z.scoreKey.reduce((a, k) => a + s[k], 0) / z.scoreKey.length;
+    else val = s[z.scoreKey];
+    return z.invert ? 100 - val : val;
+  }
+
+  // ── Rendu du hub (schéma SVG) ──
+  function renderHub() {
+    const edgesG = document.getElementById('bh-edges');
+    const nodesG = document.getElementById('bh-nodes');
+    if (!edgesG || !nodesG) return;
+    edgesG.innerHTML = '';
+    nodesG.innerHTML = '';
+    EDGES.forEach(([a, b]) => {
+      const za = ZONES.find(z => z.id === a), zb = ZONES.find(z => z.id === b);
+      edgesG.appendChild(svgEl('line', { class: 'bh-link', x1: za.x, y1: za.y, x2: zb.x, y2: zb.y }));
+    });
+    ZONES.forEach(z => {
+      const score = zoneScore(z);
+      const color = score === null ? 'var(--border)' : focusScoreColor(score);
+      const g = svgEl('g', {
+        class: 'bh-node', tabindex: '0', role: 'button', 'data-zone': z.id,
+        'aria-label': z.label + ' — ' + z.sub + '. Activer pour en savoir plus.'
+      });
+      g.appendChild(svgEl('title', {}, z.label));
+      const blob = svgEl('circle', { class: 'bh-blob', cx: z.x, cy: z.y, r: 44 });
+      blob.style.fill = color;
+      blob.style.opacity = score === null ? '0.16' : '0.30';
+      g.appendChild(blob);
+      g.appendChild(svgEl('circle', { class: 'bh-core', cx: z.x, cy: z.y, r: 30, fill: 'var(--card)' }));
+      g.appendChild(svgEl('text', { class: 'bh-emoji', x: z.x, y: z.y - 1 }, z.emoji));
+      g.appendChild(svgEl('text', { class: 'bh-label', x: z.x, y: z.y + 56 }, z.label));
+      g.appendChild(svgEl('text', { class: 'bh-sub', x: z.x, y: z.y + 70 }, z.sub));
+      g.addEventListener('click', () => openZoneSheet(z.id));
+      g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openZoneSheet(z.id); } });
+      nodesG.appendChild(g);
+    });
+  }
+
+  // ── Bottom sheet d'une zone ──
+  function openZoneSheet(zoneId) {
+    const z = ZONES.find(zz => zz.id === zoneId);
+    if (!z) return;
+    document.getElementById('bh-sheet-bd')?.remove();
+    const trigger = document.activeElement;
+    const sits = SITUATIONS.filter(s => s.zone === zoneId);
+    const bd = document.createElement('div');
+    bd.className = 'bh-sheet-backdrop';
+    bd.id = 'bh-sheet-bd';
+    bd.innerHTML = `
+      <div class="bh-sheet" role="dialog" aria-modal="true" aria-labelledby="bh-sheet-title-el" tabindex="-1">
+        <div class="bh-sheet-head">
+          <span class="bh-sheet-emoji">${z.emoji}</span>
+          <div>
+            <div class="bh-sheet-title" id="bh-sheet-title-el">${z.label}</div>
+            <div class="bh-sheet-sub">${z.sub}</div>
+          </div>
+        </div>
+        <div class="bh-sheet-mech">${z.mechanism}<span class="src">${z.source}</span></div>
+        <div class="bh-sit-list">
+          ${sits.map(s => `<div class="bh-sit-item" data-sit="${s.id}" role="button" tabindex="0">${s.title}</div>`).join('')}
+        </div>
+        <div class="bh-sheet-actions">
+          <button class="sl-card-action" id="bh-sheet-textlink" style="width:100%;justify-content:center">📖 Voir tout en texte</button>
+          <button class="bh-sheet-close" id="bh-sheet-close">Fermer</button>
+        </div>
+      </div>`;
+    document.body.appendChild(bd);
+    const onKey = e => { if (e.key === 'Escape') closeSheet(); };
+    function closeSheet(restoreFocus) {
+      bd.remove();
+      document.removeEventListener('keydown', onKey);
+      if (restoreFocus !== false && typeof trigger?.focus === 'function') trigger.focus();
+    }
+    bd.addEventListener('click', e => { if (e.target === bd) closeSheet(); });
+    bd.querySelector('#bh-sheet-close').onclick = closeSheet;
+    bd.querySelector('#bh-sheet-textlink').onclick = () => { closeSheet(false); window.__bhSituationsFilter = zoneId; show('situations-lib'); };
+    bd.querySelectorAll('.bh-sit-item').forEach(item => {
+      const goSit = () => {
+        closeSheet(false);
+        window.__bhSituationsFilter = zoneId;
+        show('situations-lib');
+        setTimeout(() => { document.getElementById('sl-' + item.dataset.sit)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+      };
+      item.addEventListener('click', goSit);
+      item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goSit(); } });
+    });
+    document.addEventListener('keydown', onKey);
+    bd.querySelector('.bh-sheet').focus();
+  }
+
+  // ── Bibliothèque des réactions (repli 2D total) ──
+  function renderSituationsLib(filterZone) {
+    const filters = document.getElementById('sl-filters');
+    const list = document.getElementById('sl-list');
+    if (!filters || !list) return;
+    const active = filterZone || window.__bhSituationsFilter || 'all';
+    window.__bhSituationsFilter = active;
+    filters.innerHTML = '';
+    [{ id: 'all', emoji: '✨', label: 'Tout' }].concat(ZONES.map(z => ({ id: z.id, emoji: z.emoji, label: z.label }))).forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'sl-chip' + (c.id === active ? ' active' : '');
+      chip.type = 'button';
+      chip.textContent = c.emoji + ' ' + c.label;
+      chip.onclick = () => renderSituationsLib(c.id);
+      filters.appendChild(chip);
+    });
+    list.innerHTML = '';
+    const zonesToShow = active === 'all' ? ZONES : ZONES.filter(z => z.id === active);
+    zonesToShow.forEach(z => {
+      const sits = SITUATIONS.filter(s => s.zone === z.id);
+      if (!sits.length) return;
+      const intro = document.createElement('div');
+      intro.className = 'sl-zone-intro';
+      intro.innerHTML = `
+        <div class="sl-zone-intro-head">${z.emoji} ${z.label} <span class="sl-zone-intro-sub">— ${z.sub}</span></div>
+        <div class="sl-zone-intro-mech">${z.mechanism}<span class="src">${z.source}</span></div>`;
+      list.appendChild(intro);
+      sits.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'sl-card';
+        card.id = 'sl-' + s.id;
+        card.innerHTML = `
+          <div class="sl-card-title">${s.title}</div>
+          <div class="sl-card-mech">${s.mech}</div>
+          <div class="sl-card-norm">${s.norm}</div>
+          <div class="sl-card-strategy">${s.strategy}</div>
+          <button class="sl-card-action" type="button">${BH_ACTIONS[s.action].label}</button>`;
+        card.querySelector('.sl-card-action').onclick = () => goToAction(s.action);
+        list.appendChild(card);
+      });
+    });
+  }
+
+  function goToAction(key) {
+    const a = BH_ACTIONS[key];
+    if (!a) return;
+    document.getElementById('bh-sheet-bd')?.remove();
+    if (localStorage.getItem('ft_brain_mode') === 'on') localStorage.setItem('ft_brain_mode', 'off');
+    a.run();
+  }
+
+  // ── Bascule Mode Cerveau / Mode Classique ──
+  function currentScreenId() {
+    return document.querySelector('.screen.active')?.id || 'landing';
+  }
+  function updateBrainUI(id) {
+    const mode = localStorage.getItem('ft_brain_mode') === 'on';
+    const fab = document.getElementById('brain-toggle-fab');
+    const icon = document.getElementById('brain-toggle-icon');
+    const label = document.getElementById('brain-toggle-label');
+    const returnFab = document.getElementById('brain-return-fab');
+    if (!fab) return;
+    fab.setAttribute('aria-pressed', mode ? 'true' : 'false');
+    fab.classList.toggle('mode-brain', mode);
+    icon.textContent = mode ? '📋' : '🧠';
+    label.textContent = mode ? 'Classique' : 'Cerveau';
+    returnFab.classList.toggle('visible', mode && id !== 'brain-hub');
+  }
+
+  // ── Évite la collision avec la pile #top-right-stack (⚙️/📵/📊) ──
+  // Le FAB cerveau partage le coin haut-droit avec cette pile ; on le replace
+  // dynamiquement juste sous elle (sa hauteur varie selon le badge utilisateur).
+  function positionBrainFab() {
+    const fab = document.getElementById('brain-toggle-fab');
+    const stack = document.getElementById('top-right-stack');
+    if (!fab || !stack) return;
+    const r = stack.getBoundingClientRect();
+    fab.style.top = Math.round(r.bottom + 8) + 'px';
+  }
+  positionBrainFab();
+  window.addEventListener('resize', positionBrainFab);
+  const topRightStackEl = document.getElementById('top-right-stack');
+  if (topRightStackEl && window.ResizeObserver) {
+    new ResizeObserver(positionBrainFab).observe(topRightStackEl);
+  }
+
+  document.getElementById('brain-toggle-fab').onclick = () => {
+    const mode = localStorage.getItem('ft_brain_mode') === 'on';
+    if (mode) {
+      localStorage.setItem('ft_brain_mode', 'off');
+      show(localStorage.getItem('ft_brain_return_screen') || 'landing');
+    } else {
+      localStorage.setItem('ft_brain_return_screen', currentScreenId());
+      localStorage.setItem('ft_brain_mode', 'on');
+      show('brain-hub');
+    }
+  };
+  document.getElementById('brain-return-fab').onclick = () => show('brain-hub');
+  document.getElementById('bh-link-situations').onclick = e => { e.preventDefault(); window.__bhSituationsFilter = 'all'; show('situations-lib'); };
+  document.getElementById('back-situations-lib').onclick = () => {
+    show(localStorage.getItem('ft_brain_mode') === 'on' ? 'brain-hub' : 'aide-menu');
+  };
+  document.getElementById('aide-btn-situations').onclick = () => { window.__bhSituationsFilter = 'all'; show('situations-lib'); };
+  document.getElementById('aide-btn-pause').onclick = () => show('pause-perm');
+  document.getElementById('aide-btn-victoires').onclick = () => show('victoires-carnet');
+  document.getElementById('aide-btn-achat').onclick = () => show('pause-achat');
+  document.getElementById('aide-btn-routines').onclick = () => show('routines-mini');
+
+  // ── Branchement sur la navigation existante ──
+  const _origShow = show;
+  show = function(id) {
+    _origShow(id);
+    updateBrainUI(id);
+    if (id === 'brain-hub') renderHub();
+    if (id === 'situations-lib') renderSituationsLib();
+  };
+
+  // ─── PERMISSION DE PAUSE ───
+// Test reversible derriere flag localStorage ft_flag_permission_pause === '1'.
+// Flag absent/different de '1' -> bouton aide-menu invisible, zero regression.
+(function setupPausePerm() {
+  const screen = document.getElementById('pause-perm');
+  if (!screen) return;
+
+  if (localStorage.getItem('ft_flag_permission_pause') === '1') {
+    const aideBtn = document.getElementById('aide-btn-pause');
+    if (aideBtn) aideBtn.style.display = '';
+  }
+
+  const PAUSE_IDEES = [
+    'Regarder par la fenêtre, sans but particulier.',
+    'Écouter une chanson, sans écran allumé.',
+    'Étirer doucement le cou et les épaules.',
+    'Griffonner ou dessiner sans objectif.',
+    'Boire un verre d’eau, lentement.',
+    'Fermer les yeux et respirer quelques fois.',
+    'Faire quelques pas, dans la pièce ou dehors.',
+    'Caresser un animal, ou un tissu doux.',
+    'Ne rien faire, juste s’asseoir un moment.'
+  ];
+
+  let pauseInterval = null;
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  document.getElementById('back-pause-perm').onclick = () => {
+    if (pauseInterval) clearInterval(pauseInterval);
+    show('landing');
+  };
+
+  document.querySelectorAll('#pause-perm .pause-btn').forEach(btn => {
+    btn.onclick = () => {
+      const min = parseInt(btn.dataset.min);
+      const sec = min * 60;
+      btn.parentElement.style.display = 'none';
+      document.getElementById('pause-timer').style.display = 'block';
+      document.getElementById('pause-timer-num').textContent = formatTime(sec);
+      let remaining = sec;
+      if (pauseInterval) clearInterval(pauseInterval);
+      pauseInterval = setInterval(() => {
+        remaining--;
+        document.getElementById('pause-timer-num').textContent = formatTime(remaining);
+        const pct = 100 * (1 - remaining / sec);
+        document.getElementById('pause-timer-bar').style.width = pct + '%';
+        if (remaining <= 0) {
+          clearInterval(pauseInterval);
+          if (!document.body.classList.contains('mode-sobre')) playTimerEndSound();
+        }
+      }, 1000);
+    };
+  });
+
+  document.getElementById('btn-pause-idea').onclick = () => {
+    const pick = PAUSE_IDEES[Math.floor(Math.random() * PAUSE_IDEES.length)];
+    document.getElementById('pause-idea-result').textContent = pick;
+  };
+})();
+
+// ─── CARNET DE PETITES VICTOIRES ───
+// Test reversible derriere flag localStorage ft_flag_carnet_victoires === '1'.
+// Flag absent/different de '1' -> bouton aide-menu invisible, zero regression.
+(function setupVictoires() {
+  const screen = document.getElementById('victoires-carnet');
+  if (!screen) return;
+
+  if (localStorage.getItem('ft_flag_carnet_victoires') === '1') {
+    const aideBtn = document.getElementById('aide-btn-victoires');
+    if (aideBtn) aideBtn.style.display = '';
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const key = 'ft_victoires_' + today;
+
+  function renderVictoires() {
+    const list = document.getElementById('victoires-list');
+    const items = JSON.parse(localStorage.getItem(key) || '[]');
+    list.innerHTML = '';
+    document.querySelector('#victoires-today .victoires-count').textContent = items.length + ' victoire' + (items.length !== 1 ? 's' : '');
+    items.forEach((v, i) => {
+      const el = document.createElement('div');
+      el.className = 'victoire-item';
+      const text = document.createElement('div');
+      text.className = 'victoire-text';
+      text.textContent = v;
+      const del = document.createElement('button');
+      del.className = 'victoire-del';
+      del.setAttribute('aria-label', 'Supprimer cette victoire');
+      del.textContent = '✕';
+      del.onclick = () => {
+        items.splice(i, 1);
+        localStorage.setItem(key, JSON.stringify(items));
+        renderVictoires();
+      };
+      el.appendChild(text);
+      el.appendChild(del);
+      list.appendChild(el);
+    });
+  }
+
+  document.getElementById('back-victoires-carnet').onclick = () => show('landing');
+  document.getElementById('btn-victoires-add').onclick = () => {
+    const input = document.getElementById('victoires-input');
+    const txt = input.value.trim();
+    if (!txt) return;
+    const items = JSON.parse(localStorage.getItem(key) || '[]');
+    items.push(txt);
+    localStorage.setItem(key, JSON.stringify(items));
+    input.value = '';
+    renderVictoires();
+    const confirm = document.getElementById('victoires-confirm');
+    confirm.textContent = 'Victoire notée.';
+    confirm.classList.add('visible');
+    clearTimeout(confirm._t);
+    confirm._t = setTimeout(() => confirm.classList.remove('visible'), 2500);
+  };
+
+  renderVictoires();
+})();
+
+// Pioche une victoire au hasard parmi toutes les journées enregistrées
+// (ft_victoires_AAAA-MM-JJ). Retourne null si rien n'est encore noté.
+window.getRandomVictoire = function() {
+  const all = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf('ft_victoires_') === 0) {
+      try {
+        const arr = JSON.parse(localStorage.getItem(k) || '[]');
+        arr.forEach(v => { if (v) all.push(v); });
+      } catch(e) {}
+    }
+  }
+  if (!all.length) return null;
+  return all[Math.floor(Math.random() * all.length)];
+};
+
+// ─── PAUSE ANTI-ACHAT IMPULSIF ───
+// Test reversible derriere flag localStorage ft_flag_pause_achat === '1'.
+// Flag absent/different de '1' -> bouton aide-menu invisible, zero regression.
+(function setupAchatPause() {
+  const screen = document.getElementById('pause-achat');
+  if (!screen) return;
+
+  if (localStorage.getItem('ft_flag_pause_achat') === '1') {
+    const aideBtn = document.getElementById('aide-btn-achat');
+    if (aideBtn) aideBtn.style.display = '';
+  }
+
+  let achatInterval = null;
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  document.getElementById('back-pause-achat').onclick = () => show('landing');
+  document.getElementById('btn-achat-start').onclick = () => {
+    const sec = 300; // 5 min
+    document.querySelector('#pause-achat .achat-start').style.display = 'none';
+    document.getElementById('achat-timer').style.display = 'block';
+    document.getElementById('achat-timer-num').textContent = formatTime(sec);
+    let remaining = sec;
+    if (achatInterval) clearInterval(achatInterval);
+    achatInterval = setInterval(() => {
+      remaining--;
+      document.getElementById('achat-timer-num').textContent = formatTime(remaining);
+      const pct = 100 * (1 - remaining / sec);
+      document.getElementById('achat-timer-bar').style.width = pct + '%';
+      if (remaining <= 0) {
+        clearInterval(achatInterval);
+        playTone();
+      }
+    }, 1000);
+  };
+
+  document.getElementById('btn-achat-oui').onclick = () => {
+    if (achatInterval) clearInterval(achatInterval);
+    show('landing');
+  };
+
+  document.getElementById('btn-achat-non').onclick = () => {
+    if (achatInterval) clearInterval(achatInterval);
+    show('landing');
+  };
+})();
+
+// ─── ROUTINES MINIMALES ───
+// Test reversible derriere flag localStorage ft_flag_routines_minimales === '1'.
+// Flag absent/different de '1' -> bouton aide-menu invisible, zero regression.
+(function setupRoutines() {
+  const screen = document.getElementById('routines-mini');
+  if (!screen) return;
+
+  if (localStorage.getItem('ft_flag_routines_minimales') === '1') {
+    const aideBtn = document.getElementById('aide-btn-routines');
+    if (aideBtn) aideBtn.style.display = '';
+  }
+
+  const routinesData = [
+    'Clés 🔑', 'Téléphone 📱', 'Portefeuille 💳',
+    'Masque 😷', 'Lunettes 👓', 'Bouteille 💧'
+  ];
+  const today = new Date().toISOString().split('T')[0];
+  const key = 'ft_routines_' + today;
+
+  function renderRoutines() {
+    const list = document.getElementById('routines-list');
+    list.innerHTML = '';
+    const checked = JSON.parse(localStorage.getItem(key) || '{}');
+    routinesData.forEach((name, i) => {
+      const isChecked = checked[i];
+      const el = document.createElement('div');
+      el.className = 'routine-row';
+      el.innerHTML = `
+        <button class="routine-check${isChecked ? ' checked' : ''}"></button>
+        <div class="routine-text${isChecked ? ' checked' : ''}">${name}</div>`;
+      el.querySelector('.routine-check').onclick = () => {
+        checked[i] = !checked[i];
+        localStorage.setItem(key, JSON.stringify(checked));
+        renderRoutines();
+      };
+      list.appendChild(el);
+    });
+  }
+
+  document.getElementById('back-routines-mini').onclick = () => show('landing');
+  document.getElementById('btn-routines-reset').onclick = () => {
+    localStorage.removeItem(key);
+    renderRoutines();
+  };
+
+  renderRoutines();
+})();
+
+updateBrainUI(currentScreenId());
+})();
+
+// ─── SEUIL POUR CETTE FOIS ───
+// Test reversible derriere flag localStorage ft_flag_seuil_tache === '1'.
+// Flag absent/different de '1' -> bloc #seuil-tache-block masque, zero regression.
+(function setupSeuilTache() {
+  function _saveSeuilTexte() {
+    if (localStorage.getItem('ft_flag_seuil_tache') !== '1') return;
+    var projects = getProjects();
+    var p = projects.find(function(x) { return x.id === (currentProject && currentProject.id); });
+    if (!p) return;
+    var step = getCurrentStep(p);
+    if (!step) return;
+    var val = document.getElementById('seuil-texte').value.trim();
+    step.seuilTexte = val;
+    saveProjects(projects);
+    currentProject = p;
+  }
+
+  document.getElementById('seuil-texte').addEventListener('blur', _saveSeuilTexte);
+
+  document.getElementById('btn-seuil-suffisant').onclick = function() {
+    if (localStorage.getItem('ft_flag_seuil_tache') !== '1') return;
+    var projects = getProjects();
+    var p = projects.find(function(x) { return x.id === (currentProject && currentProject.id); });
+    if (!p) return;
+    var step = getCurrentStep(p);
+    if (!step) return;
+    var val = document.getElementById('seuil-texte').value.trim();
+    if (val) step.seuilTexte = val;
+    step.seuilAtteint = true;
+    saveProjects(projects);
+    currentProject = p;
+    renderSession();
+  };
 })();
 </script>
 </body>
