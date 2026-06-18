@@ -4,12 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>focusTDAH</title>
+<!-- PWA manifest & icons -->
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <!-- PWA iPhone -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="focusTDAH">
 <meta name="theme-color" content="#0d0d14">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<!-- Install prompt UX (handles iOS Safari, where beforeinstallprompt never fires) -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@khmyznikov/pwa-install@3/dist/pwa-install.js"></script>
 <!-- Three.js for brain background -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- Firebase -->
@@ -2331,6 +2338,8 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 </head>
 <body>
 
+<pwa-install id="pwa-install" name="focusTDAH" icon="./icons/icon-192.png" manifest-url="./manifest.json"></pwa-install>
+
 <main>
 
 <!-- SPLASH -->
@@ -2759,6 +2768,10 @@ h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
 <section class="screen" id="settings">
   <button class="back" id="back-settings">← Retour</button>
   <h1 style="margin-bottom:20px">Paramètres</h1>
+  <button class="block-btn" id="btn-pwa-install" style="margin-bottom:16px">
+    <span class="b-title">📲 Installer l'application</span>
+    <span class="b-sub">Ajoute focusTDAH à ton écran d'accueil</span>
+  </button>
   <div class="settings-tabs" id="st-tabs">
     <button class="settings-tab active" data-tab="micros">Micros</button>
     <button class="settings-tab" data-tab="drinks">Boissons</button>
@@ -7105,6 +7118,10 @@ function renderSettingsFocus(container) {
 
 document.getElementById('settings-fab').onclick = openSettings;
 document.getElementById('back-settings').onclick = () => show(settingsReturnScreen || 'landing');
+document.getElementById('btn-pwa-install').onclick = () => {
+  const el = document.getElementById('pwa-install');
+  if (el && typeof el.showDialog === 'function') el.showDialog(true);
+};
 
 // ════════════════════════════════════════════════
 // ─── "J'EN AI MARRE" — PAUSE 2 MINUTES ───
