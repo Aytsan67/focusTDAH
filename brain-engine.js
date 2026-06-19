@@ -8,6 +8,7 @@ let _onGoBack    = null;
 
 // ── Private state ──
 let canvas, renderer, scene, camera, miniRenderer;
+let _initDone = false;
 let brain, pivot, partMeshes, neurons, zIdx, conns;
 let nGeo, nMat, nCol, nColBase, nSz;
 let lMesh, pGeo, pArr, pMat, pulses;
@@ -349,6 +350,7 @@ function init(canvasEl, minimapCanvas) {
   });
 
   loop();
+  _initDone = true;
 }
 
 // ════════════════════════════════════════════════
@@ -441,6 +443,7 @@ function onNavigate(screenId) {
 
 return {
   init,
+  isReady: () => _initDone,
   setMode: function(m) {
     if(m==='idle')       autoRotSpeed=0.003;
     else if(m==='zoom')  autoRotSpeed=0.001;

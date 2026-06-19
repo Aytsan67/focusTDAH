@@ -19,6 +19,7 @@
 <script type="module" src="https://cdn.jsdelivr.net/npm/@khmyznikov/pwa-install@3/dist/pwa-install.js"></script>
 <!-- Three.js for brain background -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="brain-engine.js"></script>
 <!-- Firebase -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -4939,7 +4940,7 @@ function maybeShowOnboarding() {
   document.body.appendChild(ov);
   let step = 0;
 
-  function safeBrain(fn) { try { if (window.BrainEngine) fn(); } catch(e) {} }
+  function safeBrain(fn) { try { if (window.BrainEngine && BrainEngine.isReady && BrainEngine.isReady()) fn(); } catch(e) {} }
 
   let brainSceneTimer = null;
   function setBrainForStep(s) {
@@ -5598,7 +5599,7 @@ function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
-  if (window.BrainEngine) {
+  if (window.BrainEngine && BrainEngine.isReady && BrainEngine.isReady()) {
     if (id === 'landing') {
       BrainEngine.zoomOut();
       BrainEngine.resume(); // iOS : forcer le rendu même si IntersectionObserver n'a pas tiré
@@ -5619,13 +5620,13 @@ function brainNav(lobeId) {
     brainstem:  () => (typeof showModePanique   === 'function' ? showModePanique()   : show('landing')),
     insula_r:   () => show('quicktodo-screen'),
   };
-  if (window.BrainEngine) {
+  if (window.BrainEngine && BrainEngine.isReady && BrainEngine.isReady()) {
     BrainEngine.highlightLobe(lobeId, 2.5, 700);
     BrainEngine.zoomToLobe(lobeId);
   }
   localStorage.setItem('ft_brain_tapped', '1');
   const nav = navMap[lobeId];
-  if (nav) setTimeout(() => { if (window.BrainEngine) BrainEngine.zoomOut(); nav(); }, 680);
+  if (nav) setTimeout(() => { if (window.BrainEngine && BrainEngine.isReady && BrainEngine.isReady()) BrainEngine.zoomOut(); nav(); }, 680);
 }
 
 // ─── BRAIN LABEL POSITIONING ───
@@ -15560,7 +15561,6 @@ function _reorderProjectCards() {
 })();
 
 </script>
-<script src="brain-engine.js"></script>
 <script>
 // ══ BRAIN ENGINE INIT ══
 (function initBrain() {
