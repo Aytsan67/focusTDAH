@@ -4841,11 +4841,18 @@ function maybeShowOnboarding() {
   const existingOnboarding = document.getElementById('brain-onboarding');
   if (existingOnboarding) existingOnboarding.remove();
   document.body.classList.remove('brain-onboarding-uses-3d');
-  const ONBOARDING_VERSION = 'v11';
-  const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
-  // L'introduction est volontairement rejouée à chaque chargement/refresh.
-  // On garde la clé seulement comme trace de version, jamais pour skipper le voyage.
-  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', 'ft_onboarded_v5', 'ft_onboarded_v6', 'ft_onboarded_v7', 'ft_onboarded_v8', 'ft_onboarded_v9', 'ft_onboarded_v10', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
+  ['ft_onboarded_v2','ft_onboarded_v3','ft_onboarded_v4','ft_onboarded_v5',
+   'ft_onboarded_v6','ft_onboarded_v7','ft_onboarded_v8','ft_onboarded_v9',
+   'ft_onboarded_v10','ft_onboarded_v11','ft_onboarded'].forEach(k => localStorage.removeItem(k));
+
+  // Nouveau voyage immersif Three.js (brain-intro-immersive.js)
+  if (window.BrainIntroImmersive) {
+    BrainIntroImmersive.start(function() {
+      if (window.BrainEngine) { BrainEngine.setColorTint(null); BrainEngine.setEnergy(0.6); }
+      if (typeof window._brainRevealImmediate === 'function') window._brainRevealImmediate();
+    });
+    return;
+  }
 
   const STEPS = [
     {
@@ -15561,6 +15568,7 @@ function _reorderProjectCards() {
 })();
 
 </script>
+<script src="brain-intro-immersive.js"></script>
 <script>
 // ══ BRAIN ENGINE INIT ══
 (function initBrain() {
