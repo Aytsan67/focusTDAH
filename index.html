@@ -1932,6 +1932,95 @@ body.brain-onboarding-uses-3d #brain-onboarding[data-scene="dopamine"] .bon-syna
   opacity: .92;
 }
 
+
+
+/* Onboarding v11: le canvas #brain-canvas / BrainEngine devient le visuel réel de l'intro.
+   L'onboarding n'est plus une fausse carte 3D : il est un HUD transparent posé SUR le cerveau WebGL existant. */
+body.brain-onboarding-uses-3d #brain-section {
+  z-index: 1999 !important;
+  transform: none !important;
+}
+body.brain-onboarding-uses-3d #brain-canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  transform: none !important;
+  object-fit: cover;
+}
+body.brain-onboarding-uses-3d #brain-onboarding {
+  z-index: 2000 !important;
+  background: transparent !important;
+  isolation: isolate;
+}
+body.brain-onboarding-uses-3d #brain-onboarding::before {
+  opacity: .06 !important;
+  mix-blend-mode: screen;
+}
+body.brain-onboarding-uses-3d #brain-onboarding::after {
+  z-index: 2 !important;
+  background:
+    linear-gradient(180deg, #000 0 8.5%, transparent 8.5% 91.5%, #000 91.5% 100%),
+    radial-gradient(circle at 50% 48%, transparent 0 56%, rgba(0,0,0,.36) 100%) !important;
+}
+body.brain-onboarding-uses-3d #brain-onboarding .bon-voyage-stage,
+body.brain-onboarding-uses-3d #brain-onboarding .bon-content {
+  z-index: 10 !important;
+}
+body.brain-onboarding-uses-3d #brain-onboarding .bon-voyage-stage {
+  pointer-events: none;
+}
+body.brain-onboarding-uses-3d .bon-visual.bon-3d-view {
+  background: transparent !important;
+  border-color: rgba(255,255,255,.08) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.05),
+    inset 0 0 90px rgba(0,245,255,.055),
+    0 0 120px color-mix(in srgb, var(--accent) 12%, transparent) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+body.brain-onboarding-uses-3d .bon-real-3d-anchor {
+  display: none !important;
+}
+body.brain-onboarding-uses-3d .bon-3d-glass {
+  opacity: .11 !important;
+  mix-blend-mode: screen;
+}
+body.brain-onboarding-uses-3d .bon-cinema-layer,
+body.brain-onboarding-uses-3d .bon-film-grain,
+body.brain-onboarding-uses-3d .bon-scanline,
+body.brain-onboarding-uses-3d .bon-camera-rail,
+body.brain-onboarding-uses-3d .bon-callout,
+body.brain-onboarding-uses-3d .bon-zone-reveal,
+body.brain-onboarding-uses-3d .bon-distraction-cloud,
+body.brain-onboarding-uses-3d .bon-synapse-zoom,
+body.brain-onboarding-uses-3d .bon-3d-badge,
+body.brain-onboarding-uses-3d .bon-depth-label,
+body.brain-onboarding-uses-3d .bon-shot-label,
+body.brain-onboarding-uses-3d .bon-cinema-titlecard {
+  pointer-events: none;
+}
+body.brain-onboarding-uses-3d .bon-3d-badge {
+  background: rgba(0,0,8,.28) !important;
+}
+body.brain-onboarding-uses-3d .bon-depth-label {
+  background: rgba(0,0,8,.22) !important;
+}
+body.brain-onboarding-uses-3d .bon-content {
+  background: rgba(0,0,8,.64) !important;
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+}
+@media (min-width: 900px) {
+  body.brain-onboarding-uses-3d #brain-onboarding {
+    grid-template-columns: minmax(480px, 1.25fr) minmax(380px, 560px) !important;
+  }
+  body.brain-onboarding-uses-3d #brain-onboarding .bon-visual {
+    width: min(58vw, 760px) !important;
+    height: min(78vh, 720px) !important;
+  }
+}
+
+
 @media (min-width: 700px) {
   .bon-content { max-width: 560px; align-self: center; border: 1px solid rgba(255,255,255,.08); border-radius: 26px 26px 0 0; }
 }
@@ -4751,11 +4840,11 @@ function maybeShowOnboarding() {
   const existingOnboarding = document.getElementById('brain-onboarding');
   if (existingOnboarding) existingOnboarding.remove();
   document.body.classList.remove('brain-onboarding-uses-3d');
-  const ONBOARDING_VERSION = 'v10';
+  const ONBOARDING_VERSION = 'v11';
   const ONBOARDING_KEY = 'ft_onboarded_' + ONBOARDING_VERSION;
   // L'introduction est volontairement rejouée à chaque chargement/refresh.
   // On garde la clé seulement comme trace de version, jamais pour skipper le voyage.
-  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', 'ft_onboarded_v5', 'ft_onboarded_v6', 'ft_onboarded_v7', 'ft_onboarded_v8', 'ft_onboarded_v9', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
+  ['ft_onboarded_v2', 'ft_onboarded_v3', 'ft_onboarded_v4', 'ft_onboarded_v5', 'ft_onboarded_v6', 'ft_onboarded_v7', 'ft_onboarded_v8', 'ft_onboarded_v9', 'ft_onboarded_v10', ONBOARDING_KEY, 'ft_onboarded'].forEach(k => localStorage.removeItem(k));
 
   const STEPS = [
     {
