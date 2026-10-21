@@ -10,7 +10,7 @@ fi
 # Pour configurer : Claude Code sur le web → Settings → Environment variables → GH_TOKEN
 if [ -n "${GH_TOKEN:-}" ]; then
   git -C "${CLAUDE_PROJECT_DIR}" remote set-url origin \
-    "https://${GH_TOKEN}@github.com/anastasyabm-stack/Tache-.git"
+    "https://${GH_TOKEN}@github.com/Aytsan67/focusTDAH.git"
   echo "Remote git configuré avec GH_TOKEN ✓"
 else
   echo "⚠️  GH_TOKEN non défini — configure-le dans Settings → Environment variables"

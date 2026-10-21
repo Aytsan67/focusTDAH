@@ -2312,47 +2312,6 @@ body.brain-onboarding-uses-3d .bon-content {
   pointer-events: none;
 }
 
-.bzl {
-  position: absolute;
-  pointer-events: auto;
-  transform: translate(-50%, -50%);
-  background: rgba(13, 13, 20, 0.58);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(0, 200, 255, 0.28);
-  border-radius: 20px;
-  padding: 7px 13px 7px 10px;
-  color: rgba(0, 245, 255, 0.88);
-  font: 700 11px 'Syne', sans-serif;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  animation: bzlPulse 3.5s ease-in-out infinite;
-  transition: background 0.2s, border-color 0.2s;
-  /* cachés jusqu'à ce que JS les positionne */
-  left: -9999px; top: -9999px;
-}
-.bzl:active { opacity: 0.7; }
-
-.bzl[data-zone="frontal"]    { color: rgba(0, 245, 255, 0.9);  border-color: rgba(0, 245, 255, 0.38); animation-delay: 0s; }
-.bzl[data-zone="parietal"]   { color: rgba(80, 160, 255, 0.9); border-color: rgba(68, 140, 255, 0.38); animation-delay: 0.7s; }
-.bzl[data-zone="temporal"]   { color: rgba(0, 210, 210, 0.9);  border-color: rgba(0, 200, 200, 0.38); animation-delay: 1.4s; }
-.bzl[data-zone="occipital"]  { color: rgba(160, 215, 255, 0.9);border-color: rgba(136, 200, 255, 0.38); animation-delay: 2.1s; }
-.bzl[data-zone="cerebellum"] { color: rgba(80, 130, 255, 0.9); border-color: rgba(34, 102, 255, 0.38); animation-delay: 2.8s; }
-.bzl[data-zone="brainstem"]  { color: rgba(210, 210, 235, 0.9);border-color: rgba(180, 180, 210, 0.32); animation-delay: 3.5s; }
-.bzl[data-zone="insula_r"]   { color: rgba(0, 235, 255, 0.9);  border-color: rgba(0, 220, 255, 0.35); animation-delay: 0.35s; }
-
-@keyframes bzlPulse {
-  0%, 100% { opacity: 0.5; box-shadow: none; }
-  50%       { opacity: 1.0; box-shadow: 0 0 18px rgba(0, 200, 255, 0.22); }
-}
-
-.bzl-icon { font-size: 13px; line-height: 1; flex-shrink: 0; }
-
 #brain-cta-btn {
   position: absolute;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 26px);
@@ -3827,6 +3786,9 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
       </div>
     </div>
 
+    <!-- Stats du jour + semaine -->
+    <div class="stats-widget" id="top-stats-widget" style="display:none;margin-top:14px"></div>
+
     <!-- Projets -->
     <div id="home-proj-wrap" style="margin-top:14px;display:none">
       <div class="section-label" style="margin-bottom:8px">Mes projets</div>
@@ -4046,7 +4008,7 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
     <button class="btn-ghost" id="btn-seuil-suffisant">✓ C'est suffisant pour cette fois</button>
   </div>
   <!-- Temps cumulé + % déclaré sur cette tâche -->
-  <div id="s-task-progress" style="display:none;margin:-6px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
+  <div id="s-task-progress" style="display:none;margin:-6px 0 10px;align-items:center;gap:10px;flex-wrap:wrap"></div>
   <div class="micro-box" id="micro-box">
     <span class="micro-text" id="s-micro"></span>
   </div>
@@ -4710,6 +4672,20 @@ svg.bh-schema { display: block; width: 100%; height: auto; }
 <div class="stats-panel" id="stats-panel" style="display:none"></div>
 </main>
 <script>
+// ─── ÉCHAPPEMENT HTML ──────────────────────────────────────────────
+// À utiliser pour TOUTE donnée saisie par l'utilisateur ou renvoyée par
+// Claude qui part dans un innerHTML : un nom de projet contenant < ou &
+// casserait le balisage, et les données se synchronisent entre appareils.
+function esc(v) {
+  if (v === null || v === undefined) return '';
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ─── FIREBASE CONFIG ───────────────────────────────────────────────
 // ⬇⬇ REMPLACE CES VALEURS PAR TON firebaseConfig ⬇⬇
 const FIREBASE_CONFIG = {
@@ -5636,53 +5612,6 @@ function brainNav(lobeId) {
   if (nav) setTimeout(() => { if (window.BrainEngine && BrainEngine.isReady && BrainEngine.isReady()) BrainEngine.zoomOut(); nav(); }, 680);
 }
 
-// ─── BRAIN LABEL POSITIONING ───
-function positionBrainLabels() {
-  const W = window.innerWidth, H = window.innerHeight;
-  const cosZ = Math.cos(0.2), sinZ = Math.sin(0.2);
-  const tan25 = Math.tan(25 * Math.PI / 180);
-  const camZ  = 280;
-  const brainCX = W / 2, brainCY = H / 2;
-
-  function project(cx, cy, cz) {
-    // Rotation: X=-PI/2 puis Z=0.2 (même que brain-engine.js)
-    const wx = cx * cosZ - cz * sinZ;
-    const wy = cx * sinZ + cz * cosZ;
-    const wz = -cy;
-    const depth  = camZ - wz; // = 280 + cy
-    const aspect = W / H;
-    const px = ((wx / (depth * tan25 * aspect)) + 1) * 0.5 * W;
-    const py = (1 - wy / (depth * tan25))         * 0.5 * H;
-    return { x: px, y: py };
-  }
-
-  function placeLabel(id, cx, cy, cz, push) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const pos = project(cx, cy, cz);
-    const dx = pos.x - brainCX, dy = pos.y - brainCY;
-    const dist = Math.hypot(dx, dy) || 1;
-    let x = pos.x + (dx / dist) * (push || 62);
-    let y = pos.y + (dy / dist) * (push || 62);
-    x = Math.max(58, Math.min(W - 58, x));
-    y = Math.max(50, Math.min(H - 72, y));
-    el.style.left = x + 'px';
-    el.style.top  = y + 'px';
-  }
-
-  placeLabel('bzl-focus',    0,   28,  15, 62);  // frontal (milieu L+R)
-  placeLabel('bzl-planning', 0,   38,  -8, 62);  // pariétal
-  placeLabel('bzl-sons-l',  -52,   0,   8, 58);  // temporal_L
-  placeLabel('bzl-sons-r',   52,   0,   8, 58);  // temporal_R
-  placeLabel('bzl-projets',  0,   12, -44, 68);  // occipital
-  placeLabel('bzl-reset',    0,  -40, -22, 62);  // cervelet
-  placeLabel('bzl-liste',    42,   5,   5, 58);  // insula_r
-
-  // Brainstem projette au centre écran → placement manuel en bas
-  const sos = document.getElementById('bzl-sos');
-  if (sos) { sos.style.left = brainCX + 'px'; sos.style.top = (H * 0.80) + 'px'; }
-}
-
 // ─── QUICK TODO ───
 function getQTRaw() {
   try { return JSON.parse(localStorage.getItem('ft_quicktodo') || '[]'); } catch(e) { return []; }
@@ -6333,10 +6262,19 @@ function renderLandingStats() {
   const mins = Math.round(s.focusMin || 0);
   const tasks = s.tasks || 0;
   const sessions = s.sessions || 0;
+  // Rien à montrer tant que la journée n'a pas commencé
+  if (!mins && !tasks && !sessions) { el.style.display = 'none'; return; }
+  el.style.display = '';
+
   el.innerHTML = `
-    <div class="top-stat-row"><span class="top-stat-num" style="color:var(--accent)">${mins}</span><span class="top-stat-lbl">min</span></div>
-    <div class="top-stat-row"><span class="top-stat-num" style="color:var(--green)">${tasks}</span><span class="top-stat-lbl">tâche${tasks>1?'s':''}</span></div>
-    <div class="top-stat-row"><span class="top-stat-num" style="color:var(--text)">${sessions}</span><span class="top-stat-lbl">sess.</span></div>
+    <div class="stats-widget-row">
+      <div><div class="stats-num" style="color:var(--accent)">${mins}</div><div class="stats-lbl">min</div></div>
+      <div><div class="stats-num" style="color:var(--green)">${tasks}</div><div class="stats-lbl">tâche${tasks>1?'s':''}</div></div>
+      <div><div class="stats-num" style="color:var(--text)">${sessions}</div><div class="stats-lbl">sess.</div></div>
+    </div>
+    <div class="stats-msg">${motiv}</div>
+    ${weekHtml}
+    ${eventsHtml}
   `;
 }
 
@@ -6447,7 +6385,7 @@ function openCheckin() {
     if (feelEnergyDone && currentStep) {
       emotionSection = `
         <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Cette tâche te semble… ?
-          <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:4px">${currentStep.name}</span>
+          <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:4px">${esc(currentStep.name)}</span>
         </div>
         <div class="ci-emotion-row">
           ${EMOTION_META.map((em, i) =>
@@ -7288,7 +7226,7 @@ function showSubcatPrompt(cat, proj, done) {
   sheet.innerHTML = `
     <div class="cat-modal-handle"></div>
     <h2 style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:8px">
-      Découper <em style="font-style:normal;${grad}">${cat.name}</em> ?
+      Découper <em style="font-style:normal;${grad}">${esc(cat.name)}</em> ?
     </h2>
     <p style="color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:20px">
       Veux-tu ajouter des <strong style="color:var(--text)">sous-étapes</strong> pour mieux découper le travail ? (une par ligne)
@@ -7978,7 +7916,7 @@ function promptChangeCatMode(cat, proj) {
 
   sheet.innerHTML = `
     <div class="cat-modal-handle"></div>
-    <h2 style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">Changer le mode de <em style="font-style:normal;${grad}">${cat.name.replace(/</g,'&lt;')}</em></h2>
+    <h2 style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">Changer le mode de <em style="font-style:normal;${grad}">${esc(cat.name)}</em></h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:18px">Mode actuel : <strong style="color:var(--text)">${{ default:'📋 Défaut', seance:'📅 Séances', vierge:'🎯 Vierge' }[cat.mode] || cat.mode}</strong>. Les données seront adaptées.</p>
     <div id="ccm-s1">
       <button class="cm-mode-card ccm-card" data-mode="default" ${cat.mode==='default'?'style="opacity:.4;pointer-events:none"':''}>
@@ -8882,7 +8820,7 @@ function renderSettingsMicros(container, s) {
     const row = document.createElement('div');
     row.className = 'settings-item';
     row.innerHTML = `
-      <div class="settings-item-label">${item.label}${item.primary ? ' <span class="settings-primary-badge">Principal</span>' : ''}</div>
+      <div class="settings-item-label">${esc(item.label)}${item.primary ? ' <span class="settings-primary-badge">Principal</span>' : ''}</div>
       <label class="settings-toggle" title="Principal">
         <input type="checkbox" ${item.primary ? 'checked' : ''}>
         <span class="settings-toggle-track"></span>
@@ -8941,7 +8879,7 @@ function renderSettingsList(container, s, key, title, defaultEmoji) {
     const row = document.createElement('div');
     row.className = 'settings-item';
     row.innerHTML = `
-      <span class="settings-item-label">${item.label}</span>
+      <span class="settings-item-label">${esc(item.label)}</span>
       <button class="settings-item-del">✕</button>`;
     row.querySelector('.settings-item-del').onclick = () => {
       const ns = getSettings(); ns[key].splice(i, 1); saveSettings(ns);
@@ -9202,7 +9140,7 @@ function askSessionTask(callback) {
       <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Le temps sera associé à cette tâche</div>
       ${defaultName ? `
         <button id="ast-confirm" style="width:100%;padding:16px;border-radius:16px;background:rgba(124,92,252,.12);border:1.5px solid var(--accent);color:var(--text);font:700 14px 'DM Sans',sans-serif;cursor:pointer;text-align:left;margin-bottom:10px">
-          ✅ ${defaultName}
+          ✅ ${esc(defaultName)}
         </button>
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:center">— ou —</div>
       ` : ''}
@@ -12098,7 +12036,7 @@ function showResetComplete(victoryText) {
     <div class="reset-relaunch-card">
       <span class="reset-relaunch-emoji">✨</span>
       <div class="reset-relaunch-title">Reset terminé !</div>
-      <div class="reset-relaunch-sub">${victoryText ? '"' + victoryText + '"<br><br>' : ''}Ton cerveau est prêt pour un nouveau départ.</div>
+      <div class="reset-relaunch-sub">${victoryText ? '"' + esc(victoryText) + '"<br><br>' : ''}Ton cerveau est prêt pour un nouveau départ.</div>
       <button class="btn" id="btn-after-reset">🚀 Retour au travail</button>
       <button class="btn-outline" id="btn-after-reset-home" style="margin-top:10px">← Accueil</button>
     </div>`;
@@ -12465,8 +12403,8 @@ function showSwitchTask() {
     const pct = Math.round(stD(s) / stT(s) * 100);
     return `<button class="strategy-card" onclick="show('${blockedCalledFrom}')">
       <div class="strategy-info">
-        ${s.catName ? `<div style="font-size:11px;color:var(--muted);margin-bottom:3px">${s.catName}</div>` : ''}
-        <div class="strategy-title">${s.name}</div>
+        ${s.catName ? `<div style="font-size:11px;color:var(--muted);margin-bottom:3px">${esc(s.catName)}</div>` : ''}
+        <div class="strategy-title">${esc(s.name)}</div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
           <div style="flex:1;height:4px;border-radius:4px;background:var(--soft);overflow:hidden">
             <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:${pct}%"></div>
@@ -12866,7 +12804,7 @@ function showRSDMode() {
     if (localStorage.getItem('ft_flag_carnet_victoires') === '1' && typeof window.getRandomVictoire === 'function') {
       const victoire = window.getRandomVictoire();
       if (victoire) {
-        victoireHtml = `<div class="victoire-recall"><strong>Une victoire récente :</strong>${victoire.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</div>`;
+        victoireHtml = `<div class="victoire-recall"><strong>Une victoire récente :</strong>${esc(victoire)}</div>`;
       }
     }
     bd.innerHTML = `
@@ -13007,7 +12945,7 @@ function renderDailyPlanPreview() {
   wrap.innerHTML = plan.items.map((item, i) => `
     <div class="plan-row" style="cursor:pointer" onclick="togglePlanItem(${i})">
       <div class="plan-dot" style="background:${colors[i] || '#888'};${item.done ? 'opacity:.35' : ''}"></div>
-      <div class="plan-text${item.done ? ' done' : ''}">${item.text}</div>
+      <div class="plan-text${item.done ? ' done' : ''}">${esc(item.text)}</div>
     </div>`).join('');
 }
 
@@ -13167,8 +13105,8 @@ function renderAgenda() {
       div.className = 'agenda-item ' + (lbl ? lbl.cls : '');
       div.innerHTML = `
         <div style="flex:1">
-          <div class="agenda-item-name">${item.label}</div>
-          ${item.sub ? `<div style="font-size:10px;color:var(--muted);margin-top:1px">${item.sub}</div>` : ''}
+          <div class="agenda-item-name">${esc(item.label)}</div>
+          ${item.sub ? `<div style="font-size:10px;color:var(--muted);margin-top:1px">${esc(item.sub)}</div>` : ''}
           <div class="agenda-item-meta">${new Date(item.deadline).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})}</div>
         </div>
         ${lbl ? `<span class="deadline-chip" style="background:${lbl.cls==='overdue'?'rgba(239,83,80,.15)':'rgba(255,167,38,.15)'};color:${lbl.cls==='overdue'?'#ef5350':'#ff9800'}">${lbl.text}</span>` : ''}
@@ -13198,7 +13136,7 @@ function renderAgenda() {
         const row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--soft);border:1.5px solid var(--border);border-radius:12px;margin-bottom:6px';
         row.innerHTML = `
-          <span style="font-size:13px;font-weight:600">${cat.name}</span>
+          <span style="font-size:13px;font-weight:600">${esc(cat.name)}</span>
           <input type="date" value="${existing||''}" style="font-size:12px;padding:4px 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text)">
         `;
         row.querySelector('input').onchange = function() {
@@ -13213,7 +13151,7 @@ function renderAgenda() {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--soft);border:1.5px solid var(--border);border-radius:12px;margin-bottom:8px';
       row.innerHTML = `
-        <span style="font-size:13px;font-weight:600">${proj.name}</span>
+        <span style="font-size:13px;font-weight:600">${esc(proj.name)}</span>
         <input type="date" value="${existing||''}" style="font-size:12px;padding:4px 8px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text)">
       `;
       row.querySelector('input').onchange = function() {
@@ -13519,7 +13457,7 @@ function renderPlanningView(tab) {
       const done    = steps.filter(s => stComplete(s)).length;
       const total   = steps.length;
       const catName = cat ? cat.name : proj.name;
-      const projSub = cat ? `<div style="font-size:10px;color:var(--muted);margin-bottom:2px">${proj.name}</div>` : '';
+      const projSub = cat ? `<div style="font-size:10px;color:var(--muted);margin-bottom:2px">${esc(proj.name)}</div>` : '';
       const safeId  = (proj.id + (cat ? cat.id : 'main')).replace(/[^a-zA-Z0-9]/g, '_');
 
       const card = document.createElement('div');
@@ -13613,7 +13551,7 @@ function _renderPlanningTask(container, proj, step, color, badge, isDone) {
   row.innerHTML = `
     <div class="planning-check${isDone?' checked':''}"></div>
     <span class="planning-proj-badge" style="background:${color}22;color:${color}">${badge}</span>
-    <span class="planning-task-name${isDone?' done':''}">${step.name}</span>`;
+    <span class="planning-task-name${isDone?' done':''}">${esc(step.name)}</span>`;
   row.onclick = () => {
     // Bascule l'état de la tâche
     if (step.micros && step.micros.length > 0) {
@@ -13770,9 +13708,9 @@ function pickTaskForMe() {
   card.style.display = 'block';
   card.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">${focusHint}</div>
-    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">🎯 ${pick.name||'Projet'}</div>
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">🎯 ${esc(pick.name)||'Projet'}</div>
     ${lbl ? `<span class="deadline-chip" style="background:rgba(255,167,38,.15);color:#ff9800;margin-bottom:8px;display:inline-block">${lbl.text}</span>` : ''}
-    <p style="font-size:13px;color:var(--muted);margin:6px 0 12px;line-height:1.5">${pick.goal||'Lance-toi sur ce projet.'}</p>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0 12px;line-height:1.5">${esc(pick.goal)||'Lance-toi sur ce projet.'}</p>
     <button class="btn" id="pick-start-btn" style="font-size:14px;padding:12px">→ Démarrer ce projet</button>
     <button id="pick-other" style="background:none;border:none;color:var(--muted);font:600 12px 'DM Sans',sans-serif;padding:8px 0;cursor:pointer;display:block;width:100%;text-align:center;margin-top:6px">Autre choix</button>
   `;
@@ -14152,9 +14090,11 @@ function checkAntiShame() {
   document.getElementById('shame-start').onclick = () => {
     bd.remove();
     // Start a quick 5-min free timer
-    show('timer-free');
-    const inp = document.getElementById('ft-duration');
-    if (inp) { inp.value = 5; inp.dispatchEvent(new Event('input')); }
+    ftTaskName = '';
+    ftSession = 1;
+    ftIsPause = false;
+    ftDuration = 5 * 60;
+    startFtTimer(ftDuration); // affiche déjà l'écran timer-free
     const toggle = document.getElementById('ft-toggle');
     if (toggle) setTimeout(() => toggle.click(), 500);
   };
@@ -14786,9 +14726,9 @@ function renderWMB() {
   el.innerHTML = `
     <button class="wmb-clear" id="wmb-clear-btn" title="Effacer">✕</button>
     <div class="wmb-label">🧭 En cours</div>
-    <div class="wmb-now">${w.task}</div>
-    ${w.micro ? `<div class="wmb-next">→ ${w.micro}</div>` : ''}
-    ${w.why  ? `<div class="wmb-why">💬 ${w.why}</div>` : ''}
+    <div class="wmb-now">${esc(w.task)}</div>
+    ${w.micro ? `<div class="wmb-next">→ ${esc(w.micro)}</div>` : ''}
+    ${w.why  ? `<div class="wmb-why">💬 ${esc(w.why)}</div>` : ''}
     <button class="wmb-resume" id="wmb-resume-btn">Reprendre →</button>
   `;
   document.getElementById('wmb-clear-btn').onclick = (e) => { e.stopPropagation(); clearWMB(); };
